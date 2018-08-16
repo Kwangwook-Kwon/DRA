@@ -6,11 +6,11 @@ VPATH = @srcdir@
 AM_CPPFLAGS = @L_CPPFLAGS@ \
               -I@top_srcdir@/include \
               -I@top_srcdir@/libodutl/include \
-              -I@top_srcdir@/libdiamparser/include \
+              -I@top_srcdir@/libdiamparser \
               -I@top_srcdir@/libdiameter/include \
               -I@top_srcdir@/libdiameternasreq/include \
-              -I@top_srcdir@/libdiametereap/include \
               -I@top_srcdir@/libeap/include \
+              -I./include \
               -D@HOST_OS@
 
 AM_LDFLAGS = @L_LDFLAGS@
@@ -41,27 +41,28 @@ sysconfdir = $(prefix)/etc/opendiameter/diametereap
 sysconf_DATA = config/client.eap-tls.xml \
                  config/client.local.xml \
                  config/configuration.xml \
-                 config/configuration.dtd \
+                 config/configuration.xsd \
                  config/dictionary.dtd \
                  config/dictionary.xml \
+                 config/eap-tls.configuration.xsd \
                  config/server.eap-tls.xml \
                  config/server.local.xml
 
 if compile_EAPTLS
 LDADD = @L_LIBS@ \
-        $(top_builddir)/libdiametereap/libdiametereap.la \
-	$(top_builddir)/libdiameter/libdiameter.la \
-	$(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libeap/libeap.la \
-	$(top_builddir)/libeap/libeaptls.la \
-	$(top_builddir)/libodutl/libodutl.la
+        libdiametereap.la \
+	$(top_srcdir)/libdiameter/libdiameter.la \
+	$(top_srcdir)/libdiamparser/libdiamparser.la \
+	$(top_srcdir)/libeap/libeap.la \
+	$(top_srcdir)/libeap/libeaptls.la \
+	$(top_srcdir)/libodutl/libodutl.la
 else
 LDADD = @L_LIBS@ \
-        $(top_builddir)/libdiametereap/libdiametereap.la \
-	$(top_builddir)/libdiameter/libdiameter.la \
-	$(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libeap/libeap.la \
-	$(top_builddir)/libodutl/libodutl.la
+        libdiametereap.la \
+	$(top_srcdir)/libdiameter/libdiameter.la \
+	$(top_srcdir)/libdiamparser/libdiamparser.la \
+	$(top_srcdir)/libeap/libeap.la \
+	$(top_srcdir)/libodutl/libodutl.la
 endif
 
 if compile_EAPTLS
@@ -79,12 +80,3 @@ client_test_SOURCES = test/client_test.cxx
 server_test_SOURCES = test/server_test.cxx
 
 EXTRA_DIST = config
-INCLUDES = -I$(top_srcdir)/libdiametereap
-client_test_LDADD = $(top_builddir)/libdiametereap/libdiametereap.la \
-	$(top_builddir)/libdiameter/libdiameter.la $(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libodutl/libodutl.la $(top_builddir)/libeap/libeap.la $(top_builddir)/libeap/libeaparchie.la \
-	-lACEXML_Parser -lACEXML -lACE -lACE_SSL -lssl
-server_test_LDADD = $(top_builddir)/libdiametereap/libdiametereap.la \
-	$(top_builddir)/libdiameter/libdiameter.la $(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libodutl/libodutl.la $(top_builddir)/libeap/libeap.la $(top_builddir)/libeap/libeaparchie.la \
-	-lACEXML_Parser -lACEXML -lACE -lACE_SSL -lssl

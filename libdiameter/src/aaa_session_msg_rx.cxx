@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -34,22 +34,22 @@
 #include "aaa_session_db.h"
 #include "aaa_session_msg_rx.h"
 
-int DiameterSessionMsgRx::RxLocalMsgHandler::Request
-  (std::auto_ptr<DiameterMsg> &msg, 
-   DiameterPeerEntry *source, 
-   DiameterPeerEntry *dest)
+int AAA_SessionMsgRx::RxLocalMsgHandler::Request
+  (std::auto_ptr<AAAMessage> msg, 
+   AAA_PeerEntry *source, 
+   AAA_PeerEntry *dest)
 {
     // Note that request message needs to be 
     // maintained and will be delete by the
     // router when a corresponding answer 
     // is received
 
-    DiameterSessionId sid;
+    AAA_SessionId sid;
     if (sid.Get(*msg) == AAA_ERR_SUCCESS) {
         AAA_JobData *data = NULL;
-        if (DIAMETER_SESSION_DB().Lookup(sid, data)) {
+        if (AAA_SESSION_DB().Lookup(sid, data)) {
             try {
-               DiameterSessionIO *io = (DiameterSessionIO*)data;
+               AAA_SessionIO *io = (AAA_SessionIO*)data;
                io->RxRequest(msg);
             }
             catch (...) {
@@ -60,56 +60,56 @@ int DiameterSessionMsgRx::RxLocalMsgHandler::Request
             m_SessionRx.RxUnknownSession(msg);
             return (0);
         }
-        DiameterServerSessionFactory *factory = m_SessionRx.m_SessionFactoryMap.Lookup
+        AAA_ServerSessionFactory *factory = m_SessionRx.m_SessionFactoryMap.Lookup
             (msg->hdr.appId);
         if (factory) {
-            DiameterSessionIO *newSession = factory->CreateInstance();
+            AAA_SessionIO *newSession = factory->CreateInstance();
             if (newSession) {
                 try {
                     newSession->RxRequest(msg);
-                    DIAMETER_SESSION_DB().Add(sid, *newSession);
+                    AAA_SESSION_DB().Add(sid, *newSession);
                 }
-                catch (DiameterBaseException &e) {
+                catch (AAA_BaseException &e) {
                     if (e.Code() == 
-                        DiameterBaseException::MISSING_SESSION_ID) {
+                        AAA_BaseException::MISSING_SESSION_ID) {
                         delete newSession;
                     }
-                    AAA_LOG((LM_DEBUG,"(%P|%t) *** Processing error in new session ***\n"));
+                    AAA_LOG(LM_DEBUG,"(%P|%t) *** Processing error in new session ***\n");
                 }
                 catch (...) {
                 }
                 return (0);
             }
             else {
-                AAA_LOG((LM_DEBUG,"(%P|%t) *** Failed to create new session, discarding req msg ***\n"));
+                AAA_LOG(LM_DEBUG,"(%P|%t) *** Failed to create new session, discarding req msg ***\n");
             }
         }
         else {
-            AAA_LOG((LM_DEBUG,"(%P|%t) *** Un-supported application id, discarding req msg ***\n"));
+            AAA_LOG(LM_DEBUG,"(%P|%t) *** Un-supported application id, discarding req msg ***\n");
         }
     }
     else {
-        AAA_LOG((LM_DEBUG,"(%P|%t) *** Missing session id, discard req msg ***\n"));
+        AAA_LOG(LM_DEBUG,"(%P|%t) *** Missing session id, discard req msg ***\n");
     }
-    DiameterMsgHeaderDump::Dump(*msg);
+    AAA_MsgDump::Dump(*msg);
     return (-1);
 }
 
-int DiameterSessionMsgRx::RxLocalMsgHandler::Answer
-  (std::auto_ptr<DiameterMsg> &msg, 
-   DiameterPeerEntry *source, 
-   DiameterPeerEntry *dest)
+int AAA_SessionMsgRx::RxLocalMsgHandler::Answer
+  (std::auto_ptr<AAAMessage> msg, 
+   AAA_PeerEntry *source, 
+   AAA_PeerEntry *dest)
 {
     // Note that answer message will be delete
     // when this function exits since they are
     // not stored by the router
 
-    DiameterSessionId sid;
+    AAA_SessionId sid;
     if (sid.Get(*msg) == AAA_ERR_SUCCESS) {
         AAA_JobData *data = NULL;
-        if (DIAMETER_SESSION_DB().Lookup(sid, data)) {
+        if (AAA_SESSION_DB().Lookup(sid, data)) {
             try {
-               DiameterSessionIO *io = (DiameterSessionIO*)data;
+               AAA_SessionIO *io = (AAA_SessionIO*)data;
                io->RxAnswer(msg);
             }
             catch (...) {
@@ -117,32 +117,32 @@ int DiameterSessionMsgRx::RxLocalMsgHandler::Answer
             return (0);
         }
         else {
-            AAA_LOG((LM_DEBUG,"(%P|%t) *** Unknown session id, discard answer msg ***\n"));
+            AAA_LOG(LM_DEBUG,"(%P|%t) *** Unknown session id, discard answer msg ***\n");
         }
     }
     else {
-        AAA_LOG((LM_DEBUG,"(%P|%t) *** Missing session id, discard answer msg ***\n"));
+        AAA_LOG(LM_DEBUG,"(%P|%t) *** Missing session id, discard answer msg ***\n");
     }
-    DiameterMsgHeaderDump::Dump(*msg);
+    AAA_MsgDump::Dump(*msg);
     return (-1);
 }
 
-AAAReturnCode DiameterSessionMsgRx::RxUnknownSession
-  (std::auto_ptr<DiameterMsg> msg)
+AAAReturnCode AAA_SessionMsgRx::RxUnknownSession
+  (std::auto_ptr<AAAMessage> msg)
 {
     // special base protocol handling for unknown session id
-    if (msg->hdr.code == DIAMETER_MSGCODE_ABORTSESSION) {
+    if (msg->hdr.code == AAA_MSGCODE_ABORTSESSION) {
         TxASA(msg);
         return (AAA_ERR_SUCCESS);
     }
-    AAA_LOG((LM_DEBUG,"(%P|%t) *** Unknown session, discarding msg***\n"));
+    AAA_LOG(LM_DEBUG,"(%P|%t) *** Unknown session, discarding msg***\n");
     return (AAA_ERR_FAILURE);
 }
 
-int DiameterSessionMsgRx::RxProxyMsgHandler::Request
-  (std::auto_ptr<DiameterMsg> &msg, 
-   DiameterPeerEntry *source, 
-   DiameterPeerEntry *dest)
+int AAA_SessionMsgRx::RxProxyMsgHandler::Request
+  (std::auto_ptr<AAAMessage> msg, 
+   AAA_PeerEntry *source, 
+   AAA_PeerEntry *dest)
 {
     // Note that request message needs to be 
     // maintained and will be delete by the
@@ -151,20 +151,21 @@ int DiameterSessionMsgRx::RxProxyMsgHandler::Request
     AAA_ProxyHandler *handler = m_SessionRx.m_ProxyHandlerMap.Lookup
         (msg->hdr.appId);
     if (handler) {
-        return (handler->RequestMsg(*msg) == AAA_ERR_SUCCESS) ? 0 : (-1);
+        handler->RequestMsg(msg);
+        return (0);
     }
     else {
-        AAA_LOG((LM_DEBUG,"(%P|%t) *** No proxy support for appId=%d, forwarding message ***\n",
-                msg->hdr.appId));
+        AAA_LOG(LM_DEBUG,"(%P|%t) *** No proxy support for appId=%d, discarding req msg ***\n",
+                msg->hdr.appId);
     }
-    DiameterMsgHeaderDump::Dump(*msg);
+    AAA_MsgDump::Dump(*msg);
     return (-1);
 }
 
-int DiameterSessionMsgRx::RxProxyMsgHandler::Answer
-  (std::auto_ptr<DiameterMsg> &msg, 
-   DiameterPeerEntry *source, 
-   DiameterPeerEntry *dest)
+int AAA_SessionMsgRx::RxProxyMsgHandler::Answer
+  (std::auto_ptr<AAAMessage> msg, 
+   AAA_PeerEntry *source, 
+   AAA_PeerEntry *dest)
 {
     // Note that answer message will be delete
     // when this function exits since they are
@@ -172,24 +173,29 @@ int DiameterSessionMsgRx::RxProxyMsgHandler::Answer
     AAA_ProxyHandler *handler = m_SessionRx.m_ProxyHandlerMap.Lookup
         (msg->hdr.appId);
     if (handler) {
-        handler->AnswerMsg(*msg);
+        handler->AnswerMsg(msg);
         return (0);
     }
+    else {
+        AAA_LOG(LM_DEBUG,"(%P|%t) *** No proxy support for appId=%d, discarding answer msg ***\n",
+                msg->hdr.appId);
+    }
+    AAA_MsgDump::Dump(*msg);
     return (-1);
 }
 
-int DiameterSessionMsgRx::RxErrorMsgHandler::LocalErrorHandling
-  (std::auto_ptr<DiameterMsg> &msg, 
-   DiameterPeerEntry *source, 
-   DiameterPeerEntry *dest) 
+int AAA_SessionMsgRx::RxErrorMsgHandler::LocalErrorHandling
+  (std::auto_ptr<AAAMessage> msg, 
+   AAA_PeerEntry *source, 
+   AAA_PeerEntry *dest) 
 {
-    DiameterSessionId sid;
+    AAA_SessionId sid;
     if (sid.Get(*msg) == AAA_ERR_SUCCESS) {
         AAA_ProxyHandler *handler = NULL;
         AAA_JobData *data = NULL;
-        if (DIAMETER_SESSION_DB().Lookup(sid, data)) {
+        if (AAA_SESSION_DB().Lookup(sid, data)) {
             try {
-               DiameterSessionIO *io = (DiameterSessionIO*)data;
+               AAA_SessionIO *io = (AAA_SessionIO*)data;
                io->RxError(msg);
             }
             catch (...) {
@@ -197,21 +203,21 @@ int DiameterSessionMsgRx::RxErrorMsgHandler::LocalErrorHandling
             return (0);
         }
         else if ((handler = m_SessionRx.m_ProxyHandlerMap.Lookup(msg->hdr.appId))) {
-            handler->ErrorMsg(*msg);
+            handler->ErrorMsg(msg);
             return (0);
         }
         else {
-            AAA_LOG((LM_DEBUG,"(%P|%t) *** Error message with no local hanlder, resume routing ***\n"));
+            AAA_LOG(LM_DEBUG,"(%P|%t) *** Error message with unknown session id ***\n");
         }
     }
     else {
-        AAA_LOG((LM_DEBUG,"(%P|%t) *** Error message with missing session id ***\n"));
+        AAA_LOG(LM_DEBUG,"(%P|%t) *** Error message with missing session id ***\n");
     }
-    AAA_LOG((LM_DEBUG, "(%P|%t) Discarding message\n"));
+    AAA_LOG(LM_DEBUG, "(%P|%t) Discarding message\n");
     return (-1);
 }
 
-void DiameterSessionMsgRx::TxASA(std::auto_ptr<DiameterMsg> &asr)
+void AAA_SessionMsgRx::TxASA(std::auto_ptr<AAAMessage> &asr)
 {
     /*
         8.5.2.  Abort-Session-Answer
@@ -247,34 +253,34 @@ void DiameterSessionMsgRx::TxASA(std::auto_ptr<DiameterMsg> &asr)
                       * [ AVP ]
    */
 
-   std::auto_ptr<DiameterMsg> msg(new DiameterMsg);
+   std::auto_ptr<AAAMessage> msg(new AAAMessage);
    ACE_OS::memset(&msg->hdr, 0, sizeof(msg->hdr));
-   msg->hdr.ver = DIAMETER_PROTOCOL_VERSION;
+   msg->hdr.ver = AAA_PROTOCOL_VERSION;
    msg->hdr.length = 0;
-   msg->hdr.flags.r = DIAMETER_FLAG_CLR;
-   msg->hdr.flags.p = DIAMETER_FLAG_CLR;
-   msg->hdr.flags.e = DIAMETER_FLAG_CLR;
-   msg->hdr.code = DIAMETER_MSGCODE_ABORTSESSION;
-   msg->hdr.appId = DIAMETER_BASE_APPLICATION_ID;
+   msg->hdr.flags.r = AAA_FLG_CLR;
+   msg->hdr.flags.p = AAA_FLG_CLR;
+   msg->hdr.flags.e = AAA_FLG_CLR;
+   msg->hdr.code = AAA_MSGCODE_ABORTSESSION;
+   msg->hdr.appId = AAA_BASE_APPLICATION_ID;
 
    // required
-   DiameterSessionId sid;
+   AAA_SessionId sid;
    sid.Get(*asr);
    sid.Set(*msg);
    msg->hdr.hh = asr->hdr.hh;
    msg->hdr.ee = asr->hdr.ee;
 
-   DiameterUInt32AvpWidget rcodeAvp(DIAMETER_AVPNAME_RESULTCODE);
-   DiameterIdentityAvpWidget orHostAvp(DIAMETER_AVPNAME_ORIGINHOST);
-   DiameterIdentityAvpWidget orRealmAvp(DIAMETER_AVPNAME_ORIGINREALM);
-   DiameterUtf8AvpWidget orErrMsgAvp(DIAMETER_AVPNAME_ERRORMESSAGE);
-   DiameterIdentityAvpWidget orErrHostAvp(DIAMETER_AVPNAME_ERRORREPORTINGHOST);
+   AAA_UInt32AvpWidget rcodeAvp(AAA_AVPNAME_RESULTCODE);
+   AAA_IdentityAvpWidget orHostAvp(AAA_AVPNAME_ORIGINHOST);
+   AAA_IdentityAvpWidget orRealmAvp(AAA_AVPNAME_ORIGINREALM);
+   AAA_Utf8AvpWidget orErrMsgAvp(AAA_AVPNAME_ERRORMESSAGE);
+   AAA_IdentityAvpWidget orErrHostAvp(AAA_AVPNAME_ERRORREPORTINGHOST);
 
    rcodeAvp.Get() = AAA_UNKNOWN_SESSION_ID;
-   orHostAvp.Get() = DIAMETER_CFG_TRANSPORT()->identity;
-   orRealmAvp.Get() = DIAMETER_CFG_TRANSPORT()->realm;
+   orHostAvp.Get() = AAA_CFG_TRANSPORT()->identity;
+   orRealmAvp.Get() = AAA_CFG_TRANSPORT()->realm;
    orErrMsgAvp.Get() = std::string("Unknown Session Id");
-   orErrHostAvp.Get() = DIAMETER_CFG_TRANSPORT()->identity;
+   orErrHostAvp.Get() = AAA_CFG_TRANSPORT()->identity;
 
    msg->acl.add(rcodeAvp());
    msg->acl.add(orHostAvp());
@@ -282,5 +288,5 @@ void DiameterSessionMsgRx::TxASA(std::auto_ptr<DiameterMsg> &asr)
    msg->acl.add(orErrMsgAvp());
    msg->acl.add(orErrHostAvp());
 
-   DIAMETER_MSG_ROUTER()->AnswerMsg(msg, 0);
+   AAA_MSG_ROUTER()->AnswerMsg(msg, 0);
 }

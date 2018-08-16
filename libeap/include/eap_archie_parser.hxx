@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -61,7 +61,7 @@ copyWithPadding(AAAMessageBlock *msg, const char *data,
 /// following the Type field) to application-specific payload data.
 /// As a result of calling this function, the read pointer of the
 /// message block points to one octet after the MsgID field.
-template<> inline void
+inline void
 EapRequestArchieParser::parseRawToApp() 
 {
   AAAMessageBlock* msg = getRawData();
@@ -78,7 +78,7 @@ EapRequestArchieParser::parseRawToApp()
 /// calling this function, the write pointer of the message block
 /// points to one octet after the MsgID field.
 //void EapRequestArchieParser::parseAppToRaw();
-template<> inline void
+inline void
 EapRequestArchieParser::parseAppToRaw() 
 {
   AAAMessageBlock* msg = getRawData();
@@ -99,7 +99,7 @@ EapRequestArchieRequestParser;
 /// following the MsgID field) to application-specific payload data.
 /// As a result of calling this function, the read pointer of the
 /// message block points to one octet after the end of the payload.
-template<> inline void 
+inline void 
 EapRequestArchieRequestParser::parseRawToApp()
 {
   AAAMessageBlock* msg = getRawData();
@@ -134,7 +134,7 @@ EapRequestArchieRequestParser::parseRawToApp()
 /// calling this function, the write pointer of the message block
 /// points to one octet after the end of the payload.
 //void EapRequestArchieRequestParser::parseAppToRaw();
-template<> inline void 
+inline void 
 EapRequestArchieRequestParser::parseAppToRaw()
 {
   AAAMessageBlock* msg = getRawData();
@@ -177,7 +177,7 @@ EapResponseArchieResponseParser;
 /// following the MsgID field) to application-specific payload data.
 /// As a result of calling this function, the read pointer of the
 /// message block points to one octet after the end of the payload.
-template<> inline void 
+inline void 
 EapResponseArchieResponseParser::parseRawToApp()
 {
   AAAMessageBlock* msg = getRawData();
@@ -237,7 +237,7 @@ EapResponseArchieResponseParser::parseRawToApp()
 /// function, the write pointer of the message block points to one
 /// octet after the end of the payload.
 //void EapResponseArchieResponseParser::parseAppToRaw();
-template<> inline void 
+inline void 
 EapResponseArchieResponseParser::parseAppToRaw()
 {
   AAAMessageBlock* msg = getRawData();
@@ -303,7 +303,7 @@ EapRequestArchieConfirmParser;
 /// following the MsgID field) to application-specific payload data.
 /// As a result of calling this function, the read pointer of the
 /// message block points to one octet after the end of the payload.
-template<> inline void 
+inline void 
 EapRequestArchieConfirmParser::parseRawToApp()
 {
   AAAMessageBlock* msg = getRawData();
@@ -354,7 +354,7 @@ EapRequestArchieConfirmParser::parseRawToApp()
 /// (data following the MsgID field).  As a result of calling this
 /// function, the write pointer of the message block points to one
 /// octet after the end of the payload.
-template<> inline void 
+inline void 
 EapRequestArchieConfirmParser::parseAppToRaw()
 {
   AAAMessageBlock* msg = getRawData();
@@ -406,7 +406,7 @@ EapResponseArchieFinishParser;
 /// following the MsgID field) to application-specific payload data.
 /// As a result of calling this function, the read pointer of the
 /// message block points to one octet after the end of the payload.
-template<> inline void 
+inline void 
 EapResponseArchieFinishParser::parseRawToApp()
 {
   AAAMessageBlock* msg = getRawData();
@@ -435,7 +435,7 @@ EapResponseArchieFinishParser::parseRawToApp()
 /// (data following the MsgID field).  As a result of calling this
 /// function, the write pointer of the message block points to one
 /// octet after the end of the payload.
-template<> inline void 
+inline void 
 EapResponseArchieFinishParser::parseAppToRaw()
 {
   AAAMessageBlock* msg = getRawData();

@@ -75,54 +75,66 @@ libdiametereap_la_OBJECTS = $(am_libdiametereap_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_client_test_OBJECTS = test/client_test.$(OBJEXT)
 client_test_OBJECTS = $(am_client_test_OBJECTS)
-client_test_DEPENDENCIES =  \
-	$(top_builddir)/libdiametereap/libdiametereap.la \
-	$(top_builddir)/libdiameter/libdiameter.la \
-	$(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libodutl/libodutl.la \
-	$(top_builddir)/libeap/libeap.la \
-	$(top_builddir)/libeap/libeaparchie.la
+client_test_LDADD = $(LDADD)
+@compile_EAPTLS_FALSE@client_test_DEPENDENCIES = libdiametereap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libodutl/libodutl.la
+@compile_EAPTLS_TRUE@client_test_DEPENDENCIES = libdiametereap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeaptls.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libodutl/libodutl.la
 am__client_test_tls_SOURCES_DIST = test/client_test_tls.cxx
 @compile_EAPTLS_TRUE@am_client_test_tls_OBJECTS =  \
 @compile_EAPTLS_TRUE@	test/client_test_tls.$(OBJEXT)
 client_test_tls_OBJECTS = $(am_client_test_tls_OBJECTS)
 client_test_tls_LDADD = $(LDADD)
-@compile_EAPTLS_FALSE@client_test_tls_DEPENDENCIES = $(top_builddir)/libdiametereap/libdiametereap.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libdiameter/libdiameter.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libdiamparser/libdiamparser.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libodutl/libodutl.la
-@compile_EAPTLS_TRUE@client_test_tls_DEPENDENCIES = $(top_builddir)/libdiametereap/libdiametereap.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libdiameter/libdiameter.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libdiamparser/libdiamparser.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeaptls.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libodutl/libodutl.la
+@compile_EAPTLS_FALSE@client_test_tls_DEPENDENCIES =  \
+@compile_EAPTLS_FALSE@	libdiametereap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libodutl/libodutl.la
+@compile_EAPTLS_TRUE@client_test_tls_DEPENDENCIES = libdiametereap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeaptls.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libodutl/libodutl.la
 am_server_test_OBJECTS = test/server_test.$(OBJEXT)
 server_test_OBJECTS = $(am_server_test_OBJECTS)
-server_test_DEPENDENCIES =  \
-	$(top_builddir)/libdiametereap/libdiametereap.la \
-	$(top_builddir)/libdiameter/libdiameter.la \
-	$(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libodutl/libodutl.la \
-	$(top_builddir)/libeap/libeap.la \
-	$(top_builddir)/libeap/libeaparchie.la
+server_test_LDADD = $(LDADD)
+@compile_EAPTLS_FALSE@server_test_DEPENDENCIES = libdiametereap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libodutl/libodutl.la
+@compile_EAPTLS_TRUE@server_test_DEPENDENCIES = libdiametereap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeaptls.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libodutl/libodutl.la
 am__server_test_tls_SOURCES_DIST = test/server_test_tls.cxx
 @compile_EAPTLS_TRUE@am_server_test_tls_OBJECTS =  \
 @compile_EAPTLS_TRUE@	test/server_test_tls.$(OBJEXT)
 server_test_tls_OBJECTS = $(am_server_test_tls_OBJECTS)
 server_test_tls_LDADD = $(LDADD)
-@compile_EAPTLS_FALSE@server_test_tls_DEPENDENCIES = $(top_builddir)/libdiametereap/libdiametereap.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libdiameter/libdiameter.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libdiamparser/libdiamparser.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libodutl/libodutl.la
-@compile_EAPTLS_TRUE@server_test_tls_DEPENDENCIES = $(top_builddir)/libdiametereap/libdiametereap.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libdiameter/libdiameter.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libdiamparser/libdiamparser.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeaptls.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libodutl/libodutl.la
+@compile_EAPTLS_FALSE@server_test_tls_DEPENDENCIES =  \
+@compile_EAPTLS_FALSE@	libdiametereap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libodutl/libodutl.la
+@compile_EAPTLS_TRUE@server_test_tls_DEPENDENCIES = libdiametereap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeaptls.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libodutl/libodutl.la
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -186,7 +198,6 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
-GREP = @GREP@
 HOST_OS = @HOST_OS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -200,10 +211,8 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 L_CPPFLAGS = @L_CPPFLAGS@
-L_CXXFLAGS = @L_CXXFLAGS@
 L_LDFLAGS = @L_LDFLAGS@
 L_LIBS = @L_LIBS@
-L_MPAFLAGS = @L_MPAFLAGS@
 L_ODBCFLAGS = @L_ODBCFLAGS@
 MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
@@ -221,9 +230,12 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_RANLIB = @ac_ct_RANLIB@
+ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -242,30 +254,23 @@ build_vendor = @build_vendor@
 compile_EAPTLS_FALSE = @compile_EAPTLS_FALSE@
 compile_EAPTLS_TRUE = @compile_EAPTLS_TRUE@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-htmldir = @htmldir@
 includedir = $(prefix)/include/opendiameter/diametereap
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = $(prefix)/etc/opendiameter/diametereap
@@ -273,11 +278,11 @@ target_alias = @target_alias@
 AM_CPPFLAGS = @L_CPPFLAGS@ \
               -I@top_srcdir@/include \
               -I@top_srcdir@/libodutl/include \
-              -I@top_srcdir@/libdiamparser/include \
+              -I@top_srcdir@/libdiamparser \
               -I@top_srcdir@/libdiameter/include \
               -I@top_srcdir@/libdiameternasreq/include \
-              -I@top_srcdir@/libdiametereap/include \
               -I@top_srcdir@/libeap/include \
+              -I./include \
               -D@HOST_OS@
 
 AM_LDFLAGS = @L_LDFLAGS@
@@ -302,43 +307,33 @@ include_HEADERS = $(DIAMETER_EAP_HDR)
 sysconf_DATA = config/client.eap-tls.xml \
                  config/client.local.xml \
                  config/configuration.xml \
-                 config/configuration.dtd \
+                 config/configuration.xsd \
                  config/dictionary.dtd \
                  config/dictionary.xml \
+                 config/eap-tls.configuration.xsd \
                  config/server.eap-tls.xml \
                  config/server.local.xml
 
 @compile_EAPTLS_FALSE@LDADD = @L_LIBS@ \
-@compile_EAPTLS_FALSE@        $(top_builddir)/libdiametereap/libdiametereap.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libdiameter/libdiameter.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libdiamparser/libdiamparser.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libodutl/libodutl.la
+@compile_EAPTLS_FALSE@        libdiametereap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_FALSE@	$(top_srcdir)/libodutl/libodutl.la
 
 @compile_EAPTLS_TRUE@LDADD = @L_LIBS@ \
-@compile_EAPTLS_TRUE@        $(top_builddir)/libdiametereap/libdiametereap.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libdiameter/libdiameter.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libdiamparser/libdiamparser.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeaptls.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libodutl/libodutl.la
+@compile_EAPTLS_TRUE@        libdiametereap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiameter/libdiameter.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiamparser/libdiamparser.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeap.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libeap/libeaptls.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libodutl/libodutl.la
 
 @compile_EAPTLS_TRUE@client_test_tls_SOURCES = test/client_test_tls.cxx
 @compile_EAPTLS_TRUE@server_test_tls_SOURCES = test/server_test_tls.cxx
 client_test_SOURCES = test/client_test.cxx
 server_test_SOURCES = test/server_test.cxx
 EXTRA_DIST = config
-INCLUDES = -I$(top_srcdir)/libdiametereap
-client_test_LDADD = $(top_builddir)/libdiametereap/libdiametereap.la \
-	$(top_builddir)/libdiameter/libdiameter.la $(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libodutl/libodutl.la $(top_builddir)/libeap/libeap.la $(top_builddir)/libeap/libeaparchie.la \
-	-lACEXML_Parser -lACEXML -lACE -lACE_SSL -lssl -lboost_system
-
-server_test_LDADD = $(top_builddir)/libdiametereap/libdiametereap.la \
-	$(top_builddir)/libdiameter/libdiameter.la $(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libodutl/libodutl.la $(top_builddir)/libeap/libeap.la $(top_builddir)/libeap/libeaparchie.la \
-	-lACEXML_Parser -lACEXML -lACE -lACE_SSL -lssl -lboost_system
-
 all: all-am
 
 .SUFFIXES:

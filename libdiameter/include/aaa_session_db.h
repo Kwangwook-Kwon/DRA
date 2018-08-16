@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -40,109 +40,89 @@
 #include "aaa_session.h"
 #include "ace/RW_Mutex.h"
 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionEntry : 
-     public DiameterSessionCounter 
+class DIAMETERBASEPROTOCOL_EXPORT AAA_SessionEntry : 
+     public AAA_SessionCounter 
 {
      public:
-        DiameterSessionEntry(AAA_JobData &data) :
+        AAA_SessionEntry(AAA_JobData &data) :
             m_Data(data) {
         }
         AAA_JobData &Data() {
             return m_Data;
         }
-        int operator=(DiameterSessionEntry &cntr) {
+        int operator=(AAA_SessionEntry &cntr) {
 	    m_Data = cntr.Data();
-            (DiameterSessionCounter&)(*this) = 
-                (DiameterSessionCounter&)cntr;
+            (AAA_SessionCounter&)(*this) = 
+                (AAA_SessionCounter&)cntr;
             return (true);
         }
      private:
         AAA_JobData &m_Data;
 };
 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionEntryList :
-     public std::list<DiameterSessionEntry*>
+class DIAMETERBASEPROTOCOL_EXPORT AAA_SessionEntryList : 
+     public std::list<AAA_SessionEntry*>
 {
      public:
-        DiameterSessionEntryList();
-        bool Add(DiameterSessionId &id, 
+        bool Add(AAA_SessionId &id, 
                  AAA_JobData &data);
-        bool Lookup(DiameterSessionId &id,
+        bool Lookup(AAA_SessionId &id,
                     AAA_JobData *&data);
-        bool Remove(DiameterSessionId &id);
+        bool Remove(AAA_SessionId &id);
         void Flush();
      protected:
-        typedef std::list<DiameterSessionEntry*>::iterator 
+        typedef std::list<AAA_SessionEntry*>::iterator 
             EntryIterator;
-     private:
-        DiameterSessionCounter m_LastKnownCounter;
 };
 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionEntryNode : 
+class DIAMETERBASEPROTOCOL_EXPORT AAA_SessionEntryNode : 
      public OD_Utl_RbTreeData 
 {
      public:
-        DiameterSessionEntryNode(std::string &id, std::string &opt) {
+        AAA_SessionEntryNode(std::string &id) {
             m_DiameterId = id;
-            m_OptionalVal = opt;
         }
         std::string &DiameterId() {
             return m_DiameterId;
         }
-        std::string &OptionalVal() {
-            return m_OptionalVal;
-        }
-        DiameterSessionEntryList &EntryList() {
+        AAA_SessionEntryList &EntryList() {
             return m_Entries;
         }
      protected:
         int operator==(OD_Utl_RbTreeData &cmp) {
-            DiameterSessionEntryNode *id = (DiameterSessionEntryNode*)cmp.payload;
-            if (m_DiameterId == id->DiameterId()) {
-                if (m_OptionalVal.length() > 0) {
-                    return (m_OptionalVal == id->OptionalVal()) ?
-                            true : false;
-                }
-                return true;
-            }
-            return false;
+            AAA_SessionEntryNode *id = (AAA_SessionEntryNode*)cmp.payload;
+            return (m_DiameterId == id->DiameterId()) ? 
+                    true : false;
         }
         int operator<(OD_Utl_RbTreeData &cmp) {
-            DiameterSessionEntryNode *id = (DiameterSessionEntryNode*)cmp.payload;
-            if (m_DiameterId < id->DiameterId()) {
-                if (m_OptionalVal.length() > 0) {
-                    return (m_OptionalVal < id->OptionalVal()) ?
-                            true : false;
-                }
-                return true;
-            }
-            return false;
+            AAA_SessionEntryNode *id = (AAA_SessionEntryNode*)cmp.payload;
+            return (m_DiameterId < id->DiameterId()) ? 
+                    true : false;
         }
         void clear(void *pload) {
             m_Entries.Flush();
         }
      private:
         std::string m_DiameterId;
-        std::string m_OptionalVal;
-        DiameterSessionEntryList m_Entries;
+        AAA_SessionEntryList m_Entries;
 };
 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionDb : 
+class DIAMETERBASEPROTOCOL_EXPORT AAA_SessionDb : 
     private OD_Utl_RbTreeTree
 {
     public:
-        bool Add(DiameterSessionId &id, AAA_JobData &data);
-        bool Lookup(DiameterSessionId &id, AAA_JobData *&data);
-        bool Remove(DiameterSessionId &id);
+        bool Add(AAA_SessionId &id, AAA_JobData &data);
+        bool Lookup(AAA_SessionId &id, AAA_JobData *&data);
+        bool Remove(AAA_SessionId &id);
 
     private:
         ACE_RW_Mutex m_rwMutex;
 };
 
-typedef ACE_Singleton<DiameterSessionDb, 
+typedef ACE_Singleton<AAA_SessionDb, 
                       ACE_Recursive_Thread_Mutex> 
-                      DiameterSessionDb_S;
-#define DIAMETER_SESSION_DB() (*DiameterSessionDb_S::instance()) 
+                      AAA_SessionDb_S;
+#define AAA_SESSION_DB() (*AAA_SessionDb_S::instance()) 
 
 #endif /* __AAA_SESSION_DB_H__ */
 

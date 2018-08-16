@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This program is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU General Public License as published by   */
@@ -33,8 +33,8 @@
 /***************************************************************************
                           eap_tls.hxx  -  description
                              -------------------
-    begin                : lun mar 8 2007
-    copyright            : (C) 2007 by 
+    begin                : lun mar 8 2004
+    copyright            : (C) 2004 by 
     email                : 
  ***************************************************************************/
 

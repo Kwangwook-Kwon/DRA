@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -35,18 +35,18 @@
 #include "aaa_route_id_generator.h"
 #include "aaa_session_attributes.h"
 
-void DiameterSessionAttributes::MsgIdTxMessage(DiameterMsg &msg)
+void AAA_SessionAttributes::MsgIdTxMessage(AAAMessage &msg)
 {
    if (msg.hdr.flags.r) {
        if (msg.hdr.hh == 0) {
-           m_LastTxHopId = DIAMETER_HOPBYHOP_GEN()->Get();
+           m_LastTxHopId = AAA_HOPBYHOP_GEN()->Get();
            msg.hdr.hh = m_LastTxHopId;
        }
        else {
 	   m_LastTxHopId = msg.hdr.hh;
        }
        if (msg.hdr.ee == 0) {
-           m_LastTxEndId = DIAMETER_ENDTOEND_GEN()->Get();
+           m_LastTxEndId = AAA_ENDTOEND_GEN()->Get();
            msg.hdr.ee = m_LastTxEndId;
        }
        else {
@@ -59,7 +59,7 @@ void DiameterSessionAttributes::MsgIdTxMessage(DiameterMsg &msg)
    }
 }
 
-bool DiameterSessionAttributes::MsgIdRxMessage(DiameterMsg &msg)
+bool AAA_SessionAttributes::MsgIdRxMessage(AAAMessage &msg)
 {
    if (msg.hdr.flags.r) {
        m_LastRxHopId = msg.hdr.hh;
@@ -70,10 +70,10 @@ bool DiameterSessionAttributes::MsgIdRxMessage(DiameterMsg &msg)
            (msg.hdr.ee == m_LastTxEndId));
 }
 
-AAAReturnCode DiameterSessionId::Get(DiameterMsg &msg)
+AAAReturnCode AAA_SessionId::Get(AAAMessage &msg)
 {
-   DiameterUtf8AvpContainerWidget sidAvp(msg.acl);
-   diameter_utf8string_t *sid = sidAvp.GetAvp(DIAMETER_AVPNAME_SESSIONID);
+   AAA_Utf8AvpContainerWidget sidAvp(msg.acl);
+   diameter_utf8string_t *sid = sidAvp.GetAvp(AAA_AVPNAME_SESSIONID);
    try {
       if (sid == NULL) {
          throw (AAA_ERR_PARSING_FAILED);
@@ -89,7 +89,7 @@ AAAReturnCode DiameterSessionId::Get(DiameterMsg &msg)
          throw (AAA_ERR_PARSING_FAILED);
       }
       std::string stringHigh = sid->substr(where1, where2-where1);
-      High() = ACE_OS::strtoul(stringHigh.c_str(), NULL, 10);
+      High() = ACE_OS::atoi(stringHigh.c_str());
 
       where1 = sid->find(";", ++ where2);
       if (where1 == std::string::npos) {
@@ -108,13 +108,13 @@ AAAReturnCode DiameterSessionId::Get(DiameterMsg &msg)
    }
 }
 
-AAAReturnCode DiameterSessionId::Set(DiameterMsg &msg)
+AAAReturnCode AAA_SessionId::Set(AAAMessage &msg)
 {
-   DiameterUtf8AvpContainerWidget sidAvp(msg.acl);
-   diameter_utf8string_t &sid = sidAvp.AddAvp(DIAMETER_AVPNAME_SESSIONID);
+   AAA_Utf8AvpContainerWidget sidAvp(msg.acl);
+   diameter_utf8string_t &sid = sidAvp.AddAvp(AAA_AVPNAME_SESSIONID);
 
    char nums[64];
-   sprintf(nums, ";%u;%u", High(), Low());
+   sprintf(nums, ";%d;%d", High(), Low());
    sid = DiameterId() + nums;
 
    if (OptionalValue().length() > 0) {
@@ -124,20 +124,15 @@ AAAReturnCode DiameterSessionId::Set(DiameterMsg &msg)
    return (AAA_ERR_SUCCESS);
 }
 
-void DiameterSessionId::Dump()
+void AAA_SessionId::Dump(char *buf)
 {
-   std::string dump;
-   Dump(dump);
-   AAA_LOG((LM_INFO, "(%P|%t) Session id=%s\n", dump.c_str()));
-}
-
-void DiameterSessionId::Dump(std::string &dump)
-{
-   dump = DiameterId().c_str();
-   dump += ';';
-   dump += High();
-   dump += ';';
-   dump += Low();
-   dump += ';';
-   dump += OptionalValue().c_str();   
+   char cbuf[128];
+   ACE_OS::sprintf(cbuf, "%s;%d;%d;%s", 
+                   DiameterId().data(),
+                   High(), Low(),
+                   OptionalValue().data());
+   AAA_LOG(LM_INFO, "(%P|%t) Session id=%s\n", cbuf);
+   if (buf) {
+       ACE_OS::strcpy(buf, cbuf);
+   }
 }

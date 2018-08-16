@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -38,17 +38,16 @@
 #include <stdlib.h>
 #include "ace/Singleton.h"
 
-class DiameterIdGenerator {
+class AAA_IdGenerator {
     public:
        virtual int Get() = 0;
 
     protected:
-       DiameterIdGenerator() : m_Id(0) { }
-       virtual ~DiameterIdGenerator() { }
+       AAA_IdGenerator() : m_Id(0) { }
        int m_Id;
 };
 
-class DiameterHopByHopGenerator : public DiameterIdGenerator {
+class AAA_HopByHopGenerator : public AAA_IdGenerator {
     public:
        int Get() {
            if (m_Id == 0) {
@@ -65,7 +64,7 @@ class DiameterHopByHopGenerator : public DiameterIdGenerator {
        }
 };
 
-class DiameterEndToEndGenerator : public DiameterIdGenerator {
+class AAA_EndToEndGenerator : public AAA_IdGenerator {
     public:
        int Get() {
            if (m_Id == 0) {
@@ -85,13 +84,13 @@ class DiameterEndToEndGenerator : public DiameterIdGenerator {
        }
 };
 
-typedef ACE_Singleton<DiameterHopByHopGenerator, ACE_Recursive_Thread_Mutex>
-                      DiameterHopByHopGenerator_S;
-#define DIAMETER_HOPBYHOP_GEN() DiameterHopByHopGenerator_S::instance()
+typedef ACE_Singleton<AAA_HopByHopGenerator, ACE_Recursive_Thread_Mutex>
+                      AAA_HopByHopGenerator_S;
+#define AAA_HOPBYHOP_GEN() AAA_HopByHopGenerator_S::instance()
 
-typedef ACE_Singleton<DiameterEndToEndGenerator, ACE_Recursive_Thread_Mutex>
-                      DiameterEndToEndGenerator_S;
-#define DIAMETER_ENDTOEND_GEN() DiameterEndToEndGenerator_S::instance()
+typedef ACE_Singleton<AAA_EndToEndGenerator, ACE_Recursive_Thread_Mutex>
+                      AAA_EndToEndGenerator_S;
+#define AAA_ENDTOEND_GEN() AAA_EndToEndGenerator_S::instance()
 
 #endif
 

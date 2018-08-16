@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -36,48 +36,50 @@
 
 #include "aaa_peer_data.h"
 
-typedef enum {
-  DIAMETER_PEER_ST_CLOSED,
-  DIAMETER_PEER_ST_WAIT_CONN_ACK,
-  DIAMETER_PEER_ST_WAIT_I_CEA,
-  DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT,
-  DIAMETER_PEER_ST_WAIT_RETURNS,
-  DIAMETER_PEER_ST_I_OPEN,
-  DIAMETER_PEER_ST_R_OPEN,
-  DIAMETER_PEER_ST_CLOSING
-} DIAMETER_PEER_ST;
+#define AAA_FSM_EVENT_DEBUG 0
 
 typedef enum {
-  DIAMETER_PEER_EV_START,  
-  DIAMETER_PEER_EV_STOP,
-  DIAMETER_PEER_EV_TIMEOUT,  
-  DIAMETER_PEER_EV_CONN_RETRY,  
-  DIAMETER_PEER_EV_R_CONN_CER,  
-  DIAMETER_PEER_EV_I_RCV_CONN_ACK,  
-  DIAMETER_PEER_EV_I_RCV_CONN_NACK,
-  DIAMETER_PEER_EV_R_RCV_CEA,  
-  DIAMETER_PEER_EV_I_RCV_CEA,  
-  DIAMETER_PEER_EV_I_PEER_DISC,  
-  DIAMETER_PEER_EV_R_PEER_DISC,  
-  DIAMETER_PEER_EV_I_RCV_NON_CEA,  
-  DIAMETER_PEER_EV_WIN_ELECTION,  
-  DIAMETER_PEER_EV_SEND_MESSAGE,  
-  DIAMETER_PEER_EV_R_RCV_MESSAGE,  
-  DIAMETER_PEER_EV_I_RCV_MESSAGE,  
-  DIAMETER_PEER_EV_R_RCV_DWR,  
-  DIAMETER_PEER_EV_I_RCV_DWR,
-  DIAMETER_PEER_EV_R_RCV_DWA,  
-  DIAMETER_PEER_EV_I_RCV_DWA,
-  DIAMETER_PEER_EV_R_RCV_DPR,  
-  DIAMETER_PEER_EV_I_RCV_DPR,
-  DIAMETER_PEER_EV_R_RCV_CER,
-  DIAMETER_PEER_EV_I_RCV_CER,
-  DIAMETER_PEER_EV_R_RCV_DPA,
-  DIAMETER_PEER_EV_I_RCV_DPA,
-  DIAMETER_PEER_EV_WATCHDOG,
-} DIAMETER_PEER_EV;
+  AAA_PEER_ST_CLOSED,
+  AAA_PEER_ST_WAIT_CONN_ACK,
+  AAA_PEER_ST_WAIT_I_CEA,
+  AAA_PEER_ST_WAIT_CONN_ACK_ELECT,
+  AAA_PEER_ST_WAIT_RETURNS,
+  AAA_PEER_ST_I_OPEN,
+  AAA_PEER_ST_R_OPEN,
+  AAA_PEER_ST_CLOSING
+} AAA_PEER_ST;
 
-class DiameterPeerFsmException
+typedef enum {
+  AAA_PEER_EV_START,  
+  AAA_PEER_EV_STOP,
+  AAA_PEER_EV_TIMEOUT,  
+  AAA_PEER_EV_CONN_RETRY,  
+  AAA_PEER_EV_R_CONN_CER,  
+  AAA_PEER_EV_I_RCV_CONN_ACK,  
+  AAA_PEER_EV_I_RCV_CONN_NACK,
+  AAA_PEER_EV_R_RCV_CEA,  
+  AAA_PEER_EV_I_RCV_CEA,  
+  AAA_PEER_EV_I_PEER_DISC,  
+  AAA_PEER_EV_R_PEER_DISC,  
+  AAA_PEER_EV_I_RCV_NON_CEA,  
+  AAA_PEER_EV_WIN_ELECTION,  
+  AAA_PEER_EV_SEND_MESSAGE,  
+  AAA_PEER_EV_R_RCV_MESSAGE,  
+  AAA_PEER_EV_I_RCV_MESSAGE,  
+  AAA_PEER_EV_R_RCV_DWR,  
+  AAA_PEER_EV_I_RCV_DWR,
+  AAA_PEER_EV_R_RCV_DWA,  
+  AAA_PEER_EV_I_RCV_DWA,
+  AAA_PEER_EV_R_RCV_DPR,  
+  AAA_PEER_EV_I_RCV_DPR,
+  AAA_PEER_EV_R_RCV_CER,
+  AAA_PEER_EV_I_RCV_CER,
+  AAA_PEER_EV_R_RCV_DPA,
+  AAA_PEER_EV_I_RCV_DPA,
+  AAA_PEER_EV_WATCHDOG,
+} AAA_PEER_EV;
+
+class AAA_PeerFsmException
 {
    public:
       typedef enum {
@@ -86,10 +88,10 @@ class DiameterPeerFsmException
       } ERROR_CODE;
     
    public:
-      DiameterPeerFsmException(int code, std::string &desc) :
+      AAA_PeerFsmException(int code, std::string &desc) :
         m_Code(code), m_Description(desc) {
       }
-      DiameterPeerFsmException(int code, const char* desc) :
+      AAA_PeerFsmException(int code, const char* desc) :
         m_Code(code), m_Description(desc) {
       }
       int &Code() {
@@ -104,602 +106,592 @@ class DiameterPeerFsmException
       std::string m_Description;
 };
 
-class DiameterPeerStateMachine;
+typedef enum {
+   PFSM_EV_ERR_CONN_NACK,
+   PFSM_EV_ERR_TIMEOUT_OR_NONCEA
+} PFSM_EV_ERR;
 
-class DiameterPeerR_ISendConnReq : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_AcceptSendCEA : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerI_SendCER : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_ConnNack : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_Cleanup : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_ReConnect : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_Accept : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_Error : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_ProcessCEA : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_AcceptElect : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_Disconnect : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_DisconnectDPA : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerI_SendCERElect : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_SendCEA : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_SendCEAOpen : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_DisconnectResp : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_DisconnectIOpen : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_Reject : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerI_DisconnectSendCEA : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_SendMessage : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_Process : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerProcessDWRSendDWA : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_ProcessDWA : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerI_SendMessage : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerI_SendDPR : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_SendDPR : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerI_SendDPADisconnect : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerR_SendDPADisconnect : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerI_SendCEA : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeer_Watchdog : public AAA_Action<DiameterPeerStateMachine> {
-   public:
-      virtual void operator()(DiameterPeerStateMachine &fsm);
-};
-
-class DiameterPeerStateTable : public AAA_StateTable<DiameterPeerStateMachine>
+class AAA_PeerFsmUserEventInterface
 {
    public:
-      DiameterPeerStateTable() {
+      virtual void PeerFsmConnected() = 0;
+      virtual void PeerFsmDisconnected(int cause) = 0;
+      virtual void PeerFsmError(PFSM_EV_ERR err) = 0;
+      
+      // TBD: Can add more events here when needed
+};
 
-        // ------------- DIAMETER_PEER_ST_CLOSED ----------------
-        AddStateTableEntry(DIAMETER_PEER_ST_CLOSED,
-                           DIAMETER_PEER_EV_START,
-                           DIAMETER_PEER_ST_WAIT_CONN_ACK,
-                           m_acISendConnReq);
+class AAA_PeerStateMachine;
 
-        AddStateTableEntry(DIAMETER_PEER_ST_CLOSED,
-                           DIAMETER_PEER_EV_R_CONN_CER,
-                           DIAMETER_PEER_ST_R_OPEN,
-                           m_acRAcceptSendCEA);
+class AAA_PeerR_ISendConnReq : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
 
-        AddStateTableEntry(DIAMETER_PEER_ST_CLOSED,
-                           DIAMETER_PEER_EV_CONN_RETRY,
-                           DIAMETER_PEER_ST_CLOSED,
-                           m_acRetry);
+class AAA_PeerR_AcceptSendCEA : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
 
-        AddWildcardStateTableEntry(DIAMETER_PEER_ST_CLOSED,
-                                   DIAMETER_PEER_ST_CLOSED,
-                                   m_acCleanup);
+class AAA_PeerI_SendCER : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
 
-        // ------------- DIAMETER_PEER_ST_WAIT_CONN_ACK ----------------
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK,
-                           DIAMETER_PEER_EV_I_RCV_CONN_ACK,
-                           DIAMETER_PEER_ST_WAIT_I_CEA,
-                           m_acISendCER);
+class AAA_Peer_ConnNack : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK,
-                           DIAMETER_PEER_EV_I_RCV_CONN_NACK,
-                           DIAMETER_PEER_ST_CLOSED,
-                           m_acConnNack);
+class AAA_Peer_Cleanup : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK,
-                           DIAMETER_PEER_EV_R_CONN_CER,
-                           DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT,
-                           m_acRAccept);
+class AAA_Peer_Retry : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK,
-                           DIAMETER_PEER_EV_TIMEOUT,
-                           DIAMETER_PEER_ST_CLOSED,
+class AAA_PeerR_Accept : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_Peer_Error : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_Peer_ProcessCEA : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerR_AcceptElect : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_Peer_Disconnect : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_Peer_DisconnectDPA : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerI_SendCERElect : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerR_SendCEA : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerR_SendCEAOpen : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerR_DisconnectResp : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerR_DisconnectIOpen : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerR_Reject : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerI_DisconnectSendCEA : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerR_SendMessage : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_Peer_Process : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerProcessDWRSendDWA : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_Peer_ProcessDWA : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerI_SendMessage : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerI_SendDPR : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerR_SendDPR : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerI_SendDPADisconnect : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerR_SendDPADisconnect : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerI_SendCEA : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_Peer_Watchdog : public AAA_Action<AAA_PeerStateMachine> {
+   public:
+      virtual void operator()(AAA_PeerStateMachine &fsm);
+};
+
+class AAA_PeerStateTable : public AAA_StateTable<AAA_PeerStateMachine>
+{
+   public:
+      AAA_PeerStateTable() {
+
+        // ------------- AAA_PEER_ST_CLOSED ----------------  
+        AddStateTableEntry(AAA_PEER_ST_CLOSED,
+                           AAA_PEER_EV_START,
+                           AAA_PEER_ST_WAIT_CONN_ACK,
+                           m_acISendConnReq); 
+
+        AddStateTableEntry(AAA_PEER_ST_CLOSED,
+                           AAA_PEER_EV_R_CONN_CER,
+                           AAA_PEER_ST_R_OPEN,
+                           m_acRAcceptSendCEA);         
+
+        AddStateTableEntry(AAA_PEER_ST_CLOSED,
+                           AAA_PEER_EV_CONN_RETRY,
+                           AAA_PEER_ST_CLOSED,
+                           m_acRetry); 
+
+        AddWildcardStateTableEntry(AAA_PEER_ST_CLOSED,
+                                   AAA_PEER_ST_CLOSED,
+                                   m_acCleanup);        
+        
+        // ------------- AAA_PEER_ST_WAIT_CONN_ACK ----------------  
+        AddStateTableEntry(AAA_PEER_ST_WAIT_CONN_ACK,
+                           AAA_PEER_EV_I_RCV_CONN_ACK,
+                           AAA_PEER_ST_WAIT_I_CEA,
+                           m_acISendCER);               
+
+        AddStateTableEntry(AAA_PEER_ST_WAIT_CONN_ACK,
+                           AAA_PEER_EV_I_RCV_CONN_NACK,
+                           AAA_PEER_ST_CLOSED,
+                           m_acConnNack);                
+
+        AddStateTableEntry(AAA_PEER_ST_WAIT_CONN_ACK,
+                           AAA_PEER_EV_R_CONN_CER,
+                           AAA_PEER_ST_WAIT_CONN_ACK_ELECT,
+                           m_acRAccept);                
+
+        AddStateTableEntry(AAA_PEER_ST_WAIT_CONN_ACK,
+                           AAA_PEER_EV_TIMEOUT,
+                           AAA_PEER_ST_CLOSED,
+                           m_acError);                  
+
+        // ------------- AAA_PEER_ST_WAIT_CEA ----------------  
+        AddStateTableEntry(AAA_PEER_ST_WAIT_I_CEA,
+                           AAA_PEER_EV_I_RCV_CEA,
+                           AAA_PEER_ST_I_OPEN,
+                           m_acProcessCEA);             
+
+        AddStateTableEntry(AAA_PEER_ST_WAIT_I_CEA,
+                           AAA_PEER_EV_R_CONN_CER,
+                           AAA_PEER_ST_WAIT_RETURNS,
+                           m_acRAcceptElect);           
+
+        AddStateTableEntry(AAA_PEER_ST_WAIT_I_CEA,
+                           AAA_PEER_EV_I_PEER_DISC,
+                           AAA_PEER_ST_CLOSED,
+                           m_acDisconnect);           
+
+        AddStateTableEntry(AAA_PEER_ST_WAIT_I_CEA,
+                           AAA_PEER_EV_I_RCV_NON_CEA,  
+                           AAA_PEER_ST_CLOSED,
                            m_acError);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK,
-                           DIAMETER_PEER_EV_STOP,
-                           DIAMETER_PEER_ST_CLOSED,
+        AddStateTableEntry(AAA_PEER_ST_WAIT_I_CEA,
+                           AAA_PEER_EV_TIMEOUT,
+                           AAA_PEER_ST_CLOSED,         
                            m_acError);
 
-        // ------------- DIAMETER_PEER_ST_WAIT_CEA ----------------  
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_I_CEA,
-                           DIAMETER_PEER_EV_I_RCV_CEA,
-                           DIAMETER_PEER_ST_I_OPEN,
-                           m_acProcessCEA);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_I_CEA,
-                           DIAMETER_PEER_EV_R_CONN_CER,
-                           DIAMETER_PEER_ST_WAIT_RETURNS,
-                           m_acRAcceptElect);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_I_CEA,
-                           DIAMETER_PEER_EV_I_PEER_DISC,
-                           DIAMETER_PEER_ST_CLOSED,
-                           m_acDisconnect);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_I_CEA,
-                           DIAMETER_PEER_EV_I_RCV_NON_CEA,
-                           DIAMETER_PEER_ST_CLOSED,
-                           m_acError);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_I_CEA,
-                           DIAMETER_PEER_EV_TIMEOUT,
-                           DIAMETER_PEER_ST_CLOSED,
-                           m_acError);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_I_CEA,
-                           DIAMETER_PEER_EV_STOP,
-                           DIAMETER_PEER_ST_CLOSED,
-                           m_acError);
-
-        // ------------- DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT ----------------
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT,
-                           DIAMETER_PEER_EV_I_RCV_CONN_ACK,
-                           DIAMETER_PEER_ST_WAIT_RETURNS,
+        // ------------- AAA_PEER_ST_WAIT_CONN_ACK_ELECT ----------------  
+        AddStateTableEntry(AAA_PEER_ST_WAIT_CONN_ACK_ELECT,
+                           AAA_PEER_EV_I_RCV_CONN_ACK,
+                           AAA_PEER_ST_WAIT_RETURNS,
                            m_acISendCERElect);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT,
-                           DIAMETER_PEER_EV_I_RCV_CONN_NACK,
-                           DIAMETER_PEER_ST_R_OPEN,
+        AddStateTableEntry(AAA_PEER_ST_WAIT_CONN_ACK_ELECT,
+                           AAA_PEER_EV_I_RCV_CONN_NACK,
+                           AAA_PEER_ST_R_OPEN,
                            m_acRSendCEA);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT,
-                           DIAMETER_PEER_EV_R_PEER_DISC,
-                           DIAMETER_PEER_ST_WAIT_CONN_ACK,
+        AddStateTableEntry(AAA_PEER_ST_WAIT_CONN_ACK_ELECT,
+                           AAA_PEER_EV_R_PEER_DISC,
+                           AAA_PEER_ST_WAIT_CONN_ACK,
                            m_acRDisconnectResp);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT,
-                           DIAMETER_PEER_EV_R_CONN_CER,
-                           DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT,
+        AddStateTableEntry(AAA_PEER_ST_WAIT_CONN_ACK_ELECT,
+                           AAA_PEER_EV_R_CONN_CER,
+                           AAA_PEER_ST_WAIT_CONN_ACK_ELECT,
                            m_acRReject);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT,
-                           DIAMETER_PEER_EV_TIMEOUT,
-                           DIAMETER_PEER_ST_CLOSED,
+        AddStateTableEntry(AAA_PEER_ST_WAIT_CONN_ACK_ELECT,
+                           AAA_PEER_EV_TIMEOUT,
+                           AAA_PEER_ST_CLOSED,
                            m_acError);
 
-        // ------------- DIAMETER_PEER_ST_WAIT_RETURNS ----------------  
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_RETURNS,
-                           DIAMETER_PEER_EV_WIN_ELECTION,
-                           DIAMETER_PEER_ST_R_OPEN,
-                           m_acIDisconnectSendCEA);
+        // ------------- AAA_PEER_ST_WAIT_RETURNS ----------------  
+        AddStateTableEntry(AAA_PEER_ST_WAIT_RETURNS,
+                           AAA_PEER_EV_WIN_ELECTION,
+                           AAA_PEER_ST_R_OPEN,
+                           m_acIDisconnectSendCEA);  
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_RETURNS,
-                           DIAMETER_PEER_EV_I_PEER_DISC,
-                           DIAMETER_PEER_ST_R_OPEN,
-                           m_acIDisconnectSendCEA);
+        AddStateTableEntry(AAA_PEER_ST_WAIT_RETURNS,
+                           AAA_PEER_EV_I_PEER_DISC,
+                           AAA_PEER_ST_R_OPEN,
+                           m_acIDisconnectSendCEA);  
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_RETURNS,
-                           DIAMETER_PEER_EV_I_RCV_CEA,
-                           DIAMETER_PEER_ST_I_OPEN,
+        AddStateTableEntry(AAA_PEER_ST_WAIT_RETURNS,
+                           AAA_PEER_EV_I_RCV_CEA,
+                           AAA_PEER_ST_I_OPEN,
                            m_acRDisconnectIOpen);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_RETURNS,
-                           DIAMETER_PEER_EV_R_PEER_DISC,
-                           DIAMETER_PEER_ST_WAIT_I_CEA,
-                           m_acRDisconnectResp);
+        AddStateTableEntry(AAA_PEER_ST_WAIT_RETURNS,
+                           AAA_PEER_EV_R_PEER_DISC,
+                           AAA_PEER_ST_WAIT_I_CEA,
+                           m_acRDisconnectResp);         
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_RETURNS,
-                           DIAMETER_PEER_EV_R_CONN_CER,
-                           DIAMETER_PEER_ST_WAIT_RETURNS,
+        AddStateTableEntry(AAA_PEER_ST_WAIT_RETURNS,
+                           AAA_PEER_EV_R_CONN_CER,
+                           AAA_PEER_ST_WAIT_RETURNS,
                            m_acRReject);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_WAIT_RETURNS,
-                           DIAMETER_PEER_EV_TIMEOUT,
-                           DIAMETER_PEER_ST_CLOSED,
-                           m_acError);
+        AddStateTableEntry(AAA_PEER_ST_WAIT_RETURNS,
+                           AAA_PEER_EV_TIMEOUT,
+                           AAA_PEER_ST_CLOSED,
+                           m_acError);              
 
-        // ------------- DIAMETER_PEER_ST_R_OPEN ----------------  
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_SEND_MESSAGE,
-                           DIAMETER_PEER_ST_R_OPEN,
+        // ------------- AAA_PEER_ST_R_OPEN ----------------  
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_SEND_MESSAGE,
+                           AAA_PEER_ST_R_OPEN,
                            m_acRSendMessage);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_R_RCV_MESSAGE,
-                           DIAMETER_PEER_ST_R_OPEN,
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_R_RCV_MESSAGE,
+                           AAA_PEER_ST_R_OPEN,
                            m_acProcess);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_R_RCV_DWR,
-                           DIAMETER_PEER_ST_R_OPEN,
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_R_RCV_DWR,
+                           AAA_PEER_ST_R_OPEN,
                            m_acProcessDWRSendDWA);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_R_RCV_DWA,
-                           DIAMETER_PEER_ST_R_OPEN,
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_R_RCV_DWA,
+                           AAA_PEER_ST_R_OPEN,
                            m_acProcessDWA);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_R_CONN_CER,
-                           DIAMETER_PEER_ST_R_OPEN,
+        
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_R_CONN_CER,
+                           AAA_PEER_ST_R_OPEN,
                            m_acRReject);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_STOP,
-                           DIAMETER_PEER_ST_CLOSING,
+        
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_STOP,
+                           AAA_PEER_ST_CLOSING,
                            m_acRSendDPR);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_R_RCV_DPR,
-                           DIAMETER_PEER_ST_CLOSED,
+        
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_R_RCV_DPR,
+                           AAA_PEER_ST_CLOSED,
                            m_acRSendDPADisconnect);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_R_PEER_DISC,
-                           DIAMETER_PEER_ST_CLOSED,
+        
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_R_PEER_DISC,
+                           AAA_PEER_ST_CLOSED,
                            m_acDisconnect);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_R_RCV_CER,
-                           DIAMETER_PEER_ST_R_OPEN,
+        
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_R_RCV_CER,
+                           AAA_PEER_ST_R_OPEN,
                            m_acRSendCEAOpen);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_R_RCV_CEA,
-                           DIAMETER_PEER_ST_R_OPEN,
+        
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_R_RCV_CEA,
+                           AAA_PEER_ST_R_OPEN,
                            m_acProcessCEA);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_R_OPEN,
-                           DIAMETER_PEER_EV_WATCHDOG,
-                           DIAMETER_PEER_ST_R_OPEN,
+        
+        AddStateTableEntry(AAA_PEER_ST_R_OPEN,
+                           AAA_PEER_EV_WATCHDOG,
+                           AAA_PEER_ST_R_OPEN,
                            m_acWatchdog);
-
-        // ------------- DIAMETER_PEER_ST_I_OPEN ----------------  
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_SEND_MESSAGE,
-                           DIAMETER_PEER_ST_I_OPEN,
+        
+        // ------------- AAA_PEER_ST_I_OPEN ----------------  
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_SEND_MESSAGE,
+                           AAA_PEER_ST_I_OPEN,
                            m_acISendMessage);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_I_RCV_MESSAGE,
-                           DIAMETER_PEER_ST_I_OPEN,
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_I_RCV_MESSAGE,
+                           AAA_PEER_ST_I_OPEN,
                            m_acProcess);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_I_RCV_DWR,
-                           DIAMETER_PEER_ST_I_OPEN,
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_I_RCV_DWR,
+                           AAA_PEER_ST_I_OPEN,
                            m_acProcessDWRSendDWA);
 
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_I_RCV_DWA,
-                           DIAMETER_PEER_ST_I_OPEN,
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_I_RCV_DWA,
+                           AAA_PEER_ST_I_OPEN,
                            m_acProcessDWA);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_R_CONN_CER,
-                           DIAMETER_PEER_ST_I_OPEN,
+        
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_R_CONN_CER,
+                           AAA_PEER_ST_I_OPEN,
                            m_acRReject);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_STOP,
-                           DIAMETER_PEER_ST_CLOSING,
+        
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_STOP,
+                           AAA_PEER_ST_CLOSING,
                            m_acISendDPR);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_I_RCV_DPR,
-                           DIAMETER_PEER_ST_CLOSED,
+        
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_I_RCV_DPR,
+                           AAA_PEER_ST_CLOSED,
                            m_acISendDPADisconnect);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_I_PEER_DISC,
-                           DIAMETER_PEER_ST_CLOSED,
+        
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_I_PEER_DISC,
+                           AAA_PEER_ST_CLOSED,
                            m_acDisconnect);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_I_RCV_CER,
-                           DIAMETER_PEER_ST_I_OPEN,
+        
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_I_RCV_CER,
+                           AAA_PEER_ST_I_OPEN,
                            m_acISendCEA);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_I_RCV_CEA,
-                           DIAMETER_PEER_ST_I_OPEN,
+        
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_I_RCV_CEA,
+                           AAA_PEER_ST_I_OPEN,
                            m_acProcessCEA);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_I_OPEN,
-                           DIAMETER_PEER_EV_WATCHDOG,
-                           DIAMETER_PEER_ST_I_OPEN,
+        
+        AddStateTableEntry(AAA_PEER_ST_I_OPEN,
+                           AAA_PEER_EV_WATCHDOG,
+                           AAA_PEER_ST_I_OPEN,
                            m_acWatchdog);
-
-        // ------------- DIAMETER_PEER_ST_CLOSING ----------------  
-        AddStateTableEntry(DIAMETER_PEER_ST_CLOSING,
-                           DIAMETER_PEER_EV_I_RCV_DPA,
-                           DIAMETER_PEER_ST_CLOSED,
+        
+        // ------------- AAA_PEER_ST_CLOSING ----------------  
+        AddStateTableEntry(AAA_PEER_ST_CLOSING,
+                           AAA_PEER_EV_I_RCV_DPA,
+                           AAA_PEER_ST_CLOSED,
                            m_acDisconnectDPA);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_CLOSING,
-                           DIAMETER_PEER_EV_R_RCV_DPA,
-                           DIAMETER_PEER_ST_CLOSED,
+        
+        AddStateTableEntry(AAA_PEER_ST_CLOSING,
+                           AAA_PEER_EV_R_RCV_DPA,
+                           AAA_PEER_ST_CLOSED,
                            m_acDisconnectDPA);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_CLOSING,
-                           DIAMETER_PEER_EV_TIMEOUT,
-                           DIAMETER_PEER_ST_CLOSED,
+        
+        AddStateTableEntry(AAA_PEER_ST_CLOSING,
+                           AAA_PEER_EV_TIMEOUT,
+                           AAA_PEER_ST_CLOSED,
                            m_acError);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_CLOSING,
-                           DIAMETER_PEER_EV_I_PEER_DISC,
-                           DIAMETER_PEER_ST_CLOSED,
+        
+        AddStateTableEntry(AAA_PEER_ST_CLOSING,
+                           AAA_PEER_EV_I_PEER_DISC,
+                           AAA_PEER_ST_CLOSED,
                            m_acDisconnect);
-
-        AddStateTableEntry(DIAMETER_PEER_ST_CLOSING,
-                           DIAMETER_PEER_EV_R_PEER_DISC,
-                           DIAMETER_PEER_ST_CLOSED,
+        
+        AddStateTableEntry(AAA_PEER_ST_CLOSING,
+                           AAA_PEER_EV_R_PEER_DISC,
+                           AAA_PEER_ST_CLOSED,
                            m_acDisconnect);
-
-        AddWildcardStateTableEntry(DIAMETER_PEER_ST_CLOSING,
-                                   DIAMETER_PEER_ST_CLOSING);
-
-        InitialState(DIAMETER_PEER_ST_CLOSED);
+        
+        AddWildcardStateTableEntry(AAA_PEER_ST_CLOSING,
+                                   AAA_PEER_ST_CLOSING);
+        
+        InitialState(AAA_PEER_ST_CLOSED);
       }
 
    private:
-      DiameterPeerR_ISendConnReq       m_acISendConnReq;
-      DiameterPeerR_AcceptSendCEA      m_acRAcceptSendCEA;
-      DiameterPeerI_SendCER            m_acISendCER;
-      DiameterPeer_ConnNack            m_acConnNack;
-      DiameterPeer_Cleanup             m_acCleanup;
-      DiameterPeer_ReConnect           m_acRetry;
-      DiameterPeerR_Accept             m_acRAccept;
-      DiameterPeer_Error               m_acError;
-      DiameterPeer_ProcessCEA          m_acProcessCEA;
-      DiameterPeerR_AcceptElect        m_acRAcceptElect;
-      DiameterPeer_Disconnect          m_acDisconnect;
-      DiameterPeer_DisconnectDPA       m_acDisconnectDPA;
-      DiameterPeerI_SendCERElect       m_acISendCERElect;
-      DiameterPeerR_SendCEA            m_acRSendCEA;
-      DiameterPeerR_SendCEAOpen        m_acRSendCEAOpen;
-      DiameterPeerR_DisconnectResp     m_acRDisconnectResp;
-      DiameterPeerR_DisconnectIOpen    m_acRDisconnectIOpen;
-      DiameterPeerR_Reject             m_acRReject;
-      DiameterPeerI_DisconnectSendCEA  m_acIDisconnectSendCEA;
-      DiameterPeerR_SendMessage        m_acRSendMessage;
-      DiameterPeer_Process             m_acProcess;
-      DiameterPeerProcessDWRSendDWA    m_acProcessDWRSendDWA;
-      DiameterPeer_ProcessDWA          m_acProcessDWA;
-      DiameterPeerI_SendDPR            m_acISendDPR;
-      DiameterPeerR_SendDPR            m_acRSendDPR;
-      DiameterPeerI_SendDPADisconnect  m_acISendDPADisconnect;
-      DiameterPeerR_SendDPADisconnect  m_acRSendDPADisconnect;
-      DiameterPeerI_SendMessage        m_acISendMessage;
-      DiameterPeerI_SendCEA            m_acISendCEA;
-      DiameterPeer_Watchdog            m_acWatchdog; 
+      AAA_PeerR_ISendConnReq       m_acISendConnReq;
+      AAA_PeerR_AcceptSendCEA      m_acRAcceptSendCEA;
+      AAA_PeerI_SendCER            m_acISendCER;
+      AAA_Peer_ConnNack            m_acConnNack;
+      AAA_Peer_Cleanup             m_acCleanup;
+      AAA_Peer_Retry               m_acRetry;
+      AAA_PeerR_Accept             m_acRAccept;
+      AAA_Peer_Error               m_acError;
+      AAA_Peer_ProcessCEA          m_acProcessCEA;
+      AAA_PeerR_AcceptElect        m_acRAcceptElect;
+      AAA_Peer_Disconnect          m_acDisconnect;
+      AAA_Peer_DisconnectDPA       m_acDisconnectDPA;
+      AAA_PeerI_SendCERElect       m_acISendCERElect;
+      AAA_PeerR_SendCEA            m_acRSendCEA;
+      AAA_PeerR_SendCEAOpen        m_acRSendCEAOpen;
+      AAA_PeerR_DisconnectResp     m_acRDisconnectResp;
+      AAA_PeerR_DisconnectIOpen    m_acRDisconnectIOpen;
+      AAA_PeerR_Reject             m_acRReject;
+      AAA_PeerI_DisconnectSendCEA  m_acIDisconnectSendCEA;
+      AAA_PeerR_SendMessage        m_acRSendMessage;
+      AAA_Peer_Process             m_acProcess;
+      AAA_PeerProcessDWRSendDWA    m_acProcessDWRSendDWA;
+      AAA_Peer_ProcessDWA          m_acProcessDWA;
+      AAA_PeerI_SendDPR            m_acISendDPR;
+      AAA_PeerR_SendDPR            m_acRSendDPR;
+      AAA_PeerI_SendDPADisconnect  m_acISendDPADisconnect;
+      AAA_PeerR_SendDPADisconnect  m_acRSendDPADisconnect;
+      AAA_PeerI_SendMessage        m_acISendMessage;
+      AAA_PeerI_SendCEA            m_acISendCEA;
+      AAA_Peer_Watchdog            m_acWatchdog; 
 };
 
-class DiameterPeerStateMachine :
-    public AAA_StateMachineWithTimer<DiameterPeerStateMachine>,
+class AAA_PeerStateMachine :
+    public AAA_StateMachineWithTimer<AAA_PeerStateMachine>,
            AAA_Job
 {
    public:
-      DiameterPeerData &Data() {
-         return m_Data;
-      }
+      AAA_PeerData &Data() { 
+         return m_Data; 
+      }          
       AAA_GroupedJob &Job() {
-          return m_GroupedJob;
-      }
-      virtual int Send(std::auto_ptr<DiameterMsg> &msg, bool consume = true) {
+          return *m_GroupedJob.get();
+      }    
+      virtual int Send(std::auto_ptr<AAAMessage> &msg) {
           ///  If using ASYNC SEND
           ///  EnqueueSendMsg(msg);
-          ///  Notify(DIAMETER_PEER_EV_SEND_MESSAGE);
-          if (! AAA_StateMachineWithTimer
-             <DiameterPeerStateMachine>::Running()) {
-             AAA_LOG((LM_INFO, "(%P|%t) Cannot send message, statemachine not running\n"));
-             return (-1);
-          }
+          ///  Notify(AAA_PEER_EV_SEND_MESSAGE);
           switch (state) {
-              case DIAMETER_PEER_ST_I_OPEN:
-                  return m_TxMsgCollector.Send(msg, m_Data.m_IOInitiator.get(), consume);
-              case DIAMETER_PEER_ST_R_OPEN:
-                  return m_TxMsgCollector.Send(msg, m_Data.m_IOResponder.get(), consume);
+              case AAA_PEER_ST_I_OPEN:
+                  return RawSend(msg, m_Data.m_IOInitiator.get());
+              case AAA_PEER_ST_R_OPEN:
+                  return RawSend(msg, m_Data.m_IOResponder.get());
               default:
-                  AAA_LOG((LM_INFO, "(%P|%t) Discarding msg to send, peer state is not open\n"));
+                  AAA_LOG(LM_INFO, "(%P|%t) Discarding msg to send, peer state is not open\n");
                   break;
           }
           return (0);
-      }
+      }      
 
    private: // Event Queue
 
       typedef struct {
          AAA_Event m_Event;
-         std::auto_ptr<DiameterMsg> m_Msg;
-         std::auto_ptr<Diameter_IO_Base> m_IO;
-      } DiameterPeerEventParam;
+         std::auto_ptr<AAAMessage> m_Msg;
+         std::auto_ptr<AAA_IO_Base> m_IO;
+      } AAA_PeerEventParam;
 
-      AAA_ProtectedPtrQueue<DiameterPeerEventParam> m_EventQueue;
-      std::auto_ptr<DiameterPeerEventParam> m_CurrentPeerEventParam;
+      AAA_ProtectedPtrQueue<AAA_PeerEventParam> m_EventQueue;
+      std::auto_ptr<AAA_PeerEventParam> m_CurrentPeerEventParam;
 
    public:
 
       virtual void Notify(AAA_Event event) {
          if (AAA_StateMachineWithTimer
-             <DiameterPeerStateMachine>::Running()) {
-             std::auto_ptr<DiameterPeerEventParam> e(new DiameterPeerEventParam);
+             <AAA_PeerStateMachine>::Running()) {
+             std::auto_ptr<AAA_PeerEventParam> e(new AAA_PeerEventParam);
              e->m_Event = event;
              m_EventQueue.Enqueue(e);
              Schedule(this);
          }
-         else {
-             AAA_LOG((LM_INFO, "(%P|%t) Event not processed, statemachine not running\n"));
-         }
       }
       virtual void Notify(AAA_Event event,
-                          std::auto_ptr<DiameterMsg> msg) {
+                          std::auto_ptr<AAAMessage> msg) {
          if (AAA_StateMachineWithTimer
-             <DiameterPeerStateMachine>::Running()) {
-             std::auto_ptr<DiameterPeerEventParam> e(new DiameterPeerEventParam);
+             <AAA_PeerStateMachine>::Running()) {
+             std::auto_ptr<AAA_PeerEventParam> e(new AAA_PeerEventParam);
              e->m_Event = event;
              e->m_Msg = msg;
              m_EventQueue.Enqueue(e);
              Schedule(this);
          }
-         else {
-             AAA_LOG((LM_INFO, "(%P|%t) Event not processed, statemachine not running\n"));
-         }
       }
       virtual void Notify(AAA_Event event,
-                          std::auto_ptr<Diameter_IO_Base> io) {
+                          std::auto_ptr<AAA_IO_Base> io) {
          if (AAA_StateMachineWithTimer
-             <DiameterPeerStateMachine>::Running()) {
-             std::auto_ptr<DiameterPeerEventParam> e(new DiameterPeerEventParam);
+             <AAA_PeerStateMachine>::Running()) {
+             std::auto_ptr<AAA_PeerEventParam> e(new AAA_PeerEventParam);
              e->m_Event = event;
              e->m_IO = io;
              m_EventQueue.Enqueue(e);
              Schedule(this);
          }
-         else {
-             AAA_LOG((LM_INFO, "(%P|%t) Event not processed, statemachine not running\n"));
-         }
       }
       virtual void Notify(AAA_Event event,
-                          std::auto_ptr<DiameterMsg> msg,
-                          std::auto_ptr<Diameter_IO_Base> io) {
+                          std::auto_ptr<AAAMessage> msg,
+                          std::auto_ptr<AAA_IO_Base> io) {
          if (AAA_StateMachineWithTimer
-             <DiameterPeerStateMachine>::Running()) {
-             std::auto_ptr<DiameterPeerEventParam> e(new DiameterPeerEventParam);
+             <AAA_PeerStateMachine>::Running()) {
+             std::auto_ptr<AAA_PeerEventParam> e(new AAA_PeerEventParam);
              e->m_Event = event;
              e->m_Msg = msg;
              e->m_IO = io;
              m_EventQueue.Enqueue(e);
              Schedule(this);
          }
-         else {
-             AAA_LOG((LM_INFO, "(%P|%t) Event not processed, statemachine not running\n"));
-         }
       }
-
+      virtual void RegisterUserEventHandler
+         (AAA_PeerFsmUserEventInterface &handler) {
+         AAA_MutexScopeLock guard(m_UserEventMtx);
+         m_UserEventInterface = handler;
+      }
+      
    protected: // Constructor/Destructor
-
-      DiameterPeerStateMachine(AAA_Task &t) :
-          AAA_StateMachineWithTimer<DiameterPeerStateMachine>
+ 
+      AAA_PeerStateMachine(AAA_Task &t,
+                           AAA_PeerFsmUserEventInterface &iface) :
+          AAA_StateMachineWithTimer<AAA_PeerStateMachine>
              (*this, m_StateTable, *t.reactor()),
-             m_CleanupSignal(m_CleanupMutex),
-             m_GroupedJob(t.Job()) {
-          m_ReconnectAttempt = 0;
-          m_TxMsgCollector.Start();
+          m_UserEventInterface(iface),    
+          m_GroupedJob(AAA_GroupedJob::Create(t.Job(),
+                       (AAA_JobData*)this)) {
       }
-      virtual ~DiameterPeerStateMachine() {
-          if (state != DIAMETER_PEER_ST_CLOSED) {
-              m_CleanupSignal.wait();
-          }
-          AAA_StateMachine<DiameterPeerStateMachine>::Stop();
-          m_TxMsgCollector.Stop();
-      }
+      virtual ~AAA_PeerStateMachine() {
+          AAA_StateMachine<AAA_PeerStateMachine>::Stop();
+          do {
+              ACE_Time_Value tv(0, 100000);
+              ACE_OS::sleep(tv);
+          } while (m_GroupedJob.Job().ExistBacklog());
+          m_GroupedJob.Job().Flush(); 
+      }    
 
-   protected: // Notifications
-      virtual void Connected() {
-      }
-      virtual void Error(int resultCode) {
-      }
-      virtual void Disconnected(int cause) {
-      }
-
+   protected: // FSM event interface   
+      ACE_Mutex m_UserEventMtx;
+      AAA_PeerFsmUserEventInterface& m_UserEventInterface;
+      
    protected: // Job servicing
 
       ACE_Mutex m_EventFsmMtx;
@@ -709,15 +701,15 @@ class DiameterPeerStateMachine :
          DumpEvent(m_CurrentPeerEventParam->m_Event, "Pre-Event");
          try {
              AAA_StateMachineWithTimer
-                 <DiameterPeerStateMachine>::Event
+                 <AAA_PeerStateMachine>::Event
                         (m_CurrentPeerEventParam->m_Event);
          }
-         catch (DiameterPeerFsmException &err) {
-             AAA_LOG((LM_ERROR, "(%P|%t) FSM error[%d]: %s\n",
-                        err.Code(), err.Description().c_str()));
+         catch (AAA_PeerFsmException &err) {
+             AAA_LOG(LM_ERROR, "(%P|%t) FSM error[%d]: %s\n",
+                        err.Code(), err.Description().data());
          }
          catch (...) {
-             AAA_LOG((LM_ERROR, "(%P|%t) Unknown exception in FSM\n"));
+             AAA_LOG(LM_ERROR, "(%P|%t) Unknown exception in FSM\n");
          }
          DumpEvent(m_CurrentPeerEventParam->m_Event, "Post-Event");
          m_CurrentPeerEventParam.reset();
@@ -725,27 +717,28 @@ class DiameterPeerStateMachine :
       }
       virtual int Schedule(AAA_Job* job, size_t backlogSize = 1) {
          if (! AAA_StateMachineWithTimer
-             <DiameterPeerStateMachine>::Running()) {
+             <AAA_PeerStateMachine>::Running()) {
             return (-1);
          }
-         return m_GroupedJob.Schedule(job, backlogSize);
+         return m_GroupedJob->Schedule(job, backlogSize);
       }
       virtual void Timeout(AAA_Event ev) {
          Notify(ev);
       }
-      DiameterPeerData &PeerData() {
+      AAA_PeerData &PeerData() {
          return m_Data;
       }
+      int RawSend(std::auto_ptr<AAAMessage> &msg, AAA_IO_Base *io);    
 
    protected: // Capabilities exchange
 
       virtual void SendCER();
       virtual void SendCEA(diameter_unsigned32_t rcode,
                            std::string &message);
-
-      void AssembleCE(DiameterMsg &msg,
+    
+      void AssembleCE(AAAMessage &msg,
                       bool request = true);
-      void DisassembleCE(DiameterMsg &msg);
+      void DisassembleCE(AAAMessage &msg);
       bool ValidatePeer(diameter_unsigned32_t &rcode,
                         std::string &message);
 
@@ -754,138 +747,131 @@ class DiameterPeerStateMachine :
       virtual void SendDWR();
       virtual void SendDWA(diameter_unsigned32_t rcode,
                            std::string &message);
-
-      void AssembleDW(DiameterMsg &msg,
+    
+      void AssembleDW(AAAMessage &msg,
                       bool request = true);
-      void DisassembleDW(DiameterMsg &msg);
-
+      void DisassembleDW(AAAMessage &msg);
+    
    protected: // Disconnection
 
       virtual void SendDPR(bool initiator);
       virtual void SendDPA(bool initiator,
-                           diameter_unsigned32_t rcode);
-      void AssembleDP(DiameterMsg &msg,
+                           diameter_unsigned32_t rcode,
+                           std::string &message);
+      void AssembleDP(AAAMessage &msg,
                       bool request = true);
-      void DisassembleDP(DiameterMsg &msg);
+      void DisassembleDP(AAAMessage &msg);
 
    protected: // Message Id's
 
-      void MsgIdTxMessage(DiameterMsg &msg);
-      bool MsgIdRxMessage(DiameterMsg &msg);
-
-   protected:  // Re-connection logic
-
-      int m_ReconnectAttempt;
-
-      void DoReConnect();
-      void StopReConnect();
-
-   protected: // Update of peer SCTP addresses
-
-      int TransportProtocolInUse();
-
-   protected: // Message transmission thread
-      DiameterTxMsgCollector m_TxMsgCollector;
-
+      void MsgIdTxMessage(AAAMessage &msg);
+      bool MsgIdRxMessage(AAAMessage &msg);
+   
    protected: // Auxillary
 
       void Elect();
-
+    
       typedef enum {
           CLEANUP_IO_I = 0x00000001,
           CLEANUP_IO_R = 0x00000002,
           CLEANUP_FSM  = 0x00000004,
           CLEANUP_ALL  = 0xffffffff
-      } CLEANUP_FLG;
-
-      ACE_Mutex m_CleanupMutex;
-      ACE_Condition<ACE_Mutex> m_CleanupSignal;
-
+      } CLEANUP_FLG;    
       virtual void Cleanup(unsigned int flags = CLEANUP_ALL);
 
+      bool m_CleanupEvent;
+      void WaitOnCleanup() {
+         m_CleanupEvent = (state != AAA_PEER_ST_CLOSED) ? 
+                          false : true;
+         do {
+             ACE_Time_Value tv(0, 100000);
+             ACE_OS::sleep(tv);
+         } while (! m_CleanupEvent);
+      }
+    
    protected:
-
+    
       void DumpPeerCapabilities();
       void DumpEvent(AAA_Event ev, char *prefix) {
 #if AAA_FSM_EVENT_DEBUG
-          static char *evStrTable[] = { "DIAMETER_PEER_EV_START",  
-                                        "DIAMETER_PEER_EV_STOP",
-                                        "DIAMETER_PEER_EV_TIMEOUT",  
-                                        "DIAMETER_PEER_EV_CONN_RETRY",  
-                                        "DIAMETER_PEER_EV_R_CONN_CER",  
-                                        "DIAMETER_PEER_EV_I_RCV_CONN_ACK",  
-                                        "DIAMETER_PEER_EV_I_RCV_CONN_NACK",
-                                        "DIAMETER_PEER_EV_R_RCV_CEA",  
-                                        "DIAMETER_PEER_EV_I_RCV_CEA",  
-                                        "DIAMETER_PEER_EV_I_PEER_DISC",  
-                                        "DIAMETER_PEER_EV_R_PEER_DISC",  
-                                        "DIAMETER_PEER_EV_I_RCV_NON_CEA",  
-                                        "DIAMETER_PEER_EV_WIN_ELECTION",  
-                                        "DIAMETER_PEER_EV_SEND_MESSAGE",  
-                                        "DIAMETER_PEER_EV_R_RCV_MESSAGE",  
-                                        "DIAMETER_PEER_EV_I_RCV_MESSAGE",  
-                                        "DIAMETER_PEER_EV_R_RCV_DWR",  
-                                        "DIAMETER_PEER_EV_I_RCV_DWR",
-                                        "DIAMETER_PEER_EV_R_RCV_DWA",  
-                                        "DIAMETER_PEER_EV_I_RCV_DWA",
-                                        "DIAMETER_PEER_EV_R_RCV_DPR",  
-                                        "DIAMETER_PEER_EV_I_RCV_DPR",
-                                        "DIAMETER_PEER_EV_R_RCV_CER",
-                                        "DIAMETER_PEER_EV_I_RCV_CER",
-                                        "DIAMETER_PEER_EV_R_RCV_DPA",
-                                        "DIAMETER_PEER_EV_I_RCV_DPA",
-                                        "DIAMETER_PEER_EV_WATCHDOG"
+          static char *evStrTable[] = { "AAA_PEER_EV_START",  
+                                        "AAA_PEER_EV_STOP",
+                                        "AAA_PEER_EV_TIMEOUT",  
+                                        "AAA_PEER_EV_CONN_RETRY",  
+                                        "AAA_PEER_EV_R_CONN_CER",  
+                                        "AAA_PEER_EV_I_RCV_CONN_ACK",  
+                                        "AAA_PEER_EV_I_RCV_CONN_NACK",
+                                        "AAA_PEER_EV_R_RCV_CEA",  
+                                        "AAA_PEER_EV_I_RCV_CEA",  
+                                        "AAA_PEER_EV_I_PEER_DISC",  
+                                        "AAA_PEER_EV_R_PEER_DISC",  
+                                        "AAA_PEER_EV_I_RCV_NON_CEA",  
+                                        "AAA_PEER_EV_WIN_ELECTION",  
+                                        "AAA_PEER_EV_SEND_MESSAGE",  
+                                        "AAA_PEER_EV_R_RCV_MESSAGE",  
+                                        "AAA_PEER_EV_I_RCV_MESSAGE",  
+                                        "AAA_PEER_EV_R_RCV_DWR",  
+                                        "AAA_PEER_EV_I_RCV_DWR",
+                                        "AAA_PEER_EV_R_RCV_DWA",  
+                                        "AAA_PEER_EV_I_RCV_DWA",
+                                        "AAA_PEER_EV_R_RCV_DPR",  
+                                        "AAA_PEER_EV_I_RCV_DPR",
+                                        "AAA_PEER_EV_R_RCV_CER",
+                                        "AAA_PEER_EV_I_RCV_CER",
+                                        "AAA_PEER_EV_R_RCV_DPA",
+                                        "AAA_PEER_EV_I_RCV_DPA",
+                                        "AAA_PEER_EV_WATCHDOG"
           };
-          static char *stStrTable[] = { "DIAMETER_PEER_ST_CLOSED",
-                                        "DIAMETER_PEER_ST_WAIT_CONN_ACK",
-                                        "DIAMETER_PEER_ST_WAIT_I_CEA",
-                                        "DIAMETER_PEER_ST_WAIT_CONN_ACK_ELECT",
-                                        "DIAMETER_PEER_ST_WAIT_RETURNS",
-                                        "DIAMETER_PEER_ST_I_OPEN",
-                                        "DIAMETER_PEER_ST_R_OPEN",
-                                        "DIAMETER_PEER_ST_CLOSING"
+          static char *stStrTable[] = { "AAA_PEER_ST_CLOSED",
+                                        "AAA_PEER_ST_WAIT_CONN_ACK",
+                                        "AAA_PEER_ST_WAIT_I_CEA",
+                                        "AAA_PEER_ST_WAIT_CONN_ACK_ELECT",
+                                        "AAA_PEER_ST_WAIT_RETURNS",
+                                        "AAA_PEER_ST_I_OPEN",
+                                        "AAA_PEER_ST_R_OPEN",
+                                        "AAA_PEER_ST_CLOSING"
           };
-          AAA_LOG((LM_INFO, "(%P|%t) FSM EVENT DEBUG [state=%s, event=%s]: %s\n",
-                    stStrTable[state], evStrTable[ev], prefix));
+          AAA_LOG(LM_INFO, "(%P|%t) FSM EVENT DEBUG [state=%s, event=%s]: %s\n",
+                    stStrTable[state], evStrTable[ev], prefix);
 #endif // AAA_FSM_EVENT_DEBUG
       }
 
     public:
-      friend class DiameterPeerR_AcceptSendCEA;
-      friend class DiameterPeerI_SendCER;
-      friend class DiameterPeer_Cleanup;
-      friend class DiameterPeer_ConnNack;
-      friend class DiameterPeerR_Accept;
-      friend class DiameterPeer_Error;
-      friend class DiameterPeer_ReConnect;
-      friend class DiameterPeer_ProcessCEA;
-      friend class DiameterPeerR_AcceptElect;
-      friend class DiameterPeer_Disconnect;
-      friend class DiameterPeer_DisconnectDPA;
-      friend class DiameterPeerI_SendCERElect;
-      friend class DiameterPeerR_SendCEA;
-      friend class DiameterPeerR_SendCEAOpen;
-      friend class DiameterPeerR_DisconnectResp;
-      friend class DiameterPeerR_DisconnectIOpen;
-      friend class DiameterPeerR_Reject;
-      friend class DiameterPeerI_DisconnectSendCEA;
-      friend class DiameterPeerR_SendMessage;
-      friend class DiameterPeer_Process;
-      friend class DiameterPeerProcessDWRSendDWA;
-      friend class DiameterPeer_ProcessDWA;
-      friend class DiameterPeerI_SendDPR;
-      friend class DiameterPeerR_SendDPR;
-      friend class DiameterPeerI_SendDPADisconnect;
-      friend class DiameterPeerR_SendDPADisconnect;
-      friend class DiameterPeerI_SendMessage;
-      friend class DiameterPeerI_SendCEA;
-      friend class DiameterPeer_Watchdog;
-
+      friend class AAA_PeerR_AcceptSendCEA;
+      friend class AAA_PeerI_SendCER;
+      friend class AAA_Peer_Cleanup;
+      friend class AAA_Peer_ConnNack;
+      friend class AAA_PeerR_Accept;
+      friend class AAA_Peer_Error;
+      friend class AAA_Peer_ProcessCEA;
+      friend class AAA_PeerR_AcceptElect;
+      friend class AAA_Peer_Disconnect;
+      friend class AAA_Peer_DisconnectDPA;
+      friend class AAA_PeerI_SendCERElect;
+      friend class AAA_PeerR_SendCEA;
+      friend class AAA_PeerR_SendCEAOpen;
+      friend class AAA_PeerR_DisconnectResp;
+      friend class AAA_PeerR_DisconnectIOpen;
+      friend class AAA_PeerR_Reject;
+      friend class AAA_PeerI_DisconnectSendCEA;
+      friend class AAA_PeerR_SendMessage;
+      friend class AAA_Peer_Process;
+      friend class AAA_PeerProcessDWRSendDWA;
+      friend class AAA_Peer_ProcessDWA;
+      friend class AAA_PeerI_SendDPR;
+      friend class AAA_PeerR_SendDPR;
+      friend class AAA_PeerI_SendDPADisconnect;
+      friend class AAA_PeerR_SendDPADisconnect;
+      friend class AAA_PeerI_SendMessage;
+      friend class AAA_PeerI_SendCEA;
+      friend class AAA_Peer_Watchdog;
+    
    private:
-
-      AAA_GroupedJob &m_GroupedJob;
-      DiameterPeerData m_Data;
-      static DiameterPeerStateTable m_StateTable;
+    
+      AAA_JobHandle<AAA_GroupedJob> m_GroupedJob;    
+    
+      AAA_PeerData m_Data;
+      static AAA_PeerStateTable m_StateTable;
 };
 
 #endif /* __AAA_PEER_FSM_H__ */

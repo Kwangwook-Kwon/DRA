@@ -1,70 +1,167 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE pana_configuration SYSTEM "config.dtd">
-<pana_configuration>
+<pana_configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:noNamespaceSchemaLocation='config.xsd'>
 
     <general>
 
+        <!-- Controls the number of threads in the pool
+             to be spawned at startup -->
+        <thread_count>5</thread_count>
+    
         <!-- UDP port that the PAA will listen to
-             for Pac messages. Note that this
-             does not bind to any address or interface
-             so it will receive Pac messages on any
-             interface -->
+             for Pac messages -->
         <listen_port>3001</listen_port>
-
+    
+        <!-- Name of interface to use for PANA
+             messages -->
+        <interface_name>eth1</interface_name>
+    
+        <!-- Flag to indicate that this library
+             will try to use IPv6 stack 
+              0 - use only IPv4
+              1 - attempt to use IPv6 --> 
+        <ipv6>0</ipv6>
+    
+        <!-- Protection capability advertised by
+             the PAA, valid values are:
+            -1 - Dont use
+             0 - L2_PROTECTION
+             1 - IPSEC_PROTECTION -->
+        <protection_capability>1</protection_capability>
+    
         <!-- Filename of the parser dictionary -->
         <dictionary_filename>config/dictionary.xml</dictionary_filename>
 
-        <!-- Configurable retransmission parameters
-             as specified in the PANA draft. See
-             Sec 10 of the draft for rules govering
-             message retranmission -->
-        <retransmission_param>
-            <!-- Initial retransmission timeout -->
-            <initial_rt_timeout>10</initial_rt_timeout>
+        <!-- Session resumption flag -->
+        <mobility>0</mobility>
 
-            <!-- Maximum retransmission count -->
-            <max_rt_count>3</max_rt_count>
+        <!-- Controls wether S-flag will be set (i.e. the PAA
+             advertise supports separate NAP/ISP authentication).
+             This is a required configuration entry and MUST be 
+             provide to enable/disable S-flag -->
+        <separate>0</separate> 
 
-            <!-- Maximum retransmission timeout -->
-            <max_rt_timeout>120</max_rt_timeout>
+        <!-- Abort on 1st eap failure -->
+        <abort_on_first_eap_failure>0</abort_on_first_eap_failure>
 
-            <!-- Maximum retransmission duration -->
-            <max_rt_duration>120</max_rt_duration>
-        </retransmission_param>
+        <!-- Controls wether EAP payload will be sent
+             in the PSR/PSA message during stateful
+             discovery. Note that this is only
+             valid if use_cookie is 0. Also, if this
+             is set and used, then the separate flag
+             will be ingnored -->
+	     <eap_piggyback>1</eap_piggyback> 
 
-        <!-- WPA (802.11i) bootstrap support 
-             A 256-bit PMK key will be generated during the
-             Authorize method (and passed to authorization
-             script) when this option is enabled. 
-             -->
-        <wpa_bootstrap>1</wpa_bootstrap>
+	     <!-- Post pana address configuration options -->
+	     <popa_config>
+	     <!-- suppots dhcp -->
+	     <dhcp>1</dhcp> 
 
-        <!-- Session lifetime enforces when this PANA
-             session will end. Note that this can controls
-             the deletion of the PANA session whether
-             the session was auth successfully or not -->
-        <session_lifetime>60</session_lifetime>
+	     <!-- supports IPv6 stateless autoconfig -->
+	     <stateless>0</stateless>
 
-    </general>
+	     <!-- supports IPsec tunnel -->
+	     <tunnel>0</tunnel>
 
-    <agent>
+	     <!-- supports IKEv2 -->
+	     <ikev2>0</ikev2>
 
-        <!-- When this options is enabled, the PAA will
-             attempt to carry the first EAP request in
-             the PANA-Start-Request message -->
-        <optimized_handshake>0</optimized_handshake>
+	     </popa_config>
 
-        <!-- This tells the PAA whether the session lifetime
-             AVP will be carried in the PANA-Bind-Rquest
-             message. If enabled, the session lifetime
-             defined previously will be sent to the PaC -->
-        <carry_lifetime>1</carry_lifetime>
+	     <!-- Configurable retransmission parameters
+	     as specified in the PANA draft. See
+	     Sec 10 of the draft for rules govering
+	     message retranmission -->
+	     <retransmission_param>
+	     <!-- Initial retransmission timeout -->
+	     <initial_rt_timeout>10</initial_rt_timeout>
 
-        <!-- This tells the PAA whether the PANA-Start-Request
-             will be retransmitted. This aids in keeping
-             a more stateless PAA if disabled -->
-        <retry_psr>0</retry_psr>
+	     <!-- Maximum retransmission count -->
+	     <max_rt_count>3</max_rt_count>
 
-    </agent>
+	     <!-- Maximum retransmission timeout -->
+	     <max_rt_timeout>120</max_rt_timeout>
 
+	     <!-- Maximum retransmission duration -->
+	     <max_rt_duration>120</max_rt_duration>
+	     </retransmission_param>
+
+	     <!-- Re-Auth timer (interval) -->
+	     <keep_alive_interval>10</keep_alive_interval>
+
+	     <!-- WPA (802.11i) bootstrap support 
+	     A 256-bit PMK key will be generated during the
+	     Authorize method (and passed to authorization
+			     script) when this option is enabled. 
+	     -->
+	     <wpa_bootstrap>1</wpa_bootstrap>
+	     </general>
+
+	     <auth_agent>
+
+	     <!-- Pre-configure mcast address the PAA will 
+	     listen too, note that default value
+	     is set in the schema definition -->
+	     <mcast_address>224.0.0.100</mcast_address>
+
+	     <!-- Session lifetime enforced by this PAA -->
+	     <!--session_lifetime>5</session_lifetime-->
+	     <session_lifetime>30</session_lifetime>
+
+	     <!-- Grace period is the additional time 
+	     given to the Pac to allow for re-authorization.
+	     Session lifetime + grace period is what
+	     is sent to the Pac during binding --> 
+	     <grace_period>3</grace_period>
+
+	     <!-- Controls wether the PAA will use stateful or
+	     stateless discovery. A value of 1 will allow
+	     for a cookie based stateless discovery -->
+        <use_cookie>0</use_cookie> 
+
+        <!-- NAP provider information to be sent on
+             Start request. Note that if name is empty,
+             the NAP-Information will not be sent -->
+        <nap_info>
+           <id>1</id>
+           <name>Provider1.com</name>
+        </nap_info>
+
+        <!-- List of ISP provider information. All 
+             entries will be sent in the ISP-Information
+             AVP except those with empty names -->
+        <isp_info>
+           <id>2</id>
+           <name>Provider2.com</name>
+        </isp_info>
+
+        <isp_info>
+           <id>3</id>
+           <name>Provider3.com</name>
+        </isp_info>
+
+        <!-- List of local and remote EP device Id's 
+             supported by this PAA -->
+        <ep_id>
+           <!-- Valid values for type are:
+              0 - UNKNOWN
+              1 - IPV4_ADDRESS
+              2 - IPV6_ADDRESS
+              6 - 802_MAC_ADDRESS
+              x - see IANA address family assignment -->
+           <type>6</type>
+           <id>00080DF6E961</id>
+        </ep_id>
+        <ep_id>
+           <type>6</type>
+           <id>00080DF6E962</id>
+        </ep_id>
+
+        <!-- Controls wether the device-id of the PAA
+             will be sent to the PaC during bind or
+             first auth request -->
+        <carry_device_id>1</carry_device_id> 
+        
+    </auth_agent>
+    
 </pana_configuration>

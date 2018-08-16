@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -34,13 +34,12 @@
 #include "pana_node.h"
 #include "pana_config_manager.h"
 #include "pana_message.h"
-#include "pana_parser_dict.h"
 
 /*!
  * PANA specific AVP's
  */
 typedef enum {
-   PANA_AVP_AUTH,
+   PANA_AVP_MAC,
    PANA_AVP_DEVICE
 } PANA_AVPDataType;
 
@@ -55,11 +54,29 @@ void PANA_Node::Start(std::string &cfg_file)
     }
     bAlreadyLoaded = true;
 
-    PANA_LoadXMLDictionary((char*)PANA_CFG_GENERAL().m_Dictionary.c_str());
+    AAADictionaryManager dm;
+
+    // Registering AVP types and AVP value parsers.
+    static AvpValueParserCreator<PANA_TVDataParser> macParserCreator;
+
+    static AvpValueParserCreator<PANA_DhcpDataParser> dhcpParserCreator;
+
+    static AvpContainerEntryCreator<AAATVDataAvpContainerEntry> macContainerEntryCreator;
+
+    static AvpContainerEntryCreator<AAADhcpDataAvpContainerEntry> dhcpContainerEntryCreator;
+
+    AvpTypeList::instance()->add(new AvpType("Mac", (AAA_AVPDataType)AAA_AVP_MAC_TYPE, 0,
+		  macParserCreator, macContainerEntryCreator));
+
+    AvpTypeList::instance()->add(new AvpType("Dhcp", (AAA_AVPDataType)AAA_AVP_DHCP_TYPE, 0,
+		  dhcpParserCreator, dhcpContainerEntryCreator));
+
+    dm.init((char*)PANA_CFG_GENERAL().m_Dictionary.c_str());
 }
 
 void PANA_Node::Stop()
 {
+    PANA_CFG_CLOSE();
 }
 
 

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -36,22 +36,22 @@
 
 #include "aaa_session_auth_fsm.h"
 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterAuthSessionServerStateMachine :
-    public DiameterAuthSessionStateMachine<DiameterAuthSessionServerStateMachine>
+class DIAMETERBASEPROTOCOL_EXPORT AAA_AuthSessionServerStateMachine :
+    public AAA_AuthSessionStateMachine<AAA_AuthSessionServerStateMachine>
 {  
    public:
    public:
-      DiameterAuthSessionServerStateMachine(AAA_Task &t,
-                                        DiameterAuthSession &a);
-      virtual ~DiameterAuthSessionServerStateMachine() {
+      AAA_AuthSessionServerStateMachine(AAA_Task &t,
+                                        AAA_AuthSession &a);
+      virtual ~AAA_AuthSessionServerStateMachine() {
       }
 
       void TxASR();
       void TxSTA(diameter_unsigned32_t rcode);
       void TxRAR(diameter_unsigned32_t rcode);
-      void RxSTR(DiameterMsg &msg);
-      void RxASA(DiameterMsg &msg);
-      void RxRAA(DiameterMsg &msg);
+      void RxSTR(AAAMessage &msg);
+      void RxASA(AAAMessage &msg);
+      void RxRAA(AAAMessage &msg);
 
       bool &ASRSent() {
           return m_ASRSent;
@@ -61,145 +61,122 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterAuthSessionServerStateMachine :
        bool m_ASRSent;
 };
 
-class DiameterSessAuthServer_RxSSAR_Discard : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_RxSSAR_Discard : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
-          std::auto_ptr<DiameterMsg> msg = fsm.PendingMsg();
-          AAA_LOG((LM_INFO, "(%P|%t) Message sent in invalid session state, discarding\n"));
-          DiameterMsgHeaderDump::Dump(*msg);
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
+          std::auto_ptr<AAAMessage> msg = fsm.CurrentEventParam()->m_RxMsg;
+          AAA_LOG(LM_INFO, "(%P|%t) Message sent in invalid session state, discarding\n");
+          AAA_MsgDump::Dump(*msg);
       }
 };
 
-class DiameterSessAuthServer_RxSSA : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_RxSSAR : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
-          std::auto_ptr<DiameterMsg> msg = fsm.PendingMsg();
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
+          std::auto_ptr<AAAMessage> msg = fsm.CurrentEventParam()->m_RxMsg;
           fsm.Session().RxDelivery(msg);
       }
 };
 
-class DiameterSessAuthServer_TxSSAA_Discard : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_TxSSAA_Discard : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
-          std::auto_ptr<DiameterMsg> msg = fsm.PendingMsg();
-          AAA_LOG((LM_INFO, "(%P|%t) Message received in invalid session state, discarding\n"));
-          DiameterMsgHeaderDump::Dump(*msg);
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
+          std::auto_ptr<AAAMessage> msg = fsm.CurrentEventParam()->m_TxMsg;
+          AAA_LOG(LM_INFO, "(%P|%t) Message received in invalid session state, discarding\n");
+          AAA_MsgDump::Dump(*msg);
       }
 };
 
-class DiameterSessAuthServer_TxSSA : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_TxSSAA : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
-          std::auto_ptr<DiameterMsg> msg = fsm.PendingMsg();
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
+          std::auto_ptr<AAAMessage> msg = fsm.CurrentEventParam()->m_TxMsg;
           fsm.Session().TxDelivery(msg);
-
-          if (fsm.Attributes().AuthSessionState()() !=
-              DIAMETER_SESSION_STATE_MAINTAINED) {
-              fsm.CancelAllTimer();
-
-              AAA_LOG((LM_INFO, "(%P|%t) Server session in stateless mode, extending access time\n"));
-
-              if (fsm.Attributes().SessionTimeout()() > 0) {
-                  fsm.ScheduleTimer(DIAMETER_SESSION_AUTH_EV_SESSION_TOUT_NOST,
-                                    fsm.Attributes().SessionTimeout()() +
-                                    AAA_AUTH_SESSION_GRACE_PERIOD,
-                                    0, DIAMETER_TIMER_TYPE_SESSION);
-
-                  AAA_LOG((LM_INFO, "(%P|%t) Session Timeout: %d\n", 
-                                  fsm.Attributes().SessionTimeout()()));
-                  AAA_LOG((LM_INFO, "(%P|%t) Auth Lifetime  : %d\n",
-                                  fsm.Attributes().AuthLifetime()()));
-                  AAA_LOG((LM_INFO, "(%P|%t) Grace Period   : %d\n",
-                                  fsm.Attributes().AuthGrace()()));
-              }
-              else {
-                  fsm.ScheduleTimer(DIAMETER_SESSION_AUTH_EV_SESSION_RECLAIM,
-                                    AAA_AUTH_SESSION_RECLAMATION_PERIOD,
-                                    0, DIAMETER_TIMER_TYPE_SESSION);
-
-                  AAA_LOG((LM_INFO, "(%P|%t) Reclamation Timeout: %d\n",
-                                  AAA_AUTH_SESSION_RECLAMATION_PERIOD));
-              }
-
-              fsm.Session().Success();
-          }
       }
 };
 
-class DiameterSessAuthServer_TxSSAA_GrantAccess : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_TxSSAA_GrantAccess : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
           fsm.CancelAllTimer();
-          fsm.ScheduleTimer(DIAMETER_SESSION_AUTH_EV_SESSION_TOUT_ST,
-              fsm.Attributes().SessionTimeout()() +
-              AAA_AUTH_SESSION_GRACE_PERIOD,
-              0, DIAMETER_TIMER_TYPE_SESSION);
-          fsm.ScheduleTimer(DIAMETER_SESSION_AUTH_EV_LIFETIME_TOUT,
-              fsm.Attributes().AuthLifetime()() +
-              fsm.Attributes().AuthGrace()() +
-              AAA_AUTH_SESSION_GRACE_PERIOD,
-              0, DIAMETER_TIMER_TYPE_AUTH);
-              
-          AAA_LOG((LM_INFO, "(%P|%t) Server session in open state\n"));
-          AAA_LOG((LM_INFO, "(%P|%t) Session Timeout: %d\n", 
-                            fsm.Attributes().SessionTimeout()()));
-          AAA_LOG((LM_INFO, "(%P|%t) Auth Lifetime  : %d\n",
-                            fsm.Attributes().AuthLifetime()()));
-          AAA_LOG((LM_INFO, "(%P|%t) Grace Period   : %d\n",
-                            fsm.Attributes().AuthGrace()()));
+          if (fsm.Attributes().AuthSessionState()() == 
+              AAA_SESSION_STATE_MAINTAINED) {
+              fsm.ScheduleTimer(AAA_SESSION_AUTH_EV_SESSION_TOUT_ST,
+                  fsm.Attributes().SessionTimeout()() +
+                  AAA_AUTH_SESSION_GRACE_PERIOD,
+                  0, AAA_TIMER_TYPE_SESSION);
+              fsm.ScheduleTimer(AAA_SESSION_AUTH_EV_LIFETIME_TOUT,
+                  fsm.Attributes().AuthLifetime()() +
+                  fsm.Attributes().AuthGrace()() +
+                  AAA_AUTH_SESSION_GRACE_PERIOD,
+                  0, AAA_TIMER_TYPE_AUTH);
+          }
+          else {
+              fsm.ScheduleTimer(AAA_SESSION_AUTH_EV_SESSION_TOUT_NOST,
+                  fsm.Attributes().SessionTimeout()() +
+                  AAA_AUTH_SESSION_GRACE_PERIOD,
+                  0, AAA_TIMER_TYPE_SESSION);
+          }
+          AAA_LOG(LM_INFO, "(%P|%t) Server session in open state\n");
+          AAA_LOG(LM_INFO, "(%P|%t) Session Timeout: %d\n", 
+                            fsm.Attributes().SessionTimeout()());
+          AAA_LOG(LM_INFO, "(%P|%t) Auth Lifetime  : %d\n",
+                            fsm.Attributes().AuthLifetime()());
+          AAA_LOG(LM_INFO, "(%P|%t) Grace Period   : %d\n",
+                            fsm.Attributes().AuthGrace()());
           fsm.Session().Success();
       }
 };
 
-class DiameterSessAuthServer_TxASR : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_TxASR : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
           fsm.CancelAllTimer();
           fsm.TxASR();
       }
 };
 
-class DiameterSessAuthServer_TxRAR : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_TxRAR : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
           if (fsm.Attributes().ReAuthRequestValue().IsSet()) {
               fsm.TxRAR
-                (fsm.Attributes().ReAuthRequestValue()().reAuthType);
+                (fsm.Attributes().ReAuthRequestValue()().reAuthType);  
 	  }
       }
 };
 
-class DiameterSessAuthServer_RxRAA : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_RxRAA : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
           if (fsm.Attributes().ReAuthRequestValue().IsSet()) {
               fsm.Session().ReAuthenticate
-                 (fsm.Attributes().ReAuthRequestValue()().resultCode);
+                 (fsm.Attributes().ReAuthRequestValue()().resultCode);        
 	  }
       }
 };
 
-class DiameterSessAuthServer_TxSTACleanup : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_TxSTACleanup : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
           fsm.CancelAllTimer();
           fsm.TxSTA(AAA_AUTHORIZATION_REJECTED);
           fsm.Session().Disconnect();
@@ -208,11 +185,11 @@ class DiameterSessAuthServer_TxSTACleanup :
       }
 };
 
-class DiameterSessAuthServer_TxSTACleanup_Idle : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_TxSTACleanup_Idle : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
           fsm.CancelAllTimer();
           fsm.TxSTA(AAA_AUTHORIZATION_REJECTED);
           fsm.ASRSent() = false;
@@ -220,21 +197,21 @@ class DiameterSessAuthServer_TxSTACleanup_Idle :
       }
 };
 
-class DiameterSessAuthServer_RxASA : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_RxASA : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
-	  fsm.CancelTimer(DIAMETER_TIMER_TYPE_ASR);
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
+	  fsm.CancelTimer(AAA_TIMER_TYPE_ASR);
           fsm.Session().AbortSession();
       }
 };
 
-class DiameterSessAuthServer_AuthorizationTimeout : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_AuthorizationTimeout : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
           fsm.Session().AuthorizationTimeout();
           fsm.CancelAllTimer();
           fsm.ASRSent() = false;
@@ -242,11 +219,11 @@ class DiameterSessAuthServer_AuthorizationTimeout :
       }
 };
 
-class DiameterSessAuthServer_SessionTimeout : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
+class AAA_SessAuthServer_SessionTimeout : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
           fsm.Session().SessionTimeout();
           fsm.CancelAllTimer();
           fsm.ASRSent() = false;
@@ -254,33 +231,11 @@ class DiameterSessAuthServer_SessionTimeout :
       }
 };
 
-class DiameterSessAuthServer_SessionReclaim :
-   public AAA_Action<DiameterAuthSessionServerStateMachine>
+class AAA_SessAuthServer_Cleanup : 
+   public AAA_Action<AAA_AuthSessionServerStateMachine> 
 {
    public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
-          fsm.CancelAllTimer();
-          if (fsm.Session().ReClaimSession() == AAA_ERR_SUCCESS) {
-              fsm.Session().Disconnect();
-              fsm.ASRSent() = false;
-              fsm.Session().Reset();
-          }
-          else {
-              AAA_LOG((LM_INFO, "(%P|%t) Scheduling next reclamation Timeout: %d\n",
-                                  AAA_AUTH_SESSION_RECLAMATION_PERIOD));
-
-              fsm.ScheduleTimer(DIAMETER_SESSION_AUTH_EV_SESSION_RECLAIM,
-                                AAA_AUTH_SESSION_RECLAMATION_PERIOD,
-                                0, DIAMETER_TIMER_TYPE_SESSION);
-          }
-      }
-};
-
-class DiameterSessAuthServer_Cleanup : 
-   public AAA_Action<DiameterAuthSessionServerStateMachine> 
-{
-   public:
-      virtual void operator()(DiameterAuthSessionServerStateMachine &fsm) {
+      virtual void operator()(AAA_AuthSessionServerStateMachine &fsm) {
           fsm.CancelAllTimer();
           fsm.Session().AbortSession();
           fsm.ASRSent() = false;
@@ -289,7 +244,7 @@ class DiameterSessAuthServer_Cleanup :
 };
 
 class AAA_SessAuthServerStateTable : 
-   public AAA_StateTable<DiameterAuthSessionServerStateMachine>
+   public AAA_StateTable<AAA_AuthSessionServerStateMachine>
 {
    public:
       AAA_SessAuthServerStateTable() {
@@ -302,9 +257,9 @@ class AAA_SessAuthServerStateTable :
                       user is authorized             serv.
                                                      specific answer
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_SSAR_OK,
-                           DIAMETER_SESSION_AUTH_ST_OPEN,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_IDLE,
+                           AAA_SESSION_AUTH_EV_SSAR_OK,
+                           AAA_SESSION_AUTH_ST_OPEN,
                            m_acGrantAccess); 
 
         /*
@@ -315,9 +270,9 @@ class AAA_SessAuthServerStateTable :
                       user is not authorized         specific answer,
                                                      Cleanup
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_SSAR_FAIL,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_IDLE,
+                           AAA_SESSION_AUTH_EV_SSAR_FAIL,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acCleanup);
 
         /*
@@ -326,9 +281,9 @@ class AAA_SessAuthServerStateTable :
             Not       ASA Received                   None       No Change.
             Discon
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_RX_ASA_OK,
-                           DIAMETER_SESSION_AUTH_ST_IDLE);
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_IDLE,
+                           AAA_SESSION_AUTH_EV_RX_ASA_OK,
+                           AAA_SESSION_AUTH_ST_IDLE);
 
         /*
            State     Event                          Action     New State
@@ -336,9 +291,9 @@ class AAA_SessAuthServerStateTable :
             Not       ASA Received                   None       No Change.
             Discon
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_RX_ASA_FAIL,
-                           DIAMETER_SESSION_AUTH_ST_IDLE);
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_IDLE,
+                           AAA_SESSION_AUTH_EV_RX_ASA_FAIL,
+                           AAA_SESSION_AUTH_ST_IDLE);
 
         /*
            State     Event                          Action     New State
@@ -346,9 +301,9 @@ class AAA_SessAuthServerStateTable :
             Any       STR Received                   Send STA,  Idle
                                                      Cleanup.
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_RX_STR,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_IDLE,
+                           AAA_SESSION_AUTH_EV_RX_STR,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acTxSTACleanupIdle);
 
         /*
@@ -359,10 +314,10 @@ class AAA_SessAuthServerStateTable :
                                                     specific
                                                     auth answer
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_TX_SSAA,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
-                           m_acTxSSA);
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_IDLE,
+                           AAA_SESSION_AUTH_EV_TX_SSAA,
+                           AAA_SESSION_AUTH_ST_IDLE,
+                           m_acTxSSAA);
 
         /*
            State     Event                          Action     New State
@@ -372,36 +327,10 @@ class AAA_SessAuthServerStateTable :
                                                     specific
                                                     auth req
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_RX_SSAR,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
-                           m_acRxSSA);
-
-        /*
-           State     Event                          Action     New State
-           -------------------------------------------------------------
-            Idle      Authorization-Lifetime (and    Cleanup    Idle
-                      Auth-Grace-Period) expires
-                      on home server for stateless
-                      session.
-         */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_SESSION_TOUT_NOST,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
-                           m_acSessionTimeout);
-
-        /*
-           State     Event                          Action     New State
-           -------------------------------------------------------------
-            Idle      Authorization-Lifetime (and    Cleanup    Idle
-                      Auth-Grace-Period) expires
-                      on home server for stateless
-                      session.
-         */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_SESSION_RECLAIM,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
-                           m_acSessionReclaim);
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_IDLE,
+                           AAA_SESSION_AUTH_EV_RX_SSAR,
+                           AAA_SESSION_AUTH_ST_IDLE,
+                           m_acRxSSAR);
 
         /*
            State     Event                          Action     New State
@@ -409,9 +338,9 @@ class AAA_SessAuthServerStateTable :
             Idle      Home server wants to           Cleanup    Idle
                       terminate service                      
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                           DIAMETER_SESSION_AUTH_EV_ABORT,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_IDLE,
+                           AAA_SESSION_AUTH_EV_ABORT,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acCleanup);
 
         /*
@@ -419,8 +348,8 @@ class AAA_SessAuthServerStateTable :
            -------------------------------------------------------------
             Idle     Any                            None       Idle
          */
-        AddWildcardStateTableEntry(DIAMETER_SESSION_AUTH_ST_IDLE,
-                                   DIAMETER_SESSION_AUTH_ST_IDLE);
+        AddWildcardStateTableEntry(AAA_SESSION_AUTH_ST_IDLE,
+                                   AAA_SESSION_AUTH_ST_IDLE);
 
         /*
            State     Event                          Action     New State
@@ -430,9 +359,9 @@ class AAA_SessAuthServerStateTable :
                       is authorized                  serv. specific
                                                      answer
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_SSAR_OK,
-                           DIAMETER_SESSION_AUTH_ST_OPEN,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_SSAR_OK,
+                           AAA_SESSION_AUTH_ST_OPEN,
                            m_acGrantAccess);
 
        /*
@@ -444,54 +373,9 @@ class AAA_SessAuthServerStateTable :
                                                      answer,
                                                      Cleanup
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_SSAR_FAIL,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
-                           m_acCleanup);
-
-       /*
-           State     Event                          Action     New State
-           -------------------------------------------------------------
- [un-offic] Open      Home server wants to send      Send       Open
-                      Service-specific authorization service
-                      request                        specific
-                                                     auth req
-        */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_TX_SSAR,
-                           DIAMETER_SESSION_AUTH_ST_OPEN,
-                           m_acTxSSA);
-
-       /*
-           State     Event                          Action     New State
-           -------------------------------------------------------------
- [un-offic] Open      Service-specific authorization Provide    Open
-                      answer received                Service
-        */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_RX_SSAA,
-                           DIAMETER_SESSION_AUTH_ST_OPEN,
-                           m_acRxSSA);
-
-       /*
-           State     Event                          Action     New State
-           -------------------------------------------------------------
- [un-offic] Open      Successful Service-specific    Provide    Open
-                      authorization answer received  Service
-        */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_SSAA_OK,
-                           DIAMETER_SESSION_AUTH_ST_OPEN);
-
-       /*
-           State     Event                          Action     New State
-           -------------------------------------------------------------
- [un-offic] Open      Failed Service-specific        Cleanup    Idle
-                      authorization answer received
-        */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_SSAA_FAIL,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_SSAR_FAIL,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acCleanup);
 
         /*
@@ -500,9 +384,9 @@ class AAA_SessAuthServerStateTable :
             Open      Home server wants to           Send ASR   Discon
                       terminate the service
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_ABORT,
-                           DIAMETER_SESSION_AUTH_ST_DISC,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_ABORT,
+                           AAA_SESSION_AUTH_ST_DISC,
                            m_acTxASR);
 
         /*
@@ -512,9 +396,9 @@ class AAA_SessAuthServerStateTable :
                       Auth-Grace-Period) expires
                       on home server.
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_LIFETIME_TOUT,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_LIFETIME_TOUT,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acAuthTimeout);
 
         /*
@@ -523,9 +407,9 @@ class AAA_SessAuthServerStateTable :
             Open      Session-Timeout expires on     Cleanup    Idle
                       home server
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_SESSION_TOUT_ST,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_SESSION_TOUT_ST,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acSessionTimeout);         
 
         /*
@@ -534,9 +418,9 @@ class AAA_SessAuthServerStateTable :
             Not       ASA Received                   None       No Change.
             Discon
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_RX_ASA_OK,
-                           DIAMETER_SESSION_AUTH_ST_OPEN);
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_RX_ASA_OK,
+                           AAA_SESSION_AUTH_ST_OPEN);
 
         /*
            State     Event                          Action     New State
@@ -544,9 +428,9 @@ class AAA_SessAuthServerStateTable :
             Not       ASA Received                   None       No Change.
             Discon
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_RX_ASA_FAIL,
-                           DIAMETER_SESSION_AUTH_ST_OPEN);
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_RX_ASA_FAIL,
+                           AAA_SESSION_AUTH_ST_OPEN);
 
         /*
            State     Event                          Action     New State
@@ -554,9 +438,9 @@ class AAA_SessAuthServerStateTable :
             Open      STR Received                   Send STA,  Idle
                                                      Cleanup.
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_RX_STR,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_RX_STR,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acTxSTACleanup);
 
         /*
@@ -567,10 +451,10 @@ class AAA_SessAuthServerStateTable :
                                                     specific
                                                     auth answer
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_TX_SSAA,
-                           DIAMETER_SESSION_AUTH_ST_OPEN,
-                           m_acTxSSA);
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_TX_SSAA,
+                           AAA_SESSION_AUTH_ST_OPEN,
+                           m_acTxSSAA);
 
         /*
            State     Event                          Action     New State
@@ -580,10 +464,10 @@ class AAA_SessAuthServerStateTable :
                                                     specific
                                                     auth req
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_RX_SSAR,
-                           DIAMETER_SESSION_AUTH_ST_OPEN,
-                           m_acRxSSA);
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_RX_SSAR,
+                           AAA_SESSION_AUTH_ST_OPEN,
+                           m_acRxSSAR);
 
         /*
            State     Event                          Action     New State
@@ -592,9 +476,9 @@ class AAA_SessAuthServerStateTable :
                                                     Re-Auth
              
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_REAUTH,
-                           DIAMETER_SESSION_AUTH_ST_OPEN,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_REAUTH,
+                           AAA_SESSION_AUTH_ST_OPEN,
                            m_acTxRAR);
 
         /*
@@ -603,9 +487,9 @@ class AAA_SessAuthServerStateTable :
            Open      Re-auth answer received        process    Open
              
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                           DIAMETER_SESSION_AUTH_EV_RX_RAA,
-                           DIAMETER_SESSION_AUTH_ST_OPEN,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                           AAA_SESSION_AUTH_EV_RX_RAA,
+                           AAA_SESSION_AUTH_ST_OPEN,
                            m_acRxRAA);
 
         /*
@@ -613,8 +497,8 @@ class AAA_SessAuthServerStateTable :
            -------------------------------------------------------------
             Open     Any                            None       Open
          */
-        AddWildcardStateTableEntry(DIAMETER_SESSION_AUTH_ST_OPEN,
-                                   DIAMETER_SESSION_AUTH_ST_OPEN);
+        AddWildcardStateTableEntry(AAA_SESSION_AUTH_ST_OPEN,
+                                   AAA_SESSION_AUTH_ST_OPEN);
 
         /*
            State     Event                          Action     New State
@@ -622,9 +506,9 @@ class AAA_SessAuthServerStateTable :
             Discon    Failure to send ASR            Wait,      Discon
                                                      resend ASR
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_DISC,
-                           DIAMETER_SESSION_AUTH_EV_TX_ASR_FAIL,
-                           DIAMETER_SESSION_AUTH_ST_DISC,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_DISC,
+                           AAA_SESSION_AUTH_EV_TX_ASR_FAIL,
+                           AAA_SESSION_AUTH_ST_DISC,
                            m_acTxASR);       
 
         /*
@@ -634,9 +518,9 @@ class AAA_SessAuthServerStateTable :
                       ASA Received with Result-Code
                          == SUCCESS
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_DISC,
-                           DIAMETER_SESSION_AUTH_EV_RX_ASA_OK,
-                           DIAMETER_SESSION_AUTH_ST_DISC,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_DISC,
+                           AAA_SESSION_AUTH_EV_RX_ASA_OK,
+                           AAA_SESSION_AUTH_ST_DISC,
                            m_acRxASA);
 
         /*
@@ -646,9 +530,9 @@ class AAA_SessAuthServerStateTable :
                       ASA Received with Result-Code
                         != SUCCESS
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_DISC,
-                           DIAMETER_SESSION_AUTH_EV_RX_ASA_FAIL,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_DISC,
+                           AAA_SESSION_AUTH_EV_RX_ASA_FAIL,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acCleanup);
 
         /*
@@ -657,9 +541,9 @@ class AAA_SessAuthServerStateTable :
             Discon    STR Received                   Send STA,  Idle
                                                      Cleanup.
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_DISC,
-                           DIAMETER_SESSION_AUTH_EV_RX_STR,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_DISC,
+                           AAA_SESSION_AUTH_EV_RX_STR,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acTxSTACleanup);         
 
         /*
@@ -669,9 +553,9 @@ class AAA_SessAuthServerStateTable :
                       Auth-Grace-Period) expires
                       on home server.
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_DISC,
-                           DIAMETER_SESSION_AUTH_EV_LIFETIME_TOUT,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_DISC,
+                           AAA_SESSION_AUTH_EV_LIFETIME_TOUT,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acAuthTimeout);
 
         /*
@@ -680,9 +564,9 @@ class AAA_SessAuthServerStateTable :
             Discon    Session-Timeout expires on     Cleanup    Idle
                       home server
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_DISC,
-                           DIAMETER_SESSION_AUTH_EV_SESSION_TOUT_ST,
-                           DIAMETER_SESSION_AUTH_ST_IDLE,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_DISC,
+                           AAA_SESSION_AUTH_EV_SESSION_TOUT_ST,
+                           AAA_SESSION_AUTH_ST_IDLE,
                            m_acSessionTimeout);         
 
         /*
@@ -693,9 +577,9 @@ class AAA_SessAuthServerStateTable :
                                                     specific
                                                     auth answer
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_DISC,
-                           DIAMETER_SESSION_AUTH_EV_TX_SSAA,
-                           DIAMETER_SESSION_AUTH_ST_DISC,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_DISC,
+                           AAA_SESSION_AUTH_EV_TX_SSAA,
+                           AAA_SESSION_AUTH_ST_DISC,
                            m_acTxSSAADiscard);
 
         /*
@@ -706,9 +590,9 @@ class AAA_SessAuthServerStateTable :
                                                     specific
                                                     auth req
          */
-        AddStateTableEntry(DIAMETER_SESSION_AUTH_ST_DISC,
-                           DIAMETER_SESSION_AUTH_EV_RX_SSAR,
-                           DIAMETER_SESSION_AUTH_ST_DISC,
+        AddStateTableEntry(AAA_SESSION_AUTH_ST_DISC,
+                           AAA_SESSION_AUTH_EV_RX_SSAR,
+                           AAA_SESSION_AUTH_ST_DISC,
                            m_acRxSSARDiscard);
 
         /*
@@ -716,29 +600,28 @@ class AAA_SessAuthServerStateTable :
            -------------------------------------------------------------
             Discon   Any                            None       Discon
          */
-        AddWildcardStateTableEntry(DIAMETER_SESSION_AUTH_ST_DISC,
-                                   DIAMETER_SESSION_AUTH_ST_DISC);
+        AddWildcardStateTableEntry(AAA_SESSION_AUTH_ST_DISC,
+                                   AAA_SESSION_AUTH_ST_DISC);
 
-        InitialState(DIAMETER_SESSION_AUTH_ST_IDLE);
+        InitialState(AAA_SESSION_AUTH_ST_IDLE);
       }
 
 
    private:
-       DiameterSessAuthServer_RxSSAR_Discard               m_acRxSSARDiscard;
-       DiameterSessAuthServer_TxSSAA_Discard               m_acTxSSAADiscard;
-       DiameterSessAuthServer_RxSSA                        m_acRxSSA;
-       DiameterSessAuthServer_TxSSA                        m_acTxSSA;
-       DiameterSessAuthServer_TxRAR                        m_acTxRAR;
-       DiameterSessAuthServer_TxSSAA_GrantAccess           m_acGrantAccess;
-       DiameterSessAuthServer_TxASR                        m_acTxASR;
-       DiameterSessAuthServer_RxRAA                        m_acRxRAA;
-       DiameterSessAuthServer_RxASA                        m_acRxASA;
-       DiameterSessAuthServer_TxSTACleanup                 m_acTxSTACleanup;
-       DiameterSessAuthServer_TxSTACleanup_Idle            m_acTxSTACleanupIdle;
-       DiameterSessAuthServer_AuthorizationTimeout         m_acAuthTimeout;
-       DiameterSessAuthServer_SessionTimeout               m_acSessionTimeout;
-       DiameterSessAuthServer_SessionReclaim               m_acSessionReclaim;
-       DiameterSessAuthServer_Cleanup                      m_acCleanup;
+       AAA_SessAuthServer_RxSSAR_Discard               m_acRxSSARDiscard;
+       AAA_SessAuthServer_TxSSAA_Discard               m_acTxSSAADiscard;
+       AAA_SessAuthServer_RxSSAR                       m_acRxSSAR;
+       AAA_SessAuthServer_TxSSAA                       m_acTxSSAA;
+       AAA_SessAuthServer_TxRAR                        m_acTxRAR;
+       AAA_SessAuthServer_TxSSAA_GrantAccess           m_acGrantAccess;
+       AAA_SessAuthServer_TxASR                        m_acTxASR;
+       AAA_SessAuthServer_RxRAA                        m_acRxRAA;
+       AAA_SessAuthServer_RxASA                        m_acRxASA;
+       AAA_SessAuthServer_TxSTACleanup                 m_acTxSTACleanup;
+       AAA_SessAuthServer_TxSTACleanup_Idle            m_acTxSTACleanupIdle;
+       AAA_SessAuthServer_AuthorizationTimeout         m_acAuthTimeout;
+       AAA_SessAuthServer_SessionTimeout               m_acSessionTimeout;
+       AAA_SessAuthServer_Cleanup                      m_acCleanup;
 };
 
 #endif /* __AAA_SESSION_AUTH_SERVER_FSM_H__ */

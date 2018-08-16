@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -33,71 +33,96 @@
 
 #include <iostream>
 #include "pacd_config.h"
-#include "od_utl_xml_sax_parser.h"
+#include "od_utl_xml_parser.h"
 
-int PACD_Config::Open(std::string &cfgfile)
+class PACD_XMLRoot : public OD_Utl_XMLElementParser {
+   public:
+      PACD_XMLRoot(std::string &name, PACD_Data &e) :
+                   OD_Utl_XMLElementParser(name),
+	           m_Payload(e) { }
+      int svc(DOMNode *n);
+      void print();
+   protected:
+      PACD_Data &m_Payload;
+};
+
+int PACD_XMLRoot::svc(DOMNode *n)
 {
-    OD_Utl_XML_SaxParser parser;
+   std::string tagName;
 
-    OD_Utl_XML_StringElement setup01(m_Data.m_PaCCfgFile, 
-                                     "pana_cfg_file", parser);
+   tagName ="pana_cfg_file";
+   OD_Utl_XMLDataString cfgfile(tagName, m_Payload.m_PaCCfgFile);
+   cfgfile.populate(n->getFirstChild());
+   
+   tagName ="username";
+   OD_Utl_XMLDataString username(tagName, m_Payload.m_Username);
+   username.populate(n->getFirstChild());
 
-    OD_Utl_XML_StringElement setup02(m_Data.m_Username, 
-                                     "username", parser);
+   tagName ="password";
+   OD_Utl_XMLDataString passwd(tagName, m_Payload.m_Password);
+   passwd.populate(n->getFirstChild());
 
-    OD_Utl_XML_StringElement setup03(m_Data.m_Password, 
-                                     "password", parser);
+   tagName ="secret";
+   OD_Utl_XMLDataString secret(tagName, m_Payload.m_Secret);
+   secret.populate(n->getFirstChild());
 
-    OD_Utl_XML_StringElement setup04(m_Data.m_Secret, 
-                                     "secret", parser);
+   tagName ="auth_script";
+   OD_Utl_XMLDataString script(tagName, m_Payload.m_AuthScript);
+   script.populate(n->getFirstChild());
 
-    OD_Utl_XML_StringElement setup05(m_Data.m_AuthScript, 
-                                     "auth_script", parser);
+   tagName = "dhcp_bootstrap";
+   OD_Utl_XMLDataUInt32 dhcp(tagName, m_Payload.m_DhcpBootstrap);
+   dhcp.populate(n->getFirstChild());
 
-    OD_Utl_XML_UInt32Element setup07(m_Data.m_UseArchie, 
-                                     "use_archie", parser);
+   tagName = "use_archie";
+   OD_Utl_XMLDataUInt32 archie(tagName, m_Payload.m_UseArchie);
+   archie.populate(n->getFirstChild());
 
-    OD_Utl_XML_UInt32Element setup08(m_Data.m_AuthPeriod, 
-                                     "auth_period", parser);
+   tagName = "auth_period";
+   OD_Utl_XMLDataUInt32 auth(tagName, m_Payload.m_AuthPeriod);
+   auth.populate(n->getFirstChild());
 
-    OD_Utl_XML_UInt32Element setup09(m_Data.m_ThreadCount, 
-                                     "thread_count", parser);
+   tagName = "thread_count";
+   OD_Utl_XMLDataUInt32 thread(tagName, m_Payload.m_ThreadCount);
+   thread.populate(n->getFirstChild());
 
-    try {    
-        parser.Load((char*)cfgfile.c_str());
-        this->print();
-    }
-    catch (OD_Utl_XML_SaxException &e) {
-        e.Print();
-        throw;
-    }
-    catch (...) {
-        throw;
-    }
-    return (0);
+   print();
+
+   return (0);
 }
 
-void PACD_Config::print()
+void PACD_XMLRoot::print()
 {
    std::cout << "PACD configuration (ver 1.0.0)" 
              << std::endl;
    std::cout << "     PANA config file: " 
-             << m_Data.m_PaCCfgFile
+             << m_Payload.m_PaCCfgFile
              << std::endl;
    std::cout << "     Username        : " 
-             << m_Data.m_Username
+             << m_Payload.m_Username
              << std::endl;
    std::cout << "     Auth script     : " 
-             << m_Data.m_AuthScript
+             << m_Payload.m_AuthScript
              << std::endl;
+   std::cout << "     DHCP bootstrap  : ";
+   std::cout <<  m_Payload.m_DhcpBootstrap;
+   std::cout << std::endl;
    std::cout << "     Use Archie      : ";
-   std::cout <<  m_Data.m_UseArchie;
+   std::cout <<  m_Payload.m_UseArchie;
    std::cout << std::endl;
    std::cout << "     Auth Period     : ";
-   std::cout <<  m_Data.m_AuthPeriod;
+   std::cout <<  m_Payload.m_AuthPeriod;
    std::cout << std::endl;
    std::cout << "     Thread Count    : ";
-   std::cout <<  m_Data.m_ThreadCount;
+   std::cout <<  m_Payload.m_ThreadCount;
    std::cout << std::endl;
+}
+
+int PACD_Config::Open(std::string &cfgfile)
+{
+    std::string cfgRoot = "configuration";
+    OD_Utl_XMLTreeParser parser;
+    PACD_XMLRoot configData(cfgRoot, m_Data);
+    return parser.open(cfgfile, configData);
 }
 

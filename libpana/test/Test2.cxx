@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -31,7 +31,7 @@
 /*                                                                        */
 /* END_COPYRIGHT                                                          */
 
-// $Id: Test2.cxx,v 1.36 2006/05/04 19:46:40 vfajardo Exp $ 
+// $Id: Test2.cxx,v 1.31 2005/07/30 03:27:39 vfajardo Exp $ 
 
 #include <fstream>
 #include "eap.hxx"
@@ -292,48 +292,42 @@ class PeerChannel : public PANA_ClientEventInterface
               MyPeerSwitchStateMachine &s,
               ACE_Semaphore &sem) :
       eap(s), pana(n, *this), semaphore(sem) {
+      pana.EnableDhcpBootstrap() = true;
   }
   virtual ~PeerChannel() {
   }
-  void Initialize() {
-      pana.Start(); // init
+  void Discover() {
+      pana.Start(); // discovery
   }
-  void EapStart() {
+  void EapStart(bool &nap) {
       eap.Stop();
       eap.Start();
   }
-  void EapRequest(AAAMessageBlock *request) {
+  void ChooseISP(const PANA_CfgProviderList &list,
+                 PANA_CfgProviderInfo *&choice) {
+  }
+  void EapRequest(AAAMessageBlock *request,
+                  bool nap) {
       eap.Receive(request);
   }
   void EapAltReject() {
   }
   void Authorize(PANA_AuthorizationArgs &args) {
      PANA_AuthScriptCtl::Print(args);
-     typedef enum {
-        REAUTH,
-        UPDATE,
-        PING
-     } TEST_STATE;
-     static TEST_STATE testState = REAUTH;
-     switch (testState) { 
-        case REAUTH:
-          // just for testing -- reauthenticate ourselves
-          pana.ReAuthenticate();
-          testState = UPDATE;
-          break;
-        case UPDATE: {
-            ACE_INET_Addr newAddr("192.168.1.1:0");
-            pana.Update(newAddr);
-          }
-          testState = PING;
-          break;
-        case PING:
-          pana.Ping();
-          testState = REAUTH;
-          break;
+     static bool reauthTest = true;
+     if (reauthTest) {
+         // just for testing -- reauthenticate ourselves
+         pana.EapReAuthenticate();
+         reauthTest = false;
+     }
+     else {
+         pana.Ping();
      }
   }
-  bool IsKeyAvailable(pana_octetstring_t &key) {
+  void Notification(diameter_octetstring_t &msg) {
+      std::cout << "PANA notification: " << msg << std::endl;
+  }
+  bool IsKeyAvailable(diameter_octetstring_t &key) {
     if (eap.KeyAvailable()) {
        for (int i=0; i<32; i++)
          {
@@ -349,6 +343,9 @@ class PeerChannel : public PANA_ClientEventInterface
        return true;
     }
     return false;
+  }
+  bool ResumeSession() {
+      return false;
   }
   void Disconnect(ACE_UINT32 cause) {
       eap.Stop();
@@ -369,14 +366,15 @@ class StandAloneAuthChannel : public PANA_PaaEventInterface
    StandAloneAuthChannel(PANA_PaaSessionChannel &ch,
                         MyStandAloneAuthSwitchStateMachine &s) :
       eap(s), pana(ch, *this) {
+      pana.EnableDhcpBootstrap() = true;
   }
   virtual ~StandAloneAuthChannel() {
   }
-  void EapStart() {
+  void EapStart(bool &nap) {
      eap.Stop(); 
      eap.Start();
   }
-  void EapResponse(AAAMessageBlock *response) {
+  void EapResponse(AAAMessageBlock *response, bool nap) {
      eap.Receive(response);
   }
   void EapAltReject() {
@@ -384,7 +382,7 @@ class StandAloneAuthChannel : public PANA_PaaEventInterface
   void Authorize(PANA_AuthorizationArgs &args) {
      PANA_AuthScriptCtl::Print(args);
   }
-  bool IsKeyAvailable(pana_octetstring_t &key) {
+  bool IsKeyAvailable(diameter_octetstring_t &key) {
     if (eap.KeyAvailable()) {
        for (int i=0; i<32; i++)
          {
@@ -400,6 +398,9 @@ class StandAloneAuthChannel : public PANA_PaaEventInterface
        return true;
     }
     return false;
+  }
+  void Notification(diameter_octetstring_t &msg) {
+      std::cout << "PANA notification: " << msg << std::endl;
   }
   bool IsUserAuthorized() {
       return true;
@@ -536,8 +537,7 @@ std::string& MyPeerSwitchStateMachine::InputIdentity()
         return gUserName;
     }
     std::cout << "Input username (within 10sec.): " << std::endl;
-    //std::cin >> identity;
-    identity = "user1@isp.net";
+    std::cin >> identity;
     std::cout << "username = " << identity << std::endl;
     return identity;
   }
@@ -706,7 +706,7 @@ int main(int argc, char **argv)
   try {
      if (b_client) {
          PeerApplication peerApp(task, semaphore);
-	 peerApp.Channel().Initialize();
+	 peerApp.Channel().Discover();
          semaphore.acquire();
          task.Stop();
      }

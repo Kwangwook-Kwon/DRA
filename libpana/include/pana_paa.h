@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -36,13 +36,27 @@
 
 #include "pana_exports.h"
 #include "pana_session.h"
+#include "pana_provider_info.h"
+#include "pana_dhcp_bootstrap.h"
 
-class PANA_EXPORT PANA_PaaEventInterface :
-   public PANA_SessionEventInterface
+// Hard values (values specific to this implementation)
+#define PANA_CARRY_PCAP_IN_PSR   false
+#define PANA_CARRY_PCAP_IN_PBR   true
+
+typedef union {
+    struct {
+        ACE_UINT32 CarryPcapInPSR   :  1;
+        ACE_UINT32 CarryPcapInPBR   :  1;
+        ACE_UINT32 Reserved         : 30;
+    } i;
+    ACE_UINT32 p;
+} PANA_PaaSupportFlags;
+
+class PANA_EXPORT PANA_PaaEventInterface : public PANA_SessionEventInterface
 {
    public:
       virtual bool IsUserAuthorized() = 0;
-      virtual void EapResponse(AAAMessageBlock *request) = 0;
+      virtual void EapResponse(AAAMessageBlock *request, bool nap) = 0;
 };
 
 class PANA_EXPORT PANA_Paa : public PANA_Session
@@ -58,12 +72,12 @@ class PANA_EXPORT PANA_Paa : public PANA_Session
       PANA_Paa(PANA_SessionTxInterface &tp,
                PANA_SessionTimerInterface &tm,
                PANA_PaaEventInterface &ev);
-      virtual ~PANA_Paa() {
+      virtual ~PANA_Paa() { 
       }
 
       virtual void NotifyAuthorization();
       virtual void NotifyEapRestart();
-      virtual void NotifyEapResponse(pana_octetstring_t &payload);
+      virtual void NotifyEapResponse(diameter_octetstring_t &payload);
       virtual void NotifyEapTimeout();
       virtual void NotifyEapReAuth();
 
@@ -71,23 +85,36 @@ class PANA_EXPORT PANA_Paa : public PANA_Session
 
       virtual void TxPSR();
       virtual void TxPAR();
-      virtual void TxPBR(pana_unsigned32_t rcode,
+      virtual void TxPBR(diameter_unsigned32_t rcode,
                          EAP_EVENT ev);
+      virtual void TxPFER(diameter_unsigned32_t rcode,
+                          EAP_EVENT ev);
       virtual void TxPAN();
-      virtual void TxPRA();
+      virtual void TxPRAA();
 
       virtual void RxPSA();
       virtual void RxPBA(bool success);
+      virtual void RxPFEA(bool success);
       virtual void RxPAR();
       virtual void RxPAN();
-      virtual void RxPRR();
+      virtual void RxPRAR();
 
+      PANA_PaaSupportFlags &SupportFlags() {
+          return m_Flags;
+      }
+      PANA_PaaDhcpSecurityAssociation &DhcpBootstrap() {
+          return m_Dhcp;
+      }
       PANA_SessionTimerInterface &Timer() {
           return m_Timer;
       }
 
    protected:
-      virtual void TxPrepareMessage(PANA_Message &msg);
+      virtual void TxFormatAddress(PANA_Message &msg);
+
+   private:
+      PANA_PaaDhcpSecurityAssociation m_Dhcp;
+      PANA_PaaSupportFlags m_Flags;
 };
 
 #endif /* __PANA_PAA_H__ */

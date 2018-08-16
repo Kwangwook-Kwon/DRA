@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -35,29 +35,29 @@
 #define __AAA_SESSION_INL__
 
 template <class ATTRIBUTE>
-AAAReturnCode DiameterSession<ATTRIBUTE>::TxDelivery
-(std::auto_ptr<DiameterMsg> msg) 
+AAAReturnCode AAA_Session<ATTRIBUTE>::TxDelivery
+(std::auto_ptr<AAAMessage> msg) 
 {
-   DiameterIdentityAvpContainerWidget dHostAvp(msg->acl);
-   DiameterIdentityAvpContainerWidget dRealmAvp(msg->acl);
-   DiameterIdentityAvpContainerWidget orHostAvp(msg->acl);
-   DiameterIdentityAvpContainerWidget orRealmAvp(msg->acl);
-   DiameterUtf8AvpContainerWidget unameAvp(msg->acl);
+   AAA_IdentityAvpContainerWidget dHostAvp(msg->acl);
+   AAA_IdentityAvpContainerWidget dRealmAvp(msg->acl);
+   AAA_IdentityAvpContainerWidget orHostAvp(msg->acl);
+   AAA_IdentityAvpContainerWidget orRealmAvp(msg->acl);
+   AAA_Utf8AvpContainerWidget unameAvp(msg->acl);
 
    // resolve the destination host
    diameter_identity_t *dHost = dHostAvp.GetAvp
-           (DIAMETER_AVPNAME_DESTHOST);
+           (AAA_AVPNAME_DESTHOST);
    if (dHost == NULL) {
        if (! m_Attributes.DestinationHost().IsSet()) {
-           DiameterScholarAttribute<diameter_identity_t> dHostAttr;
+           AAA_ScholarAttribute<diameter_identity_t> dHostAttr;
            SetDestinationHost(dHostAttr);
            if (dHostAttr.IsSet()) {
-               dHostAvp.AddAvp(DIAMETER_AVPNAME_DESTHOST) = dHostAttr();
+               dHostAvp.AddAvp(AAA_AVPNAME_DESTHOST) = dHostAttr();
                m_Attributes.DestinationHost().Set(dHostAttr());
            }
        }
        else {
-           dHostAvp.AddAvp(DIAMETER_AVPNAME_DESTHOST) = 
+           dHostAvp.AddAvp(AAA_AVPNAME_DESTHOST) = 
                m_Attributes.DestinationHost()();
        }
    }
@@ -67,23 +67,23 @@ AAAReturnCode DiameterSession<ATTRIBUTE>::TxDelivery
 
    // resolve the destination realm
    diameter_identity_t *dRealm = dRealmAvp.GetAvp
-                   (DIAMETER_AVPNAME_DESTREALM);
+                   (AAA_AVPNAME_DESTREALM);
    if (dRealm == NULL) {
        if (! m_Attributes.DestinationRealm().IsSet()) {
-           DiameterScholarAttribute<diameter_identity_t> dRealmAttr;
+           AAA_ScholarAttribute<diameter_identity_t> dRealmAttr;
            SetDestinationRealm(dRealmAttr);
            if (dRealmAttr.IsSet()) {
-               dRealmAvp.AddAvp(DIAMETER_AVPNAME_DESTREALM) = dRealmAttr();
+               dRealmAvp.AddAvp(AAA_AVPNAME_DESTREALM) = dRealmAttr();
                m_Attributes.DestinationRealm().Set(dRealmAttr());
            }
            else if (msg->hdr.flags.r) {
-               AAA_LOG((LM_INFO, 
-               "(%P|%t) No destination realm present in message\n"));
+               AAA_LOG(LM_INFO, 
+               "(%P|%t) No destination realm present in message\n");
                return (AAA_ERR_FAILURE);
            }
        }
        else {
-           dRealmAvp.AddAvp(DIAMETER_AVPNAME_DESTREALM) = 
+           dRealmAvp.AddAvp(AAA_AVPNAME_DESTREALM) = 
                m_Attributes.DestinationRealm()();
        }
    }
@@ -94,12 +94,12 @@ AAAReturnCode DiameterSession<ATTRIBUTE>::TxDelivery
    // gather username if any
    if (! m_Attributes.Username().IsSet()) {
        diameter_utf8string_t *uname = unameAvp.GetAvp
-           (DIAMETER_AVPNAME_USERNAME);
+           (AAA_AVPNAME_USERNAME);
        if (uname == NULL) {
-           DiameterScholarAttribute<diameter_utf8string_t> unameAttr;
+           AAA_ScholarAttribute<diameter_utf8string_t> unameAttr;
            SetUsername(unameAttr);
            if (unameAttr.IsSet()) {
-               unameAvp.AddAvp(DIAMETER_AVPNAME_USERNAME) = unameAttr();
+               unameAvp.AddAvp(AAA_AVPNAME_USERNAME) = unameAttr();
                m_Attributes.Username() = unameAttr();
            }
        }
@@ -108,35 +108,46 @@ AAAReturnCode DiameterSession<ATTRIBUTE>::TxDelivery
        }
    }
 
-   if (orHostAvp.GetAvp(DIAMETER_AVPNAME_ORIGINHOST) == 0) {
-       orHostAvp.AddAvp(DIAMETER_AVPNAME_ORIGINHOST) = 
-           DIAMETER_CFG_TRANSPORT()->identity;
+   if (orHostAvp.GetAvp(AAA_AVPNAME_ORIGINHOST) == 0) {
+       orHostAvp.AddAvp(AAA_AVPNAME_ORIGINHOST) = 
+           AAA_CFG_TRANSPORT()->identity;
    }
-   if (orRealmAvp.GetAvp(DIAMETER_AVPNAME_ORIGINREALM) == 0) {
-       orRealmAvp.AddAvp(DIAMETER_AVPNAME_ORIGINREALM) = 
-           DIAMETER_CFG_TRANSPORT()->realm;
+   if (orRealmAvp.GetAvp(AAA_AVPNAME_ORIGINREALM) == 0) {
+       orRealmAvp.AddAvp(AAA_AVPNAME_ORIGINREALM) = 
+           AAA_CFG_TRANSPORT()->realm;
    }
 
    m_Attributes.SessionId().Set(*msg);
    m_Attributes.MsgIdTxMessage(*msg);
 
-   DiameterMsgQuery query(*msg);
+   AAA_MsgQuery query(*msg);
    if (query.IsRequest()) {
-      return (DIAMETER_MSG_ROUTER()->RequestMsg(msg, 0) ==
+      return (AAA_MSG_ROUTER()->RequestMsg(msg, 0) ==
               AAA_ROUTE_RESULT_SUCCESS) ?
               AAA_ERR_SUCCESS : AAA_ERR_FAILURE;
    }
    else {
-      return (DIAMETER_MSG_ROUTER()->AnswerMsg(msg, 0) ==
+      return (AAA_MSG_ROUTER()->AnswerMsg(msg, 0) ==
               AAA_ROUTE_RESULT_SUCCESS) ?
               AAA_ERR_SUCCESS : AAA_ERR_FAILURE;
    }
 }
 
 template <class ATTRIBUTE>
-AAAReturnCode DiameterSession<ATTRIBUTE>::Reset() 
+AAAReturnCode AAA_Session<ATTRIBUTE>::Reset() 
 {
+   m_WaitOnResetEvent = true;
    return (AAA_ERR_SUCCESS);
+}
+
+template <class ATTRIBUTE>
+void AAA_Session<ATTRIBUTE>::WaitOnReset(bool seed) 
+{
+   m_WaitOnResetEvent = seed;
+   do {
+      ACE_Time_Value tv(0, 100000);
+      ACE_OS::sleep(tv);
+  } while (! m_WaitOnResetEvent);
 }
 
 #endif

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -40,17 +40,17 @@
 class PANA_NonceGenerator
 {
     public:
-       static inline void Get(pana_octetstring_t &nonce) {
+       static inline void Get(diameter_octetstring_t &nonce) {
           ACE_UINT32 ltime;
           ACE_UINT32 buffer[4]; // 128-bit nonce       
 
           ACE_System_Time::get_local_system_time(ltime);
           ACE_OS::srand(ltime + ACE_OS::rand());
-          for (unsigned int i = 0; 
+          for (int i = 0; 
                i < sizeof(buffer)/sizeof(ACE_UINT32); 
                i++) {
              buffer[i] = ACE_UINT32(ACE_OS::rand());
-          }
+	  }
           nonce.assign((char*)buffer, sizeof(buffer));
        }
 };

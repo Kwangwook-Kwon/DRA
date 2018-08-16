@@ -56,7 +56,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libodutl_la_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 = src/od_utl_rbtree.lo src/od_utl_md5.lo \
-	src/od_utl_sha1.lo src/od_utl_xml_sax_parser.lo
+	src/od_utl_sha1.lo src/od_utl_xml_parser.lo
 am__objects_2 =
 am_libodutl_la_OBJECTS = $(am__objects_1) $(am__objects_2)
 libodutl_la_OBJECTS = $(am_libodutl_la_OBJECTS)
@@ -117,7 +117,6 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
-GREP = @GREP@
 HOST_OS = @HOST_OS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -131,10 +130,8 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 L_CPPFLAGS = @L_CPPFLAGS@
-L_CXXFLAGS = @L_CXXFLAGS@
 L_LDFLAGS = @L_LDFLAGS@
 L_LIBS = @L_LIBS@
-L_MPAFLAGS = @L_MPAFLAGS@
 L_ODBCFLAGS = @L_ODBCFLAGS@
 MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
@@ -152,9 +149,12 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_RANLIB = @ac_ct_RANLIB@
+ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -173,30 +173,23 @@ build_vendor = @build_vendor@
 compile_EAPTLS_FALSE = @compile_EAPTLS_FALSE@
 compile_EAPTLS_TRUE = @compile_EAPTLS_TRUE@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-htmldir = @htmldir@
 includedir = $(prefix)/include/opendiameter/odutl
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -212,13 +205,13 @@ COMMON_HDRS = include/od_utl_exports.h \
               include/od_utl_md5.h \
               include/od_utl_rbtree.h \
               include/od_utl_sha1.h \
-              include/od_utl_xml_sax_parser.h \
+              include/od_utl_xml_parser.h \
               include/od_utl_rbtree_dbase.h
 
 COMMON_SRC = src/od_utl_rbtree.cxx \
               src/od_utl_md5.cxx \
               src/od_utl_sha1.cxx \
-              src/od_utl_xml_sax_parser.cxx
+              src/od_utl_xml_parser.cxx
 
 include_HEADERS = $(COMMON_HDRS)
 lib_LTLIBRARIES = libodutl.la
@@ -296,7 +289,7 @@ src/od_utl_rbtree.lo: src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/od_utl_md5.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 src/od_utl_sha1.lo: src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
-src/od_utl_xml_sax_parser.lo: src/$(am__dirstamp) \
+src/od_utl_xml_parser.lo: src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 libodutl.la: $(libodutl_la_OBJECTS) $(libodutl_la_DEPENDENCIES) 
 	$(CXXLINK) -rpath $(libdir) $(libodutl_la_LDFLAGS) $(libodutl_la_OBJECTS) $(libodutl_la_LIBADD) $(LIBS)
@@ -309,8 +302,8 @@ mostlyclean-compile:
 	-rm -f src/od_utl_rbtree.lo
 	-rm -f src/od_utl_sha1.$(OBJEXT)
 	-rm -f src/od_utl_sha1.lo
-	-rm -f src/od_utl_xml_sax_parser.$(OBJEXT)
-	-rm -f src/od_utl_xml_sax_parser.lo
+	-rm -f src/od_utl_xml_parser.$(OBJEXT)
+	-rm -f src/od_utl_xml_parser.lo
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -318,7 +311,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/od_utl_md5.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/od_utl_rbtree.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/od_utl_sha1.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/od_utl_xml_sax_parser.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/od_utl_xml_parser.Plo@am__quote@
 
 .cxx.o:
 @am__fastdepCXX_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`; \

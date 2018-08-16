@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -35,7 +35,7 @@
 #define __PANA_PMK_BOOTSTRAP_H__
 
 #include "pana_exports.h"
-#include "pana_parser.h"
+#include "diameter_parser_api.h"
 
 /*
 10.2.2  PANA with Bootstrapping WPA/IEEE 802.11i
@@ -106,29 +106,29 @@
 class PANA_EXPORT PANA_PMKKey
 {
     public:
-        PANA_PMKKey(pana_octetstring_t &aaaKey,
-                    pana_octetstring_t &supplicantAddr,   
-                    pana_octetstring_t &authenticatorAddr,
+        PANA_PMKKey(diameter_octetstring_t &aaaKey,
+                    diameter_octetstring_t &supplicantAddr,   
+                    diameter_octetstring_t &authenticatorAddr,
                     size_t bit_length = 256) {
             Seed(aaaKey, supplicantAddr, authenticatorAddr, bit_length); 
         }
         virtual ~PANA_PMKKey() {
         }
-        virtual pana_octetstring_t &Key() {
+        virtual diameter_octetstring_t &Key() {
             return m_Key;
         }
 
     protected:
-        virtual void Seed(pana_octetstring_t &aaaKey,
-                    pana_octetstring_t &supplicantAddr,   
-                    pana_octetstring_t &authenticatorAddr,
+        virtual void Seed(diameter_octetstring_t &aaaKey,
+                    diameter_octetstring_t &supplicantAddr,   
+                    diameter_octetstring_t &authenticatorAddr,
                     size_t bit_length);
 
     private:
-        pana_octetstring_t m_Key;
+        diameter_octetstring_t m_Key;
 };
 
-typedef std::list< pana_octetstring_t > PANA_PMKKeyList;
+typedef std::list< diameter_octetstring_t > PANA_PMKKeyList;
 typedef PANA_PMKKeyList::iterator PAMA_PMKKeyListIterator;
 
 #endif /* __PANA_PMK_BOOTSTRAP_H__ */

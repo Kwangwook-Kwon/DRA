@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -35,71 +35,117 @@
 #define __AAA_SESSION_FSM_H__
 
 #include "framework.h"
-#include "diameter_parser.h"
+#include "diameter_parser_api.h"
 
 template<class ARG, class DEBUG>
-class DiameterSessionStateMachine : public AAA_StateMachineWithTimer<ARG>
+class AAA_SessionStateMachine :
+    public AAA_StateMachineWithTimer<ARG>, AAA_Job
 {
    public:
-      virtual ~DiameterSessionStateMachine() {
-          AAA_StateMachineWithTimer<ARG>::Stop();
+      virtual ~AAA_SessionStateMachine() {
+          AAA_StateMachine<ARG>::Stop();
+          do {
+              ACE_Time_Value tv(0, 100000);
+              ACE_OS::sleep(tv);
+          } while (m_GroupedJob.Job().ExistBacklog());
+          m_GroupedJob.Job().Flush(); 
+          m_CurrentEventParam.reset();
       }    
+      AAA_GroupedJob &Job() {
+          return *m_GroupedJob.get();
+      }
       AAA_State State() {
           return AAA_StateMachineWithTimer<ARG>::state;
       }
       bool IsRunning() {
           return AAA_StateMachine<ARG>::Running();
       }
+      typedef struct {
+          AAA_Event m_Event;
+          std::auto_ptr<AAAMessage> m_RxMsg;
+          std::auto_ptr<AAAMessage> m_TxMsg;
+      } AAA_SessionEventParam;
 
    private:
-      std::auto_ptr<DiameterMsg>  m_PendingMsg;
-      ACE_Recursive_Thread_Mutex m_EventFsmMtx;
+      AAA_ProtectedPtrQueue<AAA_SessionEventParam> m_EventQueue;
+      std::auto_ptr<AAA_SessionEventParam> m_CurrentEventParam;
 
    public:
-      std::auto_ptr<DiameterMsg> &PendingMsg() {
-         return m_PendingMsg;
+      AAA_SessionEventParam *CurrentEventParam() {
+	 return m_CurrentEventParam.get();
       }
       virtual void Notify(AAA_Event event) {
-         AAA_ScopeLock<ACE_Recursive_Thread_Mutex> guard(m_EventFsmMtx);
-         Process(event);
+         if (AAA_StateMachineWithTimer<ARG>::Running()) {
+             std::auto_ptr<AAA_SessionEventParam> 
+                   p(new AAA_SessionEventParam);
+             p->m_Event = event;
+             m_EventQueue.Enqueue(p);
+             Schedule(this);
+         }
       }
-      virtual void Notify(AAA_Event event,
-                          std::auto_ptr<DiameterMsg> msg) {
-         AAA_ScopeLock<ACE_Recursive_Thread_Mutex> guard(m_EventFsmMtx);
-         m_PendingMsg = msg;
-         Process(event);
+      virtual void NotifyRx(AAA_Event event,
+                            std::auto_ptr<AAAMessage> msg) {
+         if (AAA_StateMachineWithTimer<ARG>::Running()) {
+             std::auto_ptr<AAA_SessionEventParam> 
+                   p(new AAA_SessionEventParam);
+             p->m_Event = event;
+             p->m_RxMsg = msg;
+             m_EventQueue.Enqueue(p);
+             Schedule(this);
+         }
+      }
+      virtual void NotifyTx(AAA_Event event, 
+                            std::auto_ptr<AAAMessage> msg) {
+         if (AAA_StateMachineWithTimer<ARG>::Running()) {
+             std::auto_ptr<AAA_SessionEventParam> 
+                   p(new AAA_SessionEventParam);
+             p->m_Event = event;
+             p->m_TxMsg = msg;
+             m_EventQueue.Enqueue(p);
+             Schedule(this);
+         }
       }
    protected:
-      DiameterSessionStateMachine(AAA_Task &t,
+      AAA_SessionStateMachine(AAA_Task &t,
                               AAA_StateTable<ARG> &table,
                               ARG &arg) :
-          AAA_StateMachineWithTimer<ARG>(arg, table, *t.reactor()) {
+          AAA_StateMachineWithTimer<ARG>
+             (arg, table, *t.reactor()),
+          m_GroupedJob(AAA_GroupedJob::Create(t.Job(),
+	      (AAA_JobData*)this)) {
       }
-      virtual void Process(AAA_Event ev) {
-
-         m_Debug.DumpEvent(AAA_StateMachineWithTimer<ARG>::state, ev);
-
-         if (! AAA_StateMachineWithTimer<ARG>::Running()) {
-             AAA_LOG((LM_ERROR, "(%P|%t) Session not running\n"));
-             return;
-         }
-
+      ACE_Mutex m_EventFsmMtx;
+      virtual int Serve() {
+         AAA_MutexScopeLock guard(m_EventFsmMtx);
+         m_CurrentEventParam = m_EventQueue.Dequeue();
+         m_Debug.DumpEvent(AAA_StateMachineWithTimer<ARG>::state, 
+                           m_CurrentEventParam->m_Event);
          try {
-             AAA_StateMachineWithTimer<ARG>::Event(ev);
+             AAA_StateMachineWithTimer<ARG>::Event
+                       (m_CurrentEventParam->m_Event);
          }
-         catch (DiameterBaseException &err) {
-             AAA_LOG((LM_ERROR, "(%P|%t) FSM error[%d]: %s\n",
-                        err.Code(), err.Description().c_str()));
+         catch (AAA_BaseException &err) {
+             AAA_LOG(LM_ERROR, "(%P|%t) FSM error[%d]: %s\n",
+                        err.Code(), err.Description().data());
          }
          catch (...) {
-             AAA_LOG((LM_ERROR, "(%P|%t) Unknown exception in FSM\n"));
+             AAA_LOG(LM_ERROR, "(%P|%t) Unknown exception in FSM\n");
          }
+         m_CurrentEventParam.reset();
+         return (0);
+      }
+      virtual int Schedule(AAA_Job* job, size_t backlogSize = 1) {
+         if (! AAA_StateMachineWithTimer<ARG>::Running()) {
+            return (-1);
+         }
+         return m_GroupedJob->Schedule(job, backlogSize);
       }
       virtual void Timeout(AAA_Event ev) {
          Notify(ev);
       }
 
    private:   
+      AAA_JobHandle<AAA_GroupedJob> m_GroupedJob;       
       DEBUG m_Debug;
 };
 

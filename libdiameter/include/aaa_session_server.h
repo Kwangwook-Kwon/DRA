@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -37,6 +37,7 @@
 #include "aaa_session.h"
 #include "aaa_session_auth_server_fsm.h"
 #include "aaa_session_acct_server_fsm.h"
+#include "aaa_session_garbage_collector.h"
 
 ///
 /// This class provides all the functionality of
@@ -44,18 +45,18 @@
 /// needs to use the server session factory which
 /// generates instance of this class.
 ///
-class DIAMETERBASEPROTOCOL_EXPORT DiameterServerAuthSession :
-    public DiameterAuthSession 
+class DIAMETERBASEPROTOCOL_EXPORT AAA_ServerAuthSession : 
+    public AAA_AuthSession 
 {
     public:
-        DiameterServerAuthSession(AAA_Task &task,
+        AAA_ServerAuthSession(AAA_Task &task,
                               diameter_unsigned32_t id);
-        virtual ~DiameterServerAuthSession() {
+        virtual ~AAA_ServerAuthSession() {
            m_Fsm.Stop();
         }
 
         /// This fucntion sends a message to the peer session
-        virtual AAAReturnCode Send(std::auto_ptr<DiameterMsg> msg);
+        virtual AAAReturnCode Send(std::auto_ptr<AAAMessage> msg);
 
         /// Initiates a server side Re-Authentication
         AAAReturnCode ReAuth(diameter_unsigned32_t type);
@@ -65,25 +66,25 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterServerAuthSession :
 
     protected:
         /// This fucntion is called by the internal message rx
-        virtual void RxRequest(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxRequest(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxAnswer(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxAnswer(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxError(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxError(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called internally to handle messages
-        virtual AAAReturnCode RxDelivery(std::auto_ptr<DiameterMsg> msg);
+        virtual AAAReturnCode RxDelivery(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called internally to route messages
-        virtual AAAReturnCode TxDelivery(std::auto_ptr<DiameterMsg> msg);
+        virtual AAAReturnCode TxDelivery(std::auto_ptr<AAAMessage> msg);
 
         /// This function resets the current session attributes to default
         virtual AAAReturnCode Reset();
 
     private:
-        DiameterAuthSessionServerStateMachine m_Fsm;
+        AAA_AuthSessionServerStateMachine m_Fsm;
 };
 
 ///
@@ -91,19 +92,19 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterServerAuthSession :
 /// an Diameter client acct session. Applications
 /// needs to use the server session factory which
 /// generates instance of this class. Note that
-/// this requires a record storage class DiameterServerAcctSession 
+/// this requires a record storage class that 
 /// interfaces with the applications storage
 /// schemes.
 ///
 template<class REC_STORAGE>
-class DiameterServerAcctSession : 
-    public DiameterAcctSession
+class AAA_ServerAcctSession : 
+    public AAA_AcctSession
 {
     public:
-        DiameterServerAcctSession(AAA_Task &task,
+        AAA_ServerAcctSession(AAA_Task &task,
                               diameter_unsigned32_t id,
                               bool stateful = false);
-        virtual ~DiameterServerAcctSession() {
+        virtual ~AAA_ServerAcctSession() {
            m_Fsm.Stop();
         }
 
@@ -113,16 +114,16 @@ class DiameterServerAcctSession :
 
     protected:
         /// This fucntion sends a message to the peer session
-        virtual AAAReturnCode Send(std::auto_ptr<DiameterMsg> msg);
+        virtual AAAReturnCode Send(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxRequest(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxRequest(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxAnswer(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxAnswer(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxError(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxError(std::auto_ptr<AAAMessage> msg);
 
         /// This function resets the current session attributes to default
         virtual AAAReturnCode Reset();
@@ -130,29 +131,29 @@ class DiameterServerAcctSession :
     private:
         bool m_Stateful;
         REC_STORAGE m_RecStorage;
-        DiameterAcctSessionServerStateMachine m_Fsm;
+        AAA_AcctSessionServerStateMachine m_Fsm;
 };
 
 ///
 /// Internal garbage collector definitions
 ///
 
-typedef DiameterGarbageCollectorSingleton<DiameterAuthSession>
-             DiameterServerAuthSessionGC;
-typedef DiameterGarbageCollectorSingleton<DiameterAcctSession>
-             DiameterServerAcctSessionGC;
+typedef AAA_SessionGarbageCollectorSingleton<AAA_AuthSession>
+             AAA_ServerAuthSessionGC;
+typedef AAA_SessionGarbageCollectorSingleton<AAA_AcctSession>
+             AAA_ServerAcctSessionGC;
 
-typedef ACE_Singleton<DiameterServerAuthSessionGC,
+typedef ACE_Singleton<AAA_ServerAuthSessionGC, 
                       ACE_Recursive_Thread_Mutex> 
-                      DiameterServerAuthSessionGC_S;
-#define DIAMETER_AUTH_SESSION_GC_ROOT() (DiameterServerAuthSessionGC_S::instance())
-#define DIAMETER_AUTH_SESSION_GC() (DiameterServerAuthSessionGC_S::instance()->Instance()) 
+                      AAA_ServerAuthSessionGC_S;
+#define AAA_AUTH_SESSION_GC_ROOT() (AAA_ServerAuthSessionGC_S::instance())
+#define AAA_AUTH_SESSION_GC() (AAA_ServerAuthSessionGC_S::instance()->Instance()) 
 
-typedef ACE_Singleton<DiameterServerAcctSessionGC, 
+typedef ACE_Singleton<AAA_ServerAcctSessionGC, 
                       ACE_Recursive_Thread_Mutex> 
-                      DiameterServerAcctSessionGC_S;
-#define DIAMETER_ACCT_SESSION_GC_ROOT() (DiameterServerAcctSessionGC_S::instance())
-#define DIAMETER_ACCT_SESSION_GC() (DiameterServerAcctSessionGC_S::instance()->Instance()) 
+                      AAA_ServerAcctSessionGC_S;
+#define AAA_ACCT_SESSION_GC_ROOT() (AAA_ServerAcctSessionGC_S::instance())
+#define AAA_ACCT_SESSION_GC() (AAA_ServerAcctSessionGC_S::instance()->Instance()) 
 
 #include "aaa_session_server.inl"
 

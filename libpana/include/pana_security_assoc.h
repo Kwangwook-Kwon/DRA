@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -37,19 +37,13 @@
 #include "pana_exports.h"
 #include "pana_message.h"
 
-// mandatory key algorithm and integrity schemes
-#define PANA_PRF_HMAC_SHA1         0x02
-#define PANA_AUTH_HMAC_SHA1_160    0x07
-#define PANA_AUTH_ALGORITHM()      ((PANA_PRF_HMAC_SHA1 << 16)|PANA_AUTH_HMAC_SHA1_160)
-#define PANA_AUTH_HMACSIZE         20
-
-class PANA_EXPORT PANA_Nonce :
-    public PANA_ScholarValue<pana_octetstring_t>
+class PANA_EXPORT PANA_Nonce : 
+    public PANA_ScholarValue<diameter_octetstring_t>
 {
     public:
         PANA_Nonce() {
         }
-        PANA_Nonce(pana_octetstring_t &str) {
+        PANA_Nonce(diameter_octetstring_t &str) {
             Set(str);
         }
         bool operator==(PANA_Nonce &n) {
@@ -66,7 +60,7 @@ class PANA_EXPORT PANA_Nonce :
         }
         void Generate() {
             ACE_UINT32 v[4];
-            for (unsigned int i=0; i<sizeof(v)/sizeof(ACE_UINT32); i++) {
+            for (int i=0; i<sizeof(v)/sizeof(ACE_UINT32); i++) {
                  v[i] = ACE_OS::rand();
             }
             m_Value.assign((char*)v, sizeof(v));
@@ -74,43 +68,46 @@ class PANA_EXPORT PANA_Nonce :
         }
 };
 
-class PANA_EXPORT PANA_MSK :
-    public PANA_ScholarValue<pana_octetstring_t>
+class PANA_EXPORT PANA_AAAKey : 
+    public PANA_ScholarValue<diameter_octetstring_t>
 {
     public:
-        PANA_MSK() {
-            Reset();
+        PANA_AAAKey() : 
+            m_Id(0) {
         }
         ACE_UINT32 &Id() {
             return m_Id;
         }
         void Reset() {
-            m_GlobalId ++;
-            m_Id = m_GlobalId;
+            m_Id = 0;
         }
 
     private:
         ACE_UINT32 m_Id;
-
-    private:
-        static ACE_UINT32 m_GlobalId;
 };
 
-class PANA_EXPORT PANA_AuthKey :
-    public PANA_ScholarValue<pana_octetstring_t>
+class PANA_EXPORT PANA_MacKey : 
+    public PANA_ScholarValue<diameter_octetstring_t>
 {
     public:
         void Generate(PANA_Nonce &pac,
                       PANA_Nonce &paa,
-                      pana_octetstring_t &aaaKey,
-                      ACE_UINT32 sessionId,
-                      ACE_UINT32 keyId);
+                      diameter_octetstring_t &aaaKey,
+                      diameter_utf8string_t &sessionId);
 };
 
-class PANA_EXPORT PANA_SecurityAssociation
+class PANA_EXPORT PANA_SecurityAssociation : 
+    public PANA_ScholarValue<diameter_octetstring_t>
 {
     public:
-        PANA_SecurityAssociation() {
+        typedef enum {
+            SINGLE,
+            DOUBLE
+        } TYPE;
+
+    public:
+        PANA_SecurityAssociation() : 
+            m_Type(SINGLE) {
         }
         PANA_Nonce &PacNonce() {
             return m_PacNonce;
@@ -118,32 +115,54 @@ class PANA_EXPORT PANA_SecurityAssociation
         PANA_Nonce &PaaNonce() {
             return m_PaaNonce;
         }
+        TYPE &Type() {
+            return m_Type;
+        }
         void Reset() {
-            m_MSK.Reset();
-            m_AuthKey.Reset();
+            m_AAAKey1.Reset();
+            m_AAAKey2.Reset();
+            m_MacKey.Reset();
+            m_Type = SINGLE;
         }
-        PANA_MSK &MSK() {
-            return m_MSK;
+        void UpdateKeyId1(ACE_UINT32 keyId) {
+            m_AAAKey1.Id() = keyId;
         }
-        PANA_AuthKey &Auth() {
-            return m_AuthKey;
+        void UpdateKeyId2(ACE_UINT32 keyId) {
+            m_AAAKey2.Id() = keyId;
+        }
+        void UpdateAAAKey1(diameter_octetstring_t &key) {
+            m_AAAKey1.Set(key);
+        }
+        void UpdateAAAKey2(diameter_octetstring_t &key) {
+            m_AAAKey2.Set(key);
+        }
+        void UpdateAAAKey(diameter_octetstring_t &key) {
+            Set(key);
+        }
+        PANA_AAAKey &AAAKey1() {
+            return m_AAAKey1;
+        }
+        PANA_AAAKey &AAAKey2() {
+            return m_AAAKey2;
         }
 
-        void GenerateAuthKey(ACE_UINT32 sessionId);
+        void GenerateMacKey(diameter_utf8string_t &sessionId);
         bool AddKeyIdAvp(PANA_Message &msg);
-        bool AddAuthAvp(PANA_Message &msg);
-        bool ValidateAuthAvp(PANA_Message &msg);
+        bool AddMacAvp(PANA_Message &msg);
+        bool ValidateMacAvp(PANA_Message &msg);
 
     protected:
-       void GenerateAuthAvpValue(const char *PDU,
+       void GenerateMacAvpValue(const char *PDU,
                                 ACE_UINT32 PDULength,
-                                pana_octetstring_t &authValue);
+                                diameter_octetstring_t &macValue);
 
     private:
-        PANA_AuthKey m_AuthKey;
-        PANA_Nonce   m_PacNonce;
-        PANA_Nonce   m_PaaNonce;
-        PANA_MSK     m_MSK;
+        TYPE m_Type;
+        PANA_MacKey m_MacKey;
+        PANA_Nonce  m_PacNonce;
+        PANA_Nonce  m_PaaNonce;
+        PANA_AAAKey m_AAAKey2;
+        PANA_AAAKey m_AAAKey1;
 };
 
 #endif /* __PANA_SECURITY_ASSOC_H__ */

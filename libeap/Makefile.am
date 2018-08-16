@@ -5,6 +5,7 @@ VPATH = @srcdir@
 
 AM_CPPFLAGS = @L_CPPFLAGS@ \
               -I@top_srcdir@/include \
+              -I@top_srcdir@/libdiamparser \
               -I@top_srcdir@/libeap/include \
               -D@HOST_OS@
 AM_LDFLAGS = @L_LDFLAGS@
@@ -92,6 +93,7 @@ include_HEADERS = $(CORE_HDR)
 
 sysconfdir = $(prefix)/etc/opendiameter/eap
 sysconf_DATA = config/client.eap-tls.xml \
+               config/eap-tls.configuration.xsd \
                config/server.eap-tls.xml
 
 if compile_EAPTLS
@@ -116,14 +118,14 @@ if compile_EAPTLS
 libeaptls_la_LDFLAGS = -version-info 1:0:0 
 libeaptls_la_AR = $(AR) -qcs
 LDADD = @L_LIBS@ \
-        $(top_builddir)/libeap/libeap.la \
-        $(top_builddir)/libeap/libeaparchie.la \
-        $(top_builddir)/libeap/libeaptls.la \
-        $(top_builddir)/libdiamparser/libdiamparser.la
+        libeap.la \
+        libeaparchie.la \
+        libeaptls.la \
+        $(top_srcdir)/libdiamparser/libdiamparser.la
 else
 LDADD = @L_LIBS@ \
-        $(top_builddir)/libeap/libeap.la \
-        $(top_builddir)/libeap/libeaparchie.la
+        libeap.la \
+        libeaparchie.la
 endif
 
 if compile_EAPTLS

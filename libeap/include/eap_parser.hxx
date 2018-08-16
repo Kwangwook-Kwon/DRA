@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -33,7 +33,7 @@
 #ifndef  __EAP_PARSER_H__
 #define  __EAP_PARSER_H__
 
-#include "aaa_parser_api.h"
+#include "diameter_parser_api.h"
 #include "eap.hxx"
 #include "eap_log.hxx"
 
@@ -44,7 +44,7 @@ typedef AAAParser<AAAMessageBlock*, EapHeader*> EapHeaderParser;
 /// application-specific EAP header data.  As a result of calling this
 /// function, the read pointer of the message block points to
 /// the end of EAP header.
-template<> inline void
+inline void
 EapHeaderParser::parseRawToApp()
 {
   EapHeader *header = getAppData();
@@ -61,16 +61,13 @@ EapHeaderParser::parseRawToApp()
   // read the length
   header->length = ntohs(*((ACE_UINT16*)buffer->rd_ptr())); 
   buffer->rd_ptr(sizeof(ACE_UINT16));
-
-  // make sure buffer length is in sequence with header length
-  buffer->wr_ptr(buffer->base() + header->length);
 }
 
 /// Use this function to convert 
 /// application-specific EAP header data to raw EAP header data.  
 /// As a result of calling this function, the write pointer
 /// of the message block points to the end of EAP header.
-template<> inline void
+inline void
 EapHeaderParser::parseAppToRaw()
 {
   EapHeader *header = getAppData();
@@ -96,7 +93,7 @@ typedef AAAParser<AAAMessageBlock*, EapRequest*> EapRequestParser;
 /// application-specific payload data.  As a result of calling this
 /// function, the read pointer of the message block points to
 /// the end of payload.
-template<> inline void
+inline void
 EapRequestParser::parseRawToApp()
 {
   EapPayload *payload = getAppData();
@@ -132,7 +129,7 @@ EapRequestParser::parseRawToApp()
 /// of the message block points to the end of payload so that the
 /// parser can calculate the PDU length by using
 /// ACE_Message_Block::wr_ptr() - ACE_Message_Block::base().
-template<> inline void
+inline void
 EapRequestParser::parseAppToRaw()
 {
   //EapPayload *payload = getAppData();
@@ -191,7 +188,7 @@ typedef AAAParser<AAAMessageBlock*, EapNak*, EapNakDict*> EapNakParser;
 /// (data following the Type field) to application-specific payload
 /// data.  As a result of calling this function, the read pointer of
 /// the message block points to the end of payload.
-template<> inline void
+inline void
 EapNakParser::parseRawToApp()
 {
   EapNakDict *d = getDictData();
@@ -246,7 +243,7 @@ EapNakParser::parseRawToApp()
 /// points to the end of payload so that the parser can calculate
 /// the PDU length by using ACE_Message_Block::wr_ptr() -
 /// ACE_Message_Block::base().
-template<> inline void
+inline void
 EapNakParser::parseAppToRaw()
 {
   EapNakDict *d = getDictData();
@@ -312,12 +309,12 @@ EapRequestIdentityParser;
 /// application-specific payload data.  As a result of calling this
 /// function, the read pointer of the message block points to the
 /// end of payload.
-template<> inline void
+inline void
 EapRequestIdentityParser::parseRawToApp() 
 {
   AAAMessageBlock *msg = getRawData();
   EapIdentity *identity = getAppData();
-  size_t idStringSize = (msg->wr_ptr()-msg->base()) - (msg->rd_ptr()-msg->base());
+  size_t idStringSize = msg->size() - (msg->rd_ptr()-msg->base());
 
   // UTF8 varidation without null-charater check.
   UTF8Checker check;
@@ -338,7 +335,7 @@ EapRequestIdentityParser::parseRawToApp()
 /// message block points to the end of payload so that the parser can
 /// calculate the PDU length by using ACE_Message_Block::wr_ptr() -
 /// ACE_Message_Block::base().
-template<> inline void
+inline void
 EapRequestIdentityParser::parseAppToRaw()
 {
   AAAMessageBlock *msg = getRawData();
@@ -375,12 +372,12 @@ EapRequestNotificationParser;
 /// application-specific payload data.  As a result of calling this
 /// function, the read pointer of the message block points to the
 /// end of payload.
-template<> inline void
+inline void
 EapRequestNotificationParser::parseRawToApp()
 {
   AAAMessageBlock *msg = getRawData();
   EapNotification *notification = getAppData();
-  size_t notificationStringSize = (msg->wr_ptr()-msg->base()) - (msg->rd_ptr()-msg->base());
+  size_t notificationStringSize = msg->size() - (msg->rd_ptr()-msg->base());
 
   // UTF8 varidation without null-charater check.
   UTF8Checker check;
@@ -402,7 +399,7 @@ EapRequestNotificationParser::parseRawToApp()
 /// pointer of the message block points to the end of payload so
 /// that the parser can calculate the PDU length by using
 /// ACE_Message_Block::wr_ptr() - ACE_Message_Block::base().
-template<> inline void
+inline void
 EapRequestNotificationParser::parseAppToRaw()
 {
   AAAMessageBlock *msg = getRawData();
@@ -440,12 +437,12 @@ EapRequestMD5ChallengeParser;
 /// (data following the Type field) to application-specific payload
 /// data.  As a result of calling this function, the read pointer of
 /// the message block points to the end of payload.
-template<> inline void
+inline void
 EapRequestMD5ChallengeParser::parseRawToApp()
 {
   AAAMessageBlock *msg = getRawData();
   EapMD5Challenge *md5Challenge = getAppData();
-  size_t contentSize = (msg->wr_ptr()-msg->base()) - (msg->rd_ptr()-msg->base());
+  size_t contentSize = msg->size() - (msg->rd_ptr()-msg->base());
 
   // Read the Value-Size.
   ACE_Byte valueSize = (ACE_Byte)*msg->rd_ptr();
@@ -475,7 +472,7 @@ EapRequestMD5ChallengeParser::parseRawToApp()
 /// pointer of the message block points to the end of payload so
 /// that the parser can calculate the PDU length by using
 /// ACE_Message_Block::wr_ptr() - ACE_Message_Block::base().
-template<> inline void
+inline void
 EapRequestMD5ChallengeParser::parseAppToRaw()
 {
   AAAMessageBlock *msg = getRawData();

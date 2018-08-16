@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -38,49 +38,66 @@
 #include "pana_exceptions.h"
 #include "pana_egress.h"
 #include "pana_ingress.h"
+#include "pana_udp_transport.h"
 
 /*
  * PANA transport abstraction
  */
-class PANA_EXPORT PANA_Channel :
-    public PANA_IngressReceiver
+template<class SOCKET>
+class PANA_EXPORT PANA_Channel : public PANA_IngressReceiver,
+                                 public PANA_ResilientIO
 {
     public:
         PANA_Channel(AAA_GroupedJob &g, const char *name = "") :
-            PANA_IngressReceiver(g, m_Socket, name) {
+            PANA_IngressReceiver(g, *this, name),
+            PANA_ResilientIO(m_Socket) {
         }
         PANA_Channel(AAA_GroupedJob &g, ACE_INET_Addr &addr) :
-            PANA_IngressReceiver(g, m_Socket) {
+            PANA_IngressReceiver(g, *this),
+            PANA_ResilientIO(m_Socket) {
             Open(addr);
         }
         virtual ~PANA_Channel() {
             Close();
         }
         virtual void Open(ACE_INET_Addr &addr) {
-            if (m_Socket.open(addr) < 0) {
-                AAA_LOG((LM_ERROR, "(%P|%t) Failed to open socket\n"));
+            if (m_Socket.open(PANA_CFG_GENERAL().m_Interface, addr) < 0) {
                 throw (PANA_Exception(PANA_Exception::TRANSPORT_FAILED,
                                       "Failed to open device"));
             }
+            PANA_IngressReceiver::Abort() = false;
             if (m_Group.Schedule(this) < 0) {
-                AAA_LOG((LM_ERROR, "(%P|%t) Failed to schedule receiver job\n"));
                 throw (PANA_Exception(PANA_Exception::TRANSPORT_FAILED,
                                       "Failed to schedule channel"));
             }
+            m_Socket.get_local_addr(m_LocalDeviceId);
+            m_ListenAddr = addr;
         }
         virtual void Close() {
-            PANA_IngressReceiver::Stop();
+            PANA_IngressReceiver::Abort() = true;
             PANA_IngressReceiver::Wait();
             m_Socket.close();
         }
+        virtual bool ReOpen() {
+            m_Socket.close();
+            return (m_Socket.open(PANA_CFG_GENERAL().m_Interface, m_ListenAddr) < 0) ?
+                false : true;
+        }
         virtual void Send(boost::shared_ptr<PANA_Message> m) {
             PANA_EgressSender *egress = new PANA_EgressSender
-                (m_Group, m_Socket, m);
+                (m_Group, *this, m);
             egress->Schedule(egress);
         }
-
+        virtual PANA_DeviceIdContainer &GetLocalAddress() {
+            return m_LocalDeviceId; 
+        }
     protected:
-        PANA_Socket m_Socket;
+        SOCKET m_Socket;
+        PANA_DeviceIdContainer m_LocalDeviceId;
+        ACE_INET_Addr m_ListenAddr;
 };
+
+typedef PANA_Channel<PANA_UdpBoundedSender> PANA_SenderChannel;
+typedef PANA_Channel<PANA_McastListener>    PANA_ListenerChannel;
 
 #endif // __PANA_CHANNEL_H__

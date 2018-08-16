@@ -2,7 +2,7 @@
 /*                                                                        */
 /* OpenDiameter: Open-source software for the Diameter protocol           */
 /*                                                                        */
-/* Copyright (C) 2002 -2007  Open Diameter Project 		          */   
+/* Copyright (C) 2002 -2004  Open Diameter Project 		          */   
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -162,12 +162,12 @@ public:
   {
     if (!AAA_EventQueueJob::ExistBacklog())
       {
-	AAA_LOG((LM_ERROR, "%N: no backlog to serve."));
+	AAA_LOG(LM_ERROR, "%N: no backlog to serve.");
 	return 0;
       }
 
     // Obtain the event to execute.
-    AAA_Event ev = 0;
+    AAA_Event ev;
     AAA_EventQueueJob::Dequeue(ev);
 
     bool existBacklog = AAA_EventQueueJob::ExistBacklog();

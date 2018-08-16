@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -36,15 +36,15 @@
 
 #include "aaa_data_defs.h"
 
-class DiameterLogFacility 
+class AAA_LogFacility 
 {
    public:
-      DiameterLogFacility() {
+      AAA_LogFacility() {
       }
-      DiameterLogFacility(DiameterDataLog &data) {
+      AAA_LogFacility(AAA_DataLog &data) {
           Open(data);
       }
-      static inline void Open(DiameterDataLog &data) {
+      static inline void Open(AAA_DataLog &data) {
           ACE_TCHAR pname[32];
           AAALogMsg *logger = AAALogMsg_S::instance();
 
@@ -65,9 +65,9 @@ class DiameterLogFacility
           flags |= (data.targets.console) ? ACE_Log_Msg::STDERR : 0;
           flags |= (data.targets.syslog) ? ACE_Log_Msg::SYSLOG : 0;
           ACE_OS::sprintf(pname, "Open Diameter %d.%d.%d\n", 
-                   DIAMETER_VERSION_MAJOR,
-                   DIAMETER_VERSION_MINOR,
-                   DIAMETER_VERSION_MICRO);
+                   AAA_VERSION_MAJOR,
+                   AAA_VERSION_MINOR,
+                   AAA_VERSION_MICRO);
           logger->open(pname, flags);
       }
       static inline void Close() {

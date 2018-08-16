@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -38,88 +38,76 @@
 #include <iostream>
 #include "framework.h"
 #include "aaa_data_defs.h"
-#include "aaa_garbage_collector.h"
 #include "ace/Atomic_Op.h"
 
-#define AAA_IO_CONNECTOR_NAME "Connector"
 #define AAA_IO_ACCEPTOR_NAME  "Acceptor"
-
-typedef std::list<diameter_address_t*> DiameterHostIpLst;
+#define AAA_IO_CONNECTOR_NAME "Connector"
 
 // interface implemented by transport
 // specific (lower layer) methods. Assumes
 // lower layer is connection oriented
-template<class ADDR_TYPE>
-class DiameterTransportInterface
+class AAA_TransportInterface
 {
    public:
       virtual int Open() = 0;
       virtual int Close() = 0;
-
+    
       virtual int Connect(std::string &hostname, int port) = 0;
-      virtual int Complete(DiameterTransportInterface<ADDR_TYPE> *&iface) = 0;
-
-      virtual int Listen(int port, ADDR_TYPE addrToBind) = 0;
-      virtual int Accept(DiameterTransportInterface<ADDR_TYPE> *&iface) = 0;
-
+      virtual int Complete(AAA_TransportInterface *&iface) = 0;
+    
+      virtual int Listen(int port) = 0;
+      virtual int Accept(AAA_TransportInterface *&iface) = 0;
+    
       virtual int Send(void *data, size_t length) = 0;
       virtual int Receive(void *data, size_t length,
                        int timeout = 0) = 0;
-
-      virtual int TransportProtocolInUse() = 0;
-
-      virtual ~DiameterTransportInterface() { }
 };
 
 // Address Utility
 template<class ADDR_TYPE>
-class DiameterTransportAddress
+class AAA_TransportAddress
 {
    public:
       virtual int GetLocalAddresses(size_t &count,
                                     ADDR_TYPE *&addrs) = 0;
       virtual void *GetAddressPtr(ADDR_TYPE &addr) = 0;
       virtual int GetAddressSize(ADDR_TYPE &addr) = 0;
-
-   protected:
-      virtual ~DiameterTransportAddress() { }
 };
 
 // RX event handler
-class Diameter_IO_Base;
-class Diameter_IO_RxHandler 
+class AAA_IO_Base;
+class AAA_IO_RxHandler 
 {
    public:
       virtual void Message(void *data,
                            size_t length) = 0;
       virtual void Error(int error,
-                         const Diameter_IO_Base *io) = 0;
-
+                         const AAA_IO_Base *io) = 0;
+    
    protected:
-      Diameter_IO_RxHandler() { }
-      virtual ~Diameter_IO_RxHandler() { }
+      AAA_IO_RxHandler() { }
+      virtual ~AAA_IO_RxHandler() { }
 };
 
 // Base class for IO object
-class Diameter_IO_Base :
-   public ACE_Task<ACE_MT_SYNCH>,
-   public DiameterGarbageCollectorAttribute
+class AAA_IO_Base : public AAA_Job
 {
    public:
       virtual int Open() = 0;
       virtual int Send(AAAMessageBlock *data) = 0;
       virtual int Close() = 0;
-      virtual int TransportProtocolInUse() = 0;
-      virtual Diameter_IO_RxHandler *Handler() = 0;
+      virtual AAA_IO_RxHandler *Handler() = 0;
       std::string &Name() {
           return m_Name;
       }
-      virtual ~Diameter_IO_Base() { }
 
    protected:
-      Diameter_IO_Base(const char *name="") :
+      AAA_IO_Base(AAA_GroupedJob &jobQ,
+                  const char *name="") :
+          m_JobQ(jobQ),
           m_Name(name) {
       }
+      AAA_GroupedJob &m_JobQ;
       std::string m_Name;
 };
 
@@ -131,120 +119,145 @@ class Diameter_IO_Base :
 // it is usable and can be delete
 //
 template<class TX_IF, class RX_HANDLER>
-class Diameter_IO : public Diameter_IO_Base
+class AAA_IO : public AAA_IO_Base
 {
    public:
       typedef enum {
          MAX_PACKET_LENGTH = 1024,
-         DEFAULT_TIMEOUT = 0, // msec
+         DEFAULT_TIMEOUT = 100, // msec
       };
-      Diameter_IO(TX_IF &iface,
+      AAA_IO(AAA_GroupedJob &jobQ,
+             TX_IF &iface,
              const char *name = "") :
-         Diameter_IO_Base(name),
+         AAA_IO_Base(jobQ, name),
          m_Transport(std::auto_ptr<TX_IF>(&iface)),
-         m_Running(false) {
+         m_RefCount(1),
+         m_ReSchedule(true) {         
       }
-      virtual ~Diameter_IO() {
-         // wait for thread to exit
+      ~AAA_IO() {
          Close();
-         AAA_MutexScopeLock guard(m_Mutex);
          m_Transport.release();
-      }
-      int Open() {
-         if (! m_Running && (activate() == 0)) {
-             m_Running = true;
-             return m_Transport->Open();
+         while (! m_TxQueue.IsEmpty()) {
+            AAAMessageBlock *data = m_TxQueue.Dequeue();
+            data->Release();
          }
-         return (-1);
+      }
+      int Open() {         
+         return m_Transport->Open();
       }
       int Send(AAAMessageBlock *data) {
-         int bytes = m_Transport->Send(data->base(),
-                                       data->length());
-         return bytes;
-      }
-      int TransportProtocolInUse() {
-         return m_Transport->TransportProtocolInUse();
+         int rc = 0;
+         AAA_ScopeIncrement<int> guard(m_RefCount);
+         if (m_AccessLock.tryacquire() >= 0) {
+             if (! m_TxQueue.IsEmpty()) {
+                 m_TxQueue.Enqueue(data);
+                 do {
+                    data = m_TxQueue.Dequeue();
+                    rc = m_Transport->Send(data->base(), data->length());                    
+                    data->Release();
+                 } while (! m_TxQueue.IsEmpty());
+             }
+             else {
+                 rc = m_Transport->Send(data->base(), data->length());
+                 data->Release();
+             }
+             m_AccessLock.release();
+         }
+         else {
+             m_TxQueue.Enqueue(data);
+         }
+         return (rc);
       }
       int Close() {
-         m_Running = false;
-         return m_Transport->Close();
+         m_ReSchedule = false;
+         int rc = m_Transport->Close();
+         WaitOnExit();
+         return rc;
       }
-      RX_HANDLER *Handler() {
-         return &m_RxHandler;
+      RX_HANDLER *Handler() { 
+         return &m_RxHandler; 
       }
-
+    
    protected:
       // transport
       std::auto_ptr<TX_IF> m_Transport;
-
+      
+      // usage handler
+      int m_RefCount;
+      bool m_ReSchedule;
+      
       // reader handler
       RX_HANDLER m_RxHandler;
       char m_ReadBuffer[MAX_PACKET_LENGTH];
-
-      // thread signal
-      bool m_Running;
-      ACE_Mutex m_Mutex;
-
-   private:
-      int svc() {
-         int bytes;
-         AAA_MutexScopeLock guard(m_Mutex);
-         do {
-             // Reciever
-             bytes = m_Transport->Receive(m_ReadBuffer,
-                                          MAX_PACKET_LENGTH);
-             try {
-                if (bytes > 0) {
-                    m_RxHandler.Message(m_ReadBuffer, bytes);
-                }
-                else if (bytes == 0) {
-                    // timeout
-                } 
-                else if (m_Running) {
-                    throw DiameterBaseException(DiameterBaseException::IO_FAILURE,
-                                     "Receive error");
-                }
-             }
-             catch (DiameterBaseException &e) {
-                switch (e.Code()) {
-                   case DiameterBaseException::IO_FAILURE:
-                       m_Transport->Close();
-                       m_RxHandler.Error(errno, this);
-                       m_Running = false;
-                       return (0);
-                   default:
-                       // continue on
-                       break;
-                }
-             }
-             catch (...) {
-             }
-         } while (m_Running);
+    
+      // Transmitter queue
+      ACE_Mutex m_AccessLock;
+      AAA_ProtectedQueue<AAAMessageBlock*> m_TxQueue;
+      
+   private:    
+      int Serve() {
+         int bytes = m_Transport->Receive(m_ReadBuffer,
+                                          MAX_PACKET_LENGTH,
+                                          DEFAULT_TIMEOUT);
+         try {
+            if (bytes > 0) {
+                m_RxHandler.Message(m_ReadBuffer, bytes);
+            }
+            else if ((bytes == 0) && m_ReSchedule) {
+                // timeout
+            } 
+            else {
+                m_RxHandler.Error(errno, this);
+                throw (0);
+            }
+            Schedule(this);
+         }
+         catch (...) {
+         }
+         m_RefCount --;
          return (0);
+      }
+      int Schedule(AAA_Job*job, size_t backlogSize=1) {
+         if (m_ReSchedule) { 
+             m_RefCount ++; 
+             return m_JobQ.Schedule(job, backlogSize);
+         }
+         return (-1);
+      }
+      void WaitOnExit() {
+         do {
+              ACE_Time_Value tm(0, 10000);
+              ACE_OS::sleep(tm);
+         } while (m_RefCount > 0);
       }
 };
 
 // base class for acceptor and connector classes
 template<class TX_IF, class RX_HANDLER>
-class Diameter_IO_Factory : public ACE_Task<ACE_MT_SYNCH>
+class AAA_IO_Factory : public AAA_Job
 {
    public:
-      Diameter_IO_Factory(char *name = "") :
+      AAA_IO_Factory(AAA_GroupedJob &jobQ,
+                     char *name = "") :
+          m_JobQ(jobQ),
           m_Perpetual(false),
-          m_Active(false),
-          m_Name(name) {
-      }
-      virtual ~Diameter_IO_Factory() {
+          m_Name(name),
+          m_RefCount(0),
+          m_ReSchedule(true) { 
       }
       virtual int Open() {
+          m_RefCount = 1;
           return m_Transport.Open();
       }
       virtual int Close() {
-          return m_Transport.Close();
+          m_ReSchedule = false;
+          int rc = m_Transport.Close();
+          WaitOnExit();
+          return rc;
       }
 
       // for the subscriber layer
-      virtual int Success(Diameter_IO_Base *io) = 0;
+      virtual int Success(AAA_IO_Base *io) = 0;
       virtual int Failed() = 0;
 
       // for the TX layer
@@ -254,125 +267,116 @@ class Diameter_IO_Factory : public ACE_Task<ACE_MT_SYNCH>
       bool &Perpetual() {
           return m_Perpetual;
       }
-
+    
    protected:
-      bool m_Perpetual;
-      bool m_Active;
-      std::string m_Name;
       TX_IF m_Transport;
-      ACE_Mutex m_Mutex;
-
-   protected:
-      bool Activate() {
-          if (! m_Active && (activate() == 0)) {
-              m_Active = true;
-          }
-          return m_Active;
-      }
-      void Shutdown() {
-          // wait for thread to exit
-          if (m_Active) {
-              m_Active = false;
-              AAA_MutexScopeLock guard(m_Mutex);
-          }
-      }
-
+      AAA_GroupedJob &m_JobQ;
+      bool m_Perpetual;
+      std::string m_Name;
+      int m_RefCount;
+      bool m_ReSchedule;
+    
    private:
-      int svc() {
-          int rc = 0;
+      int Serve() {
           TX_IF *newTransport;
-          AAA_MutexScopeLock guard(m_Mutex);
-          do {
-              if ((rc = Create(newTransport)) > 0) {
-                  Diameter_IO<TX_IF, RX_HANDLER> *io =
-                     new Diameter_IO<TX_IF, RX_HANDLER>
-                          (*newTransport, m_Name.c_str());
-                  if (io) {
-                      try {
-                          Success(io);
-                          io->Open();
-                          if (m_Perpetual) {
-                              continue;
-                          }
-                          m_Active = false;
-                          return (0);
+          int rc = Create(newTransport);
+          if (rc > 0) {
+              AAA_IO<TX_IF, RX_HANDLER> *io =
+                 new AAA_IO<TX_IF, RX_HANDLER>(
+                     m_JobQ, *newTransport, m_Name.data());
+              if (io) {
+                  try {
+                      Success(io);
+                      m_JobQ.Schedule(io);
+                      if (m_Perpetual) {
+                          Schedule(this);
                       }
-                      catch (...) {
-                          AAA_LOG((LM_ERROR,
-                                  "(%P|%t) Factory %s error\n",
-                                  m_Name.c_str()));
-                      }
-                      newTransport->Close();
-                      delete newTransport;
+                      m_RefCount --;
+                      return (0);
                   }
-                  else {
-                      AAA_LOG((LM_ERROR,
-                              "(%P|%t) Factory %s memory allocation error\n",
-                              m_Name.c_str()));
+                  catch (...) {
+                      AAA_LOG(LM_ERROR,
+                                 "(%P|%t) Factory %s error\n",
+                                 m_Name.data());
                   }
-                  Failed();
-                  m_Active = false;
               }
-              else if (rc < 0) {
-                  AAA_LOG((LM_ERROR, "(%P|%t) IO Factory error: %s [%d=%s]\n",
-                          m_Name.c_str(), errno, strerror(errno)));
-                  Failed();
-                  m_Active = false;
-              }
-              // timeout, re-run
-          } while (m_Active);
+              newTransport->Close();
+              delete newTransport;
+              Failed();
+          }
+          else if (rc < 0) {
+              AAA_LOG(LM_ERROR, "(%P|%t) Transport interface error: %s\n",
+                         m_Name.data());
+              Failed();
+          }
+          else {
+              // timeout, re-schedule
+              Schedule(this);
+          }
+          m_RefCount --;
           return (0);
+      }
+      int Schedule(AAA_Job*job, size_t backlogSize=1) {
+          if (m_ReSchedule) { 
+              m_RefCount ++; 
+              return m_JobQ.Schedule(job, backlogSize);
+          }
+          return (-1);
+      }
+      void WaitOnExit() {
+          do {
+               ACE_Time_Value tm(0, 10000);
+               ACE_OS::sleep(tm);
+	  } while (m_RefCount > 0);
       }
 };
 
 // acceptor model for upper layer IO
-template<class TX_IF, class ADDR_TYPE, class RX_HANDLER>
-class Diameter_IO_Acceptor : public Diameter_IO_Factory<TX_IF, RX_HANDLER>
+template<class TX_IF, class RX_HANDLER>
+class AAA_IO_Acceptor : public AAA_IO_Factory<TX_IF, RX_HANDLER>
 {
    public:
-      Diameter_IO_Acceptor() :
-          Diameter_IO_Factory<TX_IF, RX_HANDLER>(AAA_IO_ACCEPTOR_NAME) {
-              Diameter_IO_Factory<TX_IF, RX_HANDLER>::Perpetual() = true;
+      AAA_IO_Acceptor(AAA_GroupedJob &jobQ) :
+          AAA_IO_Factory<TX_IF, RX_HANDLER>(jobQ, AAA_IO_ACCEPTOR_NAME) { 
+              AAA_IO_Factory<TX_IF, RX_HANDLER>::Perpetual() = true;
       }
-      int Open(int port, ADDR_TYPE addrToBind) {
-          if (Diameter_IO_Factory<TX_IF, RX_HANDLER>::Open() >= 0) {
-              if (Diameter_IO_Factory<TX_IF, RX_HANDLER>::m_Transport.Listen
-                  (port, addrToBind) >= 0) {
-                  return Diameter_IO_Factory<TX_IF, RX_HANDLER>::Activate();
+      int Open(int port) {
+          if (AAA_IO_Factory<TX_IF, RX_HANDLER>::Open() >= 0) {
+              if (AAA_IO_Factory<TX_IF, RX_HANDLER>::m_Transport.Listen
+                  (port) >= 0) {
+                  AAA_LOG(LM_ERROR, "(%P|%t) Listening at %d\n",
+                          port);
+                  return AAA_IO_Factory<TX_IF, RX_HANDLER>::m_JobQ.Schedule
+                          (this);
               }
           }
           return (-1);
       }
-      int Close() {
-          Diameter_IO_Factory<TX_IF, RX_HANDLER>::Close();
-          Diameter_IO_Factory<TX_IF, RX_HANDLER>::Shutdown();
-          return (0);
-      }
 
    protected:
       int Create(TX_IF *&newTransport) {
-          AAA_LOG((LM_INFO, "(%P|%t) Waiting for incomming connection ...\n"));
-          return Diameter_IO_Factory<TX_IF, RX_HANDLER>::m_Transport.Accept
-              (reinterpret_cast<DiameterTransportInterface<ADDR_TYPE> *&>(newTransport));
+          return AAA_IO_Factory<TX_IF, RX_HANDLER>::m_Transport.Accept
+              (reinterpret_cast<AAA_TransportInterface*&>(newTransport));
       }
 };
 
 // connector model for upper layer IO
-template<class TX_IF, class ADDR_TYPE, class RX_HANDLER>
-class Diameter_IO_Connector : public Diameter_IO_Factory<TX_IF, RX_HANDLER>
+template<class TX_IF, class RX_HANDLER>
+class AAA_IO_Connector : public AAA_IO_Factory<TX_IF, RX_HANDLER>
 {
    public:
-      Diameter_IO_Connector() :
-          Diameter_IO_Factory<TX_IF, RX_HANDLER>(AAA_IO_CONNECTOR_NAME) {
-              Diameter_IO_Factory<TX_IF, RX_HANDLER>::Perpetual() = false;
+      AAA_IO_Connector(AAA_GroupedJob &jobQ) :
+          AAA_IO_Factory<TX_IF, RX_HANDLER>(jobQ, AAA_IO_CONNECTOR_NAME) { 
+              AAA_IO_Factory<TX_IF, RX_HANDLER>::Perpetual() = false;
       }
       int Open(std::string &hostname, int port) {
-          if (Diameter_IO_Factory<TX_IF, RX_HANDLER>::Open() >= 0) {
-             if (Diameter_IO_Factory<TX_IF, RX_HANDLER>::m_Transport.Connect
+          if (AAA_IO_Factory<TX_IF, RX_HANDLER>::Open() >= 0) {
+             if (AAA_IO_Factory<TX_IF, RX_HANDLER>::m_Transport.Connect
                  (hostname, port) >= 0) {
-                 AAA_LOG((LM_INFO, "(%P|%t) Trying to connect to to %s:%d\n",
-                            hostname.c_str(), port));
-                 return Diameter_IO_Factory<TX_IF, RX_HANDLER>::Activate();
+                 AAA_LOG(LM_ERROR, "(%P|%t) Connection attempt to %s:%d\n",
+                            hostname.data(), port);
+                 AAA_IO_Factory<TX_IF, RX_HANDLER>::m_JobQ.Schedule(this);
+                 return (0);
              }
           }
           return (-1);
@@ -380,23 +384,9 @@ class Diameter_IO_Connector : public Diameter_IO_Factory<TX_IF, RX_HANDLER>
 
    protected:
       int Create(TX_IF *&newTransport) {
-          AAA_LOG((LM_INFO, "(%P|%t) Checking if connection attempt succeeded ...\n"));
-          return Diameter_IO_Factory<TX_IF, RX_HANDLER>::m_Transport.Complete
-                 ((DiameterTransportInterface<ADDR_TYPE> *&)newTransport);
+          return AAA_IO_Factory<TX_IF, RX_HANDLER>::m_Transport.Complete
+                 ((AAA_TransportInterface*&)newTransport);
       }
 };
-
-///
-/// Internal garbage collector definitions
-///
-typedef DiameterGarbageCollectorSingleton<Diameter_IO_Base>
-             DiameterIOGC;
-
-typedef ACE_Singleton<DiameterIOGC,
-                      ACE_Recursive_Thread_Mutex> 
-                      DiameterIOGC_S;
-
-#define DIAMETER_IO_GC_ROOT() (DiameterIOGC_S::instance())
-#define DIAMETER_IO_GC()      (DiameterIOGC_S::instance()->Instance())
 
 #endif 

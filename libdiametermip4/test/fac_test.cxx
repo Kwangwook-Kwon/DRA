@@ -4,7 +4,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
     */
 
    if (argc != 5) {
-      AAA_LOG((LM_DEBUG, "(%P|%t) Client: Usage: fac_test [AAA Server host] [AAA Server realm] [num session] [config file]\n"));
+      ACE_DEBUG((LM_DEBUG, "(%P|%t) Client: Usage: fac_test [AAA Server host] [AAA Server realm] [num session] [config file]\n"));
       return (1);
    }
 
@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
       return (1);
    }
 
-  AAA_LOG((LM_DEBUG, "(%P|%t) FA Client: Application starting\n"));
+  ACE_DEBUG((LM_DEBUG, "(%P|%t) FA Client: Application starting\n"));
 
    AAA_Task myTask;
    try {
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
    int newMipRegReq = 1;
    DiameterMip4Session *nextSession = 0;
 
-   DiameterMip4Session *_diameterMip4SessionPtr[100];
+   DiameterMip4Session *_diameterMip4SessionPtr[howManySessions];
 
 
    for (int i=0; i<howManySessions; i++)

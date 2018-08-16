@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -37,7 +37,7 @@
 
 #include <string>
 #include <ace/Singleton.h>
-#include <ace/String_Base.h>
+#include <ace/OS_String.h>
 #include <ace/Message_Block.h>
 #include "eap.hxx"
 #include "eap_peerfsm.hxx"
@@ -123,13 +123,13 @@ private:
     {
       EapAuthSwitchStateMachine &ssm = msm.AuthSwitchStateMachine();
 
-      EapNotification req;
+      EapRequest req(EapType(2));  
     
-      req.Notification() = ssm.NotificationString();
-      AAAMessageBlock *msg = AAAMessageBlock::Acquire(5 + req.Notification().size());
+      std::string &notification = ssm.NotificationString();
+      AAAMessageBlock *msg = AAAMessageBlock::Acquire(4 + notification.size());
 
       // Use parser to set Type field.
-      EapRequestNotificationParser parser;
+      EapRequestParser parser;
       parser.setAppData(&req);
       parser.setRawData(msg);
       try {

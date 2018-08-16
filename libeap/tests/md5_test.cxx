@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -31,7 +31,7 @@
 /*                                                                        */
 /* END_COPYRIGHT                                                          */
 
-// $Id: md5_test.cxx,v 1.8 2006/03/16 17:01:52 vfajardo Exp $ 
+// $Id: md5_test.cxx,v 1.7 2004/06/17 21:13:36 yohba Exp $ 
 // A test program for EAP API.
 // Written by Yoshihiro Ohba
 
@@ -82,7 +82,6 @@ class Channel
 {
  public:
   Channel() {}
-  virtual ~Channel() {}
   virtual void Transmit(AAAMessageBlock *msg)=0;
   virtual void Transmit(AAAMessageBlock *msg, int subChannel)=0;
 };
@@ -518,7 +517,6 @@ class BackendAuthApplication : public AAA_JobData
       md5Method(EapContinuedPolicyElement(EapType(4))),
       notificationMethod(EapContinuedPolicyElement(EapType(2)))
   {
-    MyBackendAuthSwitchStateMachine test(*task.reactor(), handle);
     // Policy settings for the backend authenticator
     identityMethod.AddContinuedPolicyElement
       (&notificationMethod, EapContinuedPolicyElement::PolicyOnFailure);
@@ -860,7 +858,11 @@ int main(int argc, char **argv)
 
   task.Start(2);
 
+#if WIN32
   #define num 100
+#else
+  int num = 100;
+#endif
 
   ACE_Semaphore semaphore(4*num);
 

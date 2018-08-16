@@ -2,50 +2,32 @@
 <!DOCTYPE dictionary SYSTEM "dictionary.dtd">
 <!--
   $Log: dictionary.xml,v $
-  Revision 1.15  2006/05/31 17:53:32  vfajardo
-  xml migration
+  Revision 1.5  2004/06/17 03:57:16  yohba
+  *** empty log message ***
 
-  Revision 1.14  2006/05/02 14:29:03  vfajardo
-  interop changes
+  Revision 1.4  2004/05/13 19:08:07  vfajardo
+  Fixes
 
-  Revision 1.13  2006/05/02 14:20:21  vfajardo
-  EAP dictionary
+  Revision 1.3  2004/05/13 19:05:00  vfajardo
+  fixes
 
-  Revision 1.12  2006/04/24 20:08:56  vfajardo
-  inband security id
-
-  Revision 1.11  2006/04/19 20:36:18  vfajardo
-  1298700
-
-  Revision 1.10  2006/04/05 17:53:25  vfajardo
-  Updates to dictionary
-
-  Revision 1.9  2005/06/29 14:44:15  vfajardo
-  test changes
-
-  Revision 1.8  2004/12/23 17:08:41  vfajardo
+  Revision 1.2  2004/04/20 12:59:20  vfajardo
   more fixes
 
-  Revision 1.7  2004/12/22 22:08:20  vfajardo
-  interim checkin
+  Revision 1.1  2004/04/12 15:56:20  vfajardo
+  Added AAA deamon
 
-  Revision 1.6  2004/12/10 22:53:03  vfajardo
-  next gen
+  Revision 1.2  2004/04/08 18:42:23  vfajardo
+  more changes
 
-  Revision 1.5  2004/12/02 23:32:27  vfajardo
-  next gen bugs
+  Revision 1.1  2004/04/06 17:45:11  vfajardo
+  configs
 
-  Revision 1.4  2004/05/18 01:14:56  yohba
+  Revision 1.1  2004/02/19 16:47:43  vfajardo
+  migrated from top level directory
+
+  Revision 1.10  2004/01/04 12:02:38  yohba
   *** empty log message ***
-
-  Revision 1.18  2004/05/18 01:13:38  yohba
-  *** empty log message ***
-
-  Revision 1.17  2004/04/20 01:45:22  vfajardo
-  diameter_address_t changes
-
-  Revision 1.16  2004/04/08 14:19:53  vfajardo
-  Added protocol id parser to header
 
   Revision 1.15  2004/01/04 12:01:55  yohba
   added IPFilter-Rule type parser
@@ -192,7 +174,7 @@
 
 -->
 
-<dictionary>
+<dictionary protocol="0">
   <!-- ************************* Vendors **************************** -->
   <vendor id="61" name="Merit Networks"/>
   <vendor id="42" name="Sun Microsystems, Inc."/>
@@ -217,8 +199,6 @@
         <optional>
           <avprule name="Origin-State-Id" maximum="1" minimum="1"/>
           <avprule name="Error-Reporting-Host" maximum="1"/>
-          <avprule name="Redirect-Host"/>
-          <avprule name="Redirect-Host-Usage" maximum="1"/>
           <avprule name="Proxy-Info" maximum="1"/>
           <avprule name="AVP"/>
 	</optional>
@@ -238,8 +218,6 @@
         <optional>
           <avprule name="Origin-State-Id" maximum="1"/>
           <avprule name="Error-Reporting-Host" maximum="1"/>
-          <avprule name="Redirect-Host"/>
-          <avprule name="Redirect-Host-Usage" maximum="1"/>
           <avprule name="Proxy-Info" maximum="1"/>
           <avprule name="AVP"/>
 	</optional>
@@ -318,6 +296,63 @@
       </answerrules>
     </command>
 
+    <command name="Accounting" code="271">
+      <requestrules>
+        <fixed>
+	  <avprule name="Session-Id" maximum="1" minimum="1"/>
+	</fixed>
+        <required>
+	  <avprule name="Origin-Host" maximum="1" minimum="1"/>
+	  <avprule name="Origin-Realm" maximum="1" minimum="1"/>
+	  <avprule name="Destination-Realm" maximum="1" minimum="1"/>
+	  <avprule name="Accounting-Record-Type" maximum="1" minimum="1"/>
+	  <avprule name="Accounting-Record-Number" maximum="1" minimum="1"/>
+	</required>
+        <optional>
+	  <avprule name="Acct-Application-Id" maximum="1"/>
+	  <avprule name="Vendor-Specific-Application-Id" maximum="1"/>
+	  <avprule name="User-Name" maximum="1"/>
+	  <avprule name="Accounting-Sub-Session-Id" maximum="1"/>
+	  <avprule name="Accounting-Session-Id" maximum="1"/>
+	  <avprule name="Acct-Multi-Session-Id" maximum="1"/>
+	  <avprule name="Acct-Interim-Interval" maximum="1"/>
+	  <avprule name="Accounting-Realtime-Required" maximum="1"/>
+	  <avprule name="Origin-State-Id" maximum="1"/>
+	  <avprule name="Event-Timestamp" maximum="1"/>
+	  <avprule name="Proxy-Info"/>
+	  <avprule name="Route-Record"/>
+	  <avprule name="AVP"/>
+        </optional>
+      </requestrules>
+      <answerrules>
+        <fixed>
+	  <avprule name="Session-Id" maximum="1" minimum="1"/>
+	</fixed>
+        <required>
+	  <avprule name="Result-Code" maximum="1" minimum="1"/>
+	  <avprule name="Origin-Host" maximum="1" minimum="1"/>
+	  <avprule name="Origin-Realm" maximum="1" minimum="1"/>
+	  <avprule name="Accounting-Record-Type" maximum="1" minimum="1"/>
+	  <avprule name="Accounting-Record-Number" maximum="1" minimum="1"/>
+	</required>
+        <optional>
+	  <avprule name="Acct-Application-Id" maximum="1"/>
+	  <avprule name="Vendor-Specific-Application-Id" maximum="1"/>
+	  <avprule name="User-Name" maximum="1"/>
+	  <avprule name="Accounting-Sub-Session-Id" maximum="1"/>
+	  <avprule name="Accounting-Session-Id" maximum="1"/>
+	  <avprule name="Acct-Multi-Session-Id" maximum="1"/>
+	  <avprule name="Error-Reporting-Host" maximum="1"/>
+	  <avprule name="Acct-Interim-Interval" maximum="1"/>
+	  <avprule name="Accounting-Realtime-Required" maximum="1"/>
+	  <avprule name="Origin-State-Id" maximum="1"/>
+	  <avprule name="Event-Timestamp" maximum="1"/>
+	  <avprule name="Proxy-Info"/>
+	  <avprule name="AVP"/>
+        </optional>
+      </answerrules>
+    </command>
+
     <command name="Capabilities-Exchange" code="257">
       <requestrules>
         <required>
@@ -334,7 +369,6 @@
 	  <avprule name="Acct-Application-Id"/>
 	  <avprule name="Vendor-Specific-Application-Id"/>
 	  <avprule name="Firmware-Revision" maximum="1"/>
-	  <avprule name="Inband-Security-Id" maximum="1"/>
 	  <avprule name="AVP"/>
         </optional>
       </requestrules>
@@ -498,6 +532,53 @@
       </answerrules>
     </command>
 
+    <command name="Test-Auth" code="300">
+      <requestrules>
+        <fixed>
+	  <avprule name="Session-Id" maximum="1" minimum="1"/>
+	</fixed>
+        <required>
+	  <avprule name="Origin-Host" maximum="1" minimum="1"/>
+	  <avprule name="Origin-Realm" maximum="1" minimum="1"/>
+	  <avprule name="Destination-Realm" maximum="1" minimum="1"/>
+	  <avprule name="Auth-Application-Id" maximum="1" minimum="1"/>
+	  <avprule name="Re-Auth-Request-Type" maximum="1" minimum="1"/>
+	</required>
+        <optional>
+  	  <avprule name="Destination-Host" maximum="1"/>
+	  <avprule name="User-Name" maximum="1"/>
+	  <avprule name="Origin-State-Id" maximum="1"/>
+	  <avprule name="AVP"/>
+	  <avprule name="Proxy-Info"/>
+	  <avprule name="Route-Record"/>
+        </optional>
+      </requestrules>
+      <answerrules>
+        <fixed>
+	  <avprule name="Session-Id" maximum="1" minimum="1"/>
+	</fixed>
+        <required>
+	  <avprule name="Result-Code" maximum="1" minimum="1"/>
+	  <avprule name="Origin-Host" maximum="1" minimum="1"/>
+	  <avprule name="Origin-Realm" maximum="1" minimum="1"/>
+	</required>
+        <optional>
+	  <avprule name="Auth-Session-State" maximum="1"/>
+	  <avprule name="Authorization-Lifetime" maximum="1"/>
+	  <avprule name="Auth-Grace-Period" maximum="1"/>
+	  <avprule name="Session-Timeout" maximum="1"/>
+	  <avprule name="Error-Message" maximum="1"/>
+	  <avprule name="Error-Reporting-Host" maximum="1"/>
+	  <avprule name="Failed-AVP"/>
+	  <avprule name="Redirect-Host"/>
+	  <avprule name="Redirect-Host-Usage" maximum="1"/>
+	  <avprule name="Redirect-Max-Cache-Time" maximum="1"/>
+	  <avprule name="Proxy-Info"/>
+	  <avprule name="AVP"/>
+        </optional>
+      </answerrules>
+    </command>
+
     <!-- ********************** End Commands ************************ -->
     <!-- ************************ typedefn's ************************ -->
     <typedefn type-name="Any"/> <!-- Added by Ohba-->
@@ -603,8 +684,8 @@
       <enum name="Busy" code="2"/>
       <enum name="Do not want to talk to you" code="3"/>
     </avp>
-    <avp name="Error-Message" code="281" mandatory="mustnot"
-	 protected="may" may-encrypt="no">
+    <avp name="Error-Message" code="281" mandatory="must"
+	 protected="mustnot" may-encrypt="no">
       <type type-name="UTF8String"/>
     </avp>
     <avp name="Error-Reporting-Host" code="294" mandatory="must"
@@ -613,7 +694,7 @@
     </avp>
     <avp name="Event-Timestamp" code="55" mandatory="must"
 	 protected="may" may-encrypt="no">
-      <type type-name="Time"/>
+      <type type-name="Unsigned32"/>
     </avp>
     <!--
     <avp name="Failed-AVP" code="279" mandatory="must"
@@ -621,19 +702,13 @@
       <type type-name="OctetString"/>
     </avp>
     -->
-    <avp name="Firmware-Revision" code="267" mandatory="mustnot"
+    <avp name="Firmware-Revision" code="267" mandatory="must"
 	 protected="mustnot" may-encrypt="no">
       <type type-name="Unsigned32"/>
     </avp>
     <avp name="Host-IP-Address" code="257" mandatory="must"
 	 protected="mustnot" may-encrypt="no">
       <type type-name="Address"/>
-    </avp>
-    <avp name="Inband-Security-Id" code="299" mandatory="must"
-	 protected="mustnot" may-encrypt="no">
-      <type type-name="Enumerated"/>
-      <enum name="No Security" code="0"/>
-      <enum name="TLS Security" code="1"/>
     </avp>
     <avp name="Multi-Round-Time-Out" code="272" mandatory="must"
 	 may-encrypt="yes">
@@ -677,7 +752,7 @@
     </avp>
     <avp name="Redirect-Host" code="292" mandatory="must"
 	 may-encrypt="no" protected="mustnot">
-      <type type-name="DiameterURI"/>
+      <type type-name="DiameterIdentity"/>
     </avp>
     <avp name="Redirect-Host-Usage" code="261" mandatory="must"
 	 may-encrypt="no" protected="mustnot">
@@ -777,18 +852,6 @@
         </optional>
       </grouped>
     </avp>
-    <avp name="Experimental-Result-Code" code="298" mandatory="must"
-	 may-encrypt="no" protected="mustnot">
-      <type type-name="Unsigned32"/>
-    </avp>
-    <avp name="Experimental-Result" code="297">
-      <grouped>
-        <required>
-	  <avprule name="Vendor-Id"/>
-	  <avprule name="Experimental-Result-Code"/>
-        </required>
-      </grouped>
-    </avp>
     <avp name="Example-AVP" code="999999" mandatory="mustnot">
       <grouped>
         <required>
@@ -812,7 +875,7 @@
   <!-- ************* DIAMETER NASREQ APPLICATION ************* -->
   <application id="1" name="NASREQ" 
     uri="ftp://ftp.ietf.org/internet-drafts/draft-ietf-aaa-diameter-nasreq-12.txt">
-    <command name="AA" code="265" >
+    <command name="AA" code="265" pbit="1">
       <requestrules>
         <fixed>
 	  <avprule name="Session-Id" maximum="1" minimum="1"/>
@@ -994,18 +1057,6 @@
 	 may-encrypt="yes">
       <type type-name="Enumerated"/>
     </avp>
-    <avp name="CHAP-Algorithm" code="403" mandatory="must"
-	 may-encrypt="yes">
-      <type type-name="Enumerated"/>
-    </avp>
-    <avp name="CHAP-Ident" code="404" mandatory="must"
-	 may-encrypt="yes">
-      <type type-name="OctetString"/>
-    </avp>
-    <avp name="CHAP-Response" code="405" mandatory="must"
-	 may-encrypt="yes">
-      <type type-name="OctetString"/>
-    </avp>
     <avp name="CHAP-Auth" code="402" mandatory="must"
 	 may-encrypt="yes">
       <grouped>
@@ -1018,6 +1069,18 @@
 	  <avprule name="AVP"/>
         </optional>
       </grouped>
+    </avp>
+    <avp name="CHAP-Algorithm" code="403" mandatory="must"
+	 may-encrypt="yes">
+      <type type-name="Enumerated"/>
+    </avp>
+    <avp name="CHAP-Ident" code="404" mandatory="must"
+	 may-encrypt="yes">
+      <type type-name="OctetString"/>
+    </avp>
+    <avp name="CHAP-Response" code="405" mandatory="must"
+	 may-encrypt="yes">
+      <type type-name="OctetString"/>
     </avp>
     <avp name="CHAP-Challenge" code="60" mandatory="must"
 	 may-encrypt="yes">
@@ -1175,6 +1238,25 @@
 	 may-encrypt="yes">
       <type type-name="OctetString"/>
     </avp>
+    <avp name="Tunneling" code="401" mandatory="must"
+	 may-encrypt="no">
+      <grouped>
+	<required>
+	  <avprule name="Tunnel-Type" maximum="1" minimum="1"/>
+	  <avprule name="Tunnel-Medium-Type" maximum="1" minimum="1"/>
+	  <avprule name="Tunnel-Client-Endpoint" maximum="1" minimum="1"/>
+	  <avprule name="Tunnel-Server-Endpoint" maximum="1" minimum="1"/>
+        </required>
+	<optional>
+	  <avprule name="Tunnel-Preference" maximum="1" />
+	  <avprule name="Tunnel-Client-Auth-Id" maximum="1" />
+	  <avprule name="Tunnel-Server-Auth-Id" maximum="1" />
+	  <avprule name="Tunnel-Assignment-Id" maximum="1" />
+	  <avprule name="Tunnel-Password" maximum="1" />
+	  <avprule name="Tunnel-Private-Group-Id" maximum="1" />
+        </optional>
+      </grouped>
+    </avp>
     <avp name="Tunnel-Type" code="64" mandatory="must"
 	 may-encrypt="yes">
       <type type-name="Enumerated"/>
@@ -1214,25 +1296,6 @@
     <avp name="Tunnel-Server-Auth-Id" code="91" mandatory="must"
 	 may-encrypt="yes">
       <type type-name="OctetString"/>
-    </avp>
-    <avp name="Tunneling" code="401" mandatory="must"
-	 may-encrypt="no">
-      <grouped>
-	<required>
-	  <avprule name="Tunnel-Type" maximum="1" minimum="1"/>
-	  <avprule name="Tunnel-Medium-Type" maximum="1" minimum="1"/>
-	  <avprule name="Tunnel-Client-Endpoint" maximum="1" minimum="1"/>
-	  <avprule name="Tunnel-Server-Endpoint" maximum="1" minimum="1"/>
-        </required>
-	<optional>
-	  <avprule name="Tunnel-Preference" maximum="1" />
-	  <avprule name="Tunnel-Client-Auth-Id" maximum="1" />
-	  <avprule name="Tunnel-Server-Auth-Id" maximum="1" />
-	  <avprule name="Tunnel-Assignment-Id" maximum="1" />
-	  <avprule name="Tunnel-Password" maximum="1" />
-	  <avprule name="Tunnel-Private-Group-Id" maximum="1" />
-        </optional>
-      </grouped>
     </avp>
     <avp name="Accounting-Input-Octets" code="363" mandatory="must"
 	 may-encrypt="yes">
@@ -1311,7 +1374,7 @@
 	  <avprule name="MIP-MN-AAA-Auth" maximum="1" minimum="1"/>
 	</required>
         <optional>
-	  <avprule name="Acct-Multi-Session-Id" maximum="1"/>
+	  <avprule name="Acct-Multi-Session-Id " maximum="1"/>
 	  <avprule name="Destination-Host" maximum="1"/>
 	  <avprule name="Origin-State-Id" maximum="1"/>
 	  <avprule name="MIP-Mobile-Node-Address" maximum="1"/>
@@ -1457,6 +1520,19 @@
 	 may-encrypt="yes">
       <type type-name="Address"/>
     </avp>
+    <avp name="MIP-MN-AAA-Auth" code="322" mandatory="must"
+	 may-encrypt="yes">
+      <grouped>
+	<required>
+	  <avprule name="MIP-MN-AAA-SPI" maximum="1" minimum="1"/>
+	  <avprule name="MIP-Auth-Input-Data-Length" maximum="1" minimum="1"/>
+	  <avprule name="MIP-Authenticator-Offset" maximum="1" minimum="1"/>
+        </required>
+	<optional>
+	  <avprule name="AVP"/>
+        </optional>
+      </grouped>
+    </avp>
     <avp name="MIP-MN-AAA-SPI" code="322" mandatory="must"
 	 may-encrypt="yes">
       <type type-name="Unsigned32"/>
@@ -1472,19 +1548,6 @@
     <avp name="MIP-Reg-Reply" code="321" mandatory="must"
 	 may-encrypt="yes">
       <type type-name="OctetString"/>
-    </avp>
-    <avp name="MIP-MN-AAA-Auth" code="322" mandatory="must"
-	 may-encrypt="yes">
-      <grouped>
-	<required>
-	  <avprule name="MIP-MN-AAA-SPI" maximum="1" minimum="1"/>
-	  <avprule name="MIP-Auth-Input-Data-Length" maximum="1" minimum="1"/>
-	  <avprule name="MIP-Authenticator-Offset" maximum="1" minimum="1"/>
-        </required>
-	<optional>
-	  <avprule name="AVP"/>
-        </optional>
-      </grouped>
     </avp>
     <avp name="MIP-Originating-Foreign-AAA" code="347" mandatory="must"
 	 may-encrypt="yes">
@@ -1502,21 +1565,22 @@
 	 may-encrypt="yes">
       <type type-name="Enumerated"/>
     </avp>
+    <avp name="MIP-FA-to-HA-Key" code="328" mandatory="must"
+	 may-encrypt="yes">
+      <grouped>
+	<required>
+	  <avprule name="MIP-FA-to-HA-SPI" maximum="1" minimum="1"/>
+	  <avprule name="MIP-Algorithm-Type" maximum="1" minimum="1"/>
+	  <avprule name="MIP-Session-Key" maximum="1" minimum="1"/>
+        </required>
+	<optional>
+	  <avprule name="AVP"/>
+        </optional>
+      </grouped>
+    </avp>
     <avp name="MIP-FA-to-HA-SPI" code="318" mandatory="must"
 	 may-encrypt="yes">
       <type type-name="Unsigned32"/>
-    </avp>
-    <avp name="MIP-FA-to-MN-SPI" code="319" mandatory="must"
-	 may-encrypt="yes">
-      <type type-name="Unsigned32"/>
-    </avp>
-    <avp name="MIP-Replay-Mode" code="346" mandatory="must"
-	 may-encrypt="yes">
-      <type type-name="Enumerated"/>
-    </avp>
-    <avp name="MIP-Session-Key" code="343" mandatory="must"
-	 may-encrypt="yes">
-      <type type-name="OctetString"/>
     </avp>
     <avp name="MIP-FA-to-MN-Key" code="326" mandatory="must"
 	 may-encrypt="yes">
@@ -1531,18 +1595,9 @@
         </optional>
       </grouped>
     </avp>
-    <avp name="MIP-FA-to-HA-Key" code="328" mandatory="must"
+    <avp name="MIP-FA-to-MN-SPI" code="319" mandatory="must"
 	 may-encrypt="yes">
-      <grouped>
-	<required>
-	  <avprule name="MIP-FA-to-HA-SPI" maximum="1" minimum="1"/>
-	  <avprule name="MIP-Algorithm-Type" maximum="1" minimum="1"/>
-	  <avprule name="MIP-Session-Key" maximum="1" minimum="1"/>
-        </required>
-	<optional>
-	  <avprule name="AVP"/>
-        </optional>
-      </grouped>
+      <type type-name="Unsigned32"/>
     </avp>
     <avp name="MIP-HA-to-FA-Key" code="329" mandatory="must"
 	 may-encrypt="yes">
@@ -1604,6 +1659,14 @@
         </optional>
       </grouped>
     </avp>
+    <avp name="MIP-Replay-Mode" code="346" mandatory="must"
+	 may-encrypt="yes">
+      <type type-name="Enumerated"/>
+    </avp>
+    <avp name="MIP-Session-Key" code="343" mandatory="must"
+	 may-encrypt="yes">
+      <type type-name="OctetString"/>
+    </avp>
   </application>
 
   <!-- ************* DIAMETER EAP APPLICATION ************* --> 
@@ -1613,7 +1676,7 @@
   values and are subject to change once IANA assigned values are
   obtained. -->
 
-  <application id="5" name="EAP" 
+  <application id="2000" name="EAP" 
     uri="ftp://ftp.ietf.org/internet-drafts/draft-ietf-aaa-eap-03.txt">
     <command name="Diameter-EAP" code="268" pbit="1">
       <requestrules>
@@ -1679,6 +1742,9 @@
         <optional>
 	  <avprule name="User-Name" maximum="1" />
 	  <avprule name="EAP-Payload" maximum="1"/>
+          <avprule name="EAP-Reissued-Payload" maximum="1"/>
+          <avprule name="EAP-Master-Session-Key" maximum="1"/>
+          <avprule name="Accounting-EAP-Auth-Method" maximum="1"/>
 	  <avprule name="Multi-Round-Time-Out" maximum="1"/>
 	  <avprule name="Service-Type" maximum="1" />
 	  <avprule name="Class"/>
@@ -1727,142 +1793,21 @@
       </answerrules>
     </command>
     <!-- ***************** DIAMETER EAP APPLICATION AVPS ************** -->
-    <avp name="EAP-Payload" code="462" mandatory="must"
+    <avp name="EAP-Payload" code="2001" mandatory="must"
 	 may-encrypt="yes">
       <type type-name="OctetString"/>
     </avp>
-    <avp name="EAP-Reissued-Payload" code="463" mandatory="must"
+    <avp name="EAP-Reissued-Payload" code="2002" mandatory="must"
 	 may-encrypt="yes">
       <type type-name="OctetString"/>
     </avp>
-    <avp name="EAP-Master-Session-Key" code="464" mandatory="must"
+    <avp name="EAP-Master-Session-Key" code="2003" mandatory="must"
 	 may-encrypt="yes">
       <type type-name="OctetString"/>
     </avp>
-    <avp name="Accounting-EAP-Auth-Method" code="465" mandatory="must"
+    <avp name="Accounting-EAP-Auth-Method" code="2004" mandatory="must"
 	 may-encrypt="yes">
       <type type-name="Unsigned64"/>
-    </avp>
-  </application>
-
-  <!-- ************* TEST APPLICATION ************* --> 
-
-  <application id="10000" name="Test-Authorization" 
-    uri="ftp://ftp.ietf.org/internet-drafts/draft-ietf-aaa-eap-03.txt">
-    <command name="Test-Auth" code="300">
-      <requestrules>
-        <fixed>
-	  <avprule name="Session-Id" maximum="1" minimum="1"/>
-	</fixed>
-        <required>
-	  <avprule name="Origin-Host" maximum="1" minimum="1"/>
-	  <avprule name="Origin-Realm" maximum="1" minimum="1"/>
-	  <avprule name="Destination-Realm" maximum="1" minimum="1"/>
-	  <avprule name="Auth-Application-Id" maximum="1" minimum="1"/>
-	  <avprule name="Re-Auth-Request-Type" maximum="1" minimum="1"/>
-	</required>
-        <optional>
-	  <avprule name="Auth-Session-State" maximum="1"/>
-	  <avprule name="Authorization-Lifetime" maximum="1"/>
-	  <avprule name="Auth-Grace-Period" maximum="1"/>
-  	  <avprule name="Destination-Host" maximum="1"/>
-	  <avprule name="User-Name" maximum="1"/>
-	  <avprule name="Origin-State-Id" maximum="1"/>
-	  <avprule name="Proxy-Info"/>
-	  <avprule name="Route-Record"/>
-          <avprule name="Tunneling"/>
-	  <avprule name="AVP"/>
-        </optional>
-      </requestrules>
-      <answerrules>
-        <fixed>
-	  <avprule name="Session-Id" maximum="1" minimum="1"/>
-	</fixed>
-        <required>
-	  <avprule name="Result-Code" maximum="1" minimum="1"/>
-	  <avprule name="Origin-Host" maximum="1" minimum="1"/>
-	  <avprule name="Origin-Realm" maximum="1" minimum="1"/>
-	</required>
-        <optional>
-	  <avprule name="Auth-Session-State" maximum="1"/>
-	  <avprule name="Authorization-Lifetime" maximum="1"/>
-	  <avprule name="Auth-Grace-Period" maximum="1"/>
-	  <avprule name="Session-Timeout" maximum="1"/>
-	  <avprule name="Error-Message" maximum="1"/>
-	  <avprule name="Error-Reporting-Host" maximum="1"/>
-	  <avprule name="Failed-AVP"/>
-	  <avprule name="Redirect-Host"/>
-	  <avprule name="Redirect-Host-Usage" maximum="1"/>
-	  <avprule name="Redirect-Max-Cache-Time" maximum="1"/>
-	  <avprule name="Proxy-Info"/>
-          <avprule name="Tunneling"/>
-	  <avprule name="AVP"/>
-        </optional>
-      </answerrules>
-    </command>
-  </application>
-  <application id="20000" name="Test-Accounting" 
-    uri="ftp://ftp.ietf.org/internet-drafts/draft-ietf-aaa-eap-03.txt">
-    <command name="Accounting" code="271">
-      <requestrules>
-        <fixed>
-	  <avprule name="Session-Id" maximum="1" minimum="1"/>
-	</fixed>
-        <required>
-	  <avprule name="Origin-Host" maximum="1" minimum="1"/>
-	  <avprule name="Origin-Realm" maximum="1" minimum="1"/>
-	  <avprule name="Destination-Realm" maximum="1" minimum="1"/>
-	  <avprule name="Accounting-Record-Type" maximum="1" minimum="1"/>
-	  <avprule name="Accounting-Record-Number" maximum="1" minimum="1"/>
-	</required>
-        <optional>
-	  <avprule name="Acct-Application-Id" maximum="1"/>
-	  <avprule name="Vendor-Specific-Application-Id" maximum="1"/>
-	  <avprule name="User-Name" maximum="1"/>
-	  <avprule name="Accounting-Sub-Session-Id" maximum="1"/>
-	  <avprule name="Accounting-Session-Id" maximum="1"/>
-	  <avprule name="Acct-Multi-Session-Id" maximum="1"/>
-	  <avprule name="Acct-Interim-Interval" maximum="1"/>
-	  <avprule name="Accounting-Realtime-Required" maximum="1"/>
-	  <avprule name="Origin-State-Id" maximum="1"/>
-	  <avprule name="Event-Timestamp" maximum="1"/>
-	  <avprule name="Proxy-Info"/>
-	  <avprule name="Route-Record"/>
-	  <avprule name="Example-Accounting-Record"/>
-	  <avprule name="AVP"/>
-        </optional>
-      </requestrules>
-      <answerrules>
-        <fixed>
-	  <avprule name="Session-Id" maximum="1" minimum="1"/>
-	</fixed>
-        <required>
-	  <avprule name="Result-Code" maximum="1" minimum="1"/>
-	  <avprule name="Origin-Host" maximum="1" minimum="1"/>
-	  <avprule name="Origin-Realm" maximum="1" minimum="1"/>
-	  <avprule name="Accounting-Record-Type" maximum="1" minimum="1"/>
-	  <avprule name="Accounting-Record-Number" maximum="1" minimum="1"/>
-	</required>
-        <optional>
-	  <avprule name="Acct-Application-Id" maximum="1"/>
-	  <avprule name="Vendor-Specific-Application-Id" maximum="1"/>
-	  <avprule name="User-Name" maximum="1"/>
-	  <avprule name="Accounting-Sub-Session-Id" maximum="1"/>
-	  <avprule name="Accounting-Session-Id" maximum="1"/>
-	  <avprule name="Acct-Multi-Session-Id" maximum="1"/>
-	  <avprule name="Error-Reporting-Host" maximum="1"/>
-	  <avprule name="Acct-Interim-Interval" maximum="1"/>
-	  <avprule name="Accounting-Realtime-Required" maximum="1"/>
-	  <avprule name="Origin-State-Id" maximum="1"/>
-	  <avprule name="Event-Timestamp" maximum="1"/>
-	  <avprule name="Proxy-Info"/>
-	  <avprule name="AVP"/>
-        </optional>
-      </answerrules>
-    </command>
-    <!-- ***************** TEST APPLICATION AVPS ************** -->
-    <avp name="Example-Accounting-Record" code="999997">
-      <type type-name="UTF8String"/>
     </avp>
   </application>
 </dictionary>

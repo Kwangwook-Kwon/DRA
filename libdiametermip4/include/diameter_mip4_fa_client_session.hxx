@@ -2,7 +2,7 @@
 /*                                                                        */
 /* OpenDiameter: Open-source software for the Diameter protocol           */
 /*                                                                        */
-/* Copyright (C) 2007  Open Diameter Project.                             */
+/* Copyright (C) 2004  Open Diameter Project.                             */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -47,6 +47,7 @@
 #include "diameter_mip4_parser.hxx"
 #include "mip4_diameter_fa_client_interface.hxx"
 
+
 /// Diameter MIP FA Client session.  This class is defined as multiple
 /// inheritance,  from AAAClientSession (defined in Diameter API),
 /// DiameterMip4FaClientStateMachine and the abstract interface
@@ -72,12 +73,12 @@ class DiameterMip4FaClientSession :
     DiameterMip4FaClientSession<SpecificFaClientSession> &session;
 
   
-    AAAReturnCode HandleMessage (DiameterMsg &msg)
+    AAAReturnCode HandleMessage (AAAMessage &msg)
     {
     // Header flag check.
       if (msg.hdr.flags.r)
 	{
-	  AAA_LOG((LM_ERROR, "[%N] Received AMR instead of AMA.\n"));
+	  AAA_LOG(LM_ERROR, "[%N] Received AMR instead of AMA.\n");
 	  return AAA_ERR_UNKNOWN_CMD;
 	}
 
@@ -91,7 +92,7 @@ class DiameterMip4FaClientSession :
       }
       catch ( DiameterParserError ) 
 	{
-	  AAA_LOG((LM_ERROR, "[%N] Payload error.\n"));
+	  AAA_LOG(LM_ERROR, "[%N] Payload error.\n");
 	  return AAA_ERR_PARSING_ERROR;
 	}
 
@@ -113,7 +114,7 @@ class DiameterMip4FaClientSession :
     // Register the AMA message handler
     if (RegisterMessageHandler( answerHandler) != AAA_ERR_SUCCESS)
     {
-      AAA_LOG((LM_ERROR, "[%N] AMA_Handler registration failed.\n"));
+      AAA_LOG(LM_ERROR, "[%N] AMA_Handler registration failed.\n");
       throw -1; 
     }
 
@@ -126,7 +127,7 @@ class DiameterMip4FaClientSession :
 
      }
      catch (bad_cast) {    
-       DIAMETER_LOG(LM_ERROR, "[%N] AMA_Handler registration failed.\n"));
+       DIAMETER_LOG(LM_ERROR, "[%N] AMA_Handler registration failed.\n");
        throw -1;
      }    
 #endif
@@ -156,9 +157,9 @@ class DiameterMip4FaClientSession :
   /// method. It is the responsibility of the derived class to
   /// override this function and capture the events if it is
   /// interested in it.
-  AAAReturnCode HandleMessage(DiameterMsg &msg)
+  AAAReturnCode HandleMessage(AAAMessage &msg)
   {
-    AAA_LOG((LM_ERROR, "[%N] Unknown command.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Unknown command.\n");
     return AAA_ERR_UNKNOWN_CMD;
   }
 
@@ -170,14 +171,14 @@ class DiameterMip4FaClientSession :
   /// interested in it.
   AAAReturnCode HandleDisconnect()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Session termination event received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Session termination event received.\n");
     Notify(DiameterMip4FaClientStateMachine::EvSgDisconnect);
     return AAA_ERR_SUCCESS; 
   }
   /// Reimplemented from AAAClientSession.
   AAAReturnCode HandleSessionTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Session timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Session timeout received.\n");
     Notify(DiameterMip4FaClientStateMachine::EvSgSessionTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -185,7 +186,7 @@ class DiameterMip4FaClientSession :
   /// Reimplemented from AAAClientSession.
   AAAReturnCode HandleAuthLifetimeTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Timeout received.\n");
     Notify(DiameterMip4FaClientStateMachine::EvSgAuthLifetimeTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -193,7 +194,7 @@ class DiameterMip4FaClientSession :
   /// Reimplemented from AAAClientSession.
   AAAReturnCode HandleAuthGracePeriodTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Timeout received.\n");
     Notify(DiameterMip4FaClientStateMachine::EvSgAuthGracePeriodTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -205,7 +206,7 @@ class DiameterMip4FaClientSession :
   /// function and capture this events if it is interested in it.
   AAAReturnCode HandleTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Session timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Session timeout received.\n");
     Notify(DiameterMip4FaClientStateMachine::EvSgTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -241,7 +242,7 @@ class DiameterMip4FaClientSession :
   // operator. More documentation in the sample application file.
   virtual void Abort(){}
 
- void SetUserName(DiameterScholarAttribute<diameter_utf8string_t> &userName)
+ void SetUserName(AAA_ScholarAttribute<diameter_utf8string_t> &userName)
   {
     diameter_utf8string_t _userName;
     specificFaClientSession.SetUserName( _userName);
@@ -251,7 +252,7 @@ class DiameterMip4FaClientSession :
   /// This function is used for setting Destination-Realm AVP
   /// contents.  
   virtual void SetDestinationRealm
-  (DiameterScholarAttribute<diameter_utf8string_t> &destinationRealm)
+  (AAA_ScholarAttribute<diameter_utf8string_t> &destinationRealm)
   {
     diameter_utf8string_t _destinationRealm;
     specificFaClientSession.SetDestinationRealm( _destinationRealm);
@@ -261,10 +262,10 @@ class DiameterMip4FaClientSession :
   //  MipRegRequest will be set by the fn RxMipregReq()
 
   void SetMipMnAaaAuth
-    (DiameterScholarAttribute<mip_mn_aaa_auth_info_t> &mipMnAaaAuth)
+    (AAA_ScholarAttribute<mip_mn_aaa_auth_info_t> &mipMnAaaAuth)
   {
 
-    DiameterScholarAttribute<mip_mn_aaa_auth_info_t> _mipMnAaaAuth; 
+    AAA_ScholarAttribute<mip_mn_aaa_auth_info_t> _mipMnAaaAuth; 
     
     specificFaClientSession.SetMipMnAaaSpi( 
 			 &( _mipMnAaaAuth().MipMnAaaSpi() ));
@@ -294,7 +295,7 @@ class DiameterMip4FaClientSession :
   /// This function is used for setting Destination-Host AVP
   /// contents.  
   void SetDestinationHost//( diameter_utf8string_t  _destinationHost)
-  (DiameterScholarAttribute<diameter_utf8string_t> &destinationHost)
+  (AAA_ScholarAttribute<diameter_utf8string_t> &destinationHost)
   {
     diameter_utf8string_t _destinationHost;
     specificFaClientSession.SetDestinationHost( _destinationHost);
@@ -302,7 +303,7 @@ class DiameterMip4FaClientSession :
   }
 
   void SetMipMobileNodeAddress
-  (DiameterScholarAttribute<diameter_address_t> &mipMobileNodeAddress)
+  (AAA_ScholarAttribute<diameter_address_t> &mipMobileNodeAddress)
   {
     diameter_address_t _mipMobileNodeAddress;
     specificFaClientSession.SetMipMobileNodeAddress(_mipMobileNodeAddress);
@@ -310,7 +311,7 @@ class DiameterMip4FaClientSession :
   }
 
   void SetMipHomeAgentAddress
-  (DiameterScholarAttribute<diameter_address_t> &mipHomeAgentAddress)
+  (AAA_ScholarAttribute<diameter_address_t> &mipHomeAgentAddress)
   {
     diameter_address_t _mipHomeAgentAddress;
     specificFaClientSession.SetMipHomeAgentAddress(_mipHomeAgentAddress);
@@ -340,7 +341,7 @@ class DiameterMip4FaClientSession :
   }
 
   void SetAuthorizationLifetime
-  (DiameterScholarAttribute<diameter_unsigned32_t> &authorizationLifetime)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &authorizationLifetime)
   {
     diameter_unsigned32_t _authorizationLifetime;
     if ( specificFaClientSession.SetAuthorizationLifetime(
@@ -352,11 +353,11 @@ class DiameterMip4FaClientSession :
 
 // fn not needed=> static info take from configuration file
 // void SetAuthSessionState
-//  (DiameterScholarAttribute<diameter_enumerated_t> &authSessionState) {}
+//  (AAA_ScholarAttribute<diameter_enumerated_t> &authSessionState) {}
 
   //int 
   void SetMipHomeAgentHost
-  (DiameterScholarAttribute<mip_home_agent_host_info_t> &mipHomeAgentHost)
+  (AAA_ScholarAttribute<mip_home_agent_host_info_t> &mipHomeAgentHost)
   {
     //mip_home_agent_host_info_t 
     diameter_identity_t _mipHomeAgentHost;
@@ -371,7 +372,7 @@ class DiameterMip4FaClientSession :
   }
 
   virtual int SetMipFaChallenge
-  (DiameterScholarAttribute<diameter_octetstring_t> &mipFaChallenge)
+  (AAA_ScholarAttribute<diameter_octetstring_t> &mipFaChallenge)
   {
     diameter_octetstring_t _mipFaChallenge;
 
@@ -381,11 +382,11 @@ class DiameterMip4FaClientSession :
   }
 
   virtual void SetMipCandidateHomeAgentHost
-  (DiameterScholarAttribute<diameter_identity_t> &mipCandidateHomeAgentHost)
+  (AAA_ScholarAttribute<diameter_identity_t> &mipCandidateHomeAgentHost)
   {}
 
   virtual int SetMipHaToFaSpi
-  (DiameterScholarAttribute<diameter_unsigned32_t> &mipHaToFaSpi)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &mipHaToFaSpi)
   {
     diameter_unsigned32_t _mipHaToFaSpi;
     if ( specificFaClientSession.SetMipHaToFaSpi( &_mipHaToFaSpi) == 0)
@@ -452,7 +453,7 @@ class DiameterMip4FaClientSession :
   }
 
   void EnforceMipFilterRule ( 
-      const  DiameterVectorAttribute<diameter_ipfilter_rule_t> &mipFilterRule)
+      const  AAA_VectorAttribute<diameter_ipfilter_rule_t> &mipFilterRule)
      //const diameter_ipfilter_rule_t &mipFilterRule)
   {
     specificFaClientSession.EnforceMipFilterRule( mipFilterRule);

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -40,30 +40,18 @@
 #include "ace/Message_Block.h"
 #include "pana_exports.h"
 #include "pana_defs.h"
-#include "pana_exceptions.h"
 
 class PANA_EXPORT PANA_MessageBuffer : public ACE_Message_Block
 {
     public:
-        PANA_MessageBuffer() :
-            ACE_Message_Block(PANA_MAX_MESSAGE_SIZE,
-                              MB_DATA, 0, 0,
-                              AAAMemoryManager_S::instance()),
-            m_RefCount(0) {
-        }
-        static PANA_MessageBuffer* Acquire(char *buf, ACE_UINT32 s) {
-            return new PANA_MessageBuffer(buf,s);
-        }
-        void Release() {
-            release();
-        }
+       PANA_MessageBuffer() :
+           ACE_Message_Block(PANA_MAX_MESSAGE_SIZE,
+                             MB_DATA, 0, 0,
+                             AAAMemoryManager_S::instance()),
+           m_RefCount(0) {
+       }
 
         friend class PANA_MessagePoolManager;
-
-    protected:
-        PANA_MessageBuffer(char *buf, ACE_UINT32 s) {
-            init(buf, s);
-        }
 
     protected:
         ACE_Atomic_Op<ACE_Thread_Mutex, long> m_RefCount;
@@ -86,7 +74,6 @@ class PANA_EXPORT PANA_MessagePoolManager
                         // reset read/write ptr
                         buffer->rd_ptr(buffer->base());
                         buffer->wr_ptr(buffer->base());
-                        memset(buffer->base(), 0x0, PANA_MAX_MESSAGE_SIZE);
                         return (buffer);
                     }
                 }

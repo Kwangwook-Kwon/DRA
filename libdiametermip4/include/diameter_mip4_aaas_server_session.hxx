@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -75,12 +75,12 @@ class AMR_Handler:public AAASessionMessageHandler
     {}
   private:
     DiameterMip4AaaSServerSession<SpecificAaaSServerSession >  &session;
-    AAAReturnCode HandleMessage (DiameterMsg &msg)
+    AAAReturnCode HandleMessage (AAAMessage &msg)
     {
       // Header flag check.
       if (!msg.hdr.flags.r)
 	{
-	  AAA_LOG((LM_ERROR, "[%N] Received AMA instead of AMR.\n"));
+	  AAA_LOG(LM_ERROR, "[%N] Received AMA instead of AMR.\n");
 	  return AAA_ERR_UNKNOWN_CMD;
 	}
 
@@ -94,7 +94,7 @@ class AMR_Handler:public AAASessionMessageHandler
       }
       catch ( DiameterParserError ) 
 	{
-	  AAA_LOG((LM_ERROR, "[%N] Payload error.\n"));
+	  AAA_LOG(LM_ERROR, "[%N] Payload error.\n");
 	  return AAA_ERR_PARSING_ERROR;
 	}
 
@@ -118,7 +118,7 @@ class AMR_Handler:public AAASessionMessageHandler
     // Register the AMR message handler
     if (RegisterMessageHandler( requestHandler) != AAA_ERR_SUCCESS)
     {
-      AAA_LOG((LM_ERROR, "[%N] AMR_Handler registration failed.\n"));
+      AAA_LOG(LM_ERROR, "[%N] AMR_Handler registration failed.\n");
       throw -1; 
     }
   }
@@ -150,16 +150,16 @@ class AMR_Handler:public AAASessionMessageHandler
   DiameterMip4AaaSServerSession* Self() { return this; }
 
   /// Reimplemented from AAAServerSession. 
-  AAAReturnCode HandleMessage(DiameterMsg &msg)
+  AAAReturnCode HandleMessage(AAAMessage &msg)
   {
-    AAA_LOG((LM_ERROR, "[%N] Unknown command.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Unknown command.\n");
     return AAA_ERR_UNKNOWN_CMD;
   }
 
   /// Reimplemented from AAAServerSession. 
   AAAReturnCode HandleDisconnect()
   {
-    AAA_LOG((LM_ERROR, "[%N] Session termination event received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Session termination event received.\n");
     Notify(DiameterMip4AaaSServerStateMachine::EvSgDisconnect);
     return AAA_ERR_SUCCESS; 
   }
@@ -167,7 +167,7 @@ class AMR_Handler:public AAASessionMessageHandler
   /// Reimplemented from AAAServerSession.
   AAAReturnCode HandleSessionTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Session timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Session timeout received.\n");
     Notify(DiameterMip4AaaSServerStateMachine::EvSgSessionTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -175,7 +175,7 @@ class AMR_Handler:public AAASessionMessageHandler
   /// Reimplemented from AAAServerSession.
   AAAReturnCode HandleAuthLifetimeTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Timeout received.\n");
     Notify(DiameterMip4AaaSServerStateMachine::EvSgAuthLifetimeTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -183,7 +183,7 @@ class AMR_Handler:public AAASessionMessageHandler
   /// Reimplemented from AAAServerSession.
   AAAReturnCode HandleAuthGracePeriodTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Timeout received.\n");
     Notify(DiameterMip4AaaSServerStateMachine::EvSgAuthGracePeriodTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -195,7 +195,7 @@ class AMR_Handler:public AAASessionMessageHandler
   /// event handler.
   AAAReturnCode HandleTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] General timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] General timeout received.\n");
     Notify(DiameterMip4AaaSServerStateMachine::EvSgTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -221,7 +221,7 @@ class AMR_Handler:public AAASessionMessageHandler
     return specificAaaSServerSession.SetMnHaNonce( mnHaNonce);
     //return 1;
   }
-  int SetHaMnKey(  DiameterScholarAttribute<diameter_octetstring_t> &mipSessionKey)  //MnHaKey for HA
+  int SetHaMnKey(  AAA_ScholarAttribute<diameter_octetstring_t> &mipSessionKey)  //MnHaKey for HA
   {
     diameter_octetstring_t _mipSessionKey;
     int rc = specificAaaSServerSession.SetHaMnKey( _mipSessionKey);
@@ -230,7 +230,7 @@ class AMR_Handler:public AAASessionMessageHandler
     return rc;
     
   }
-  int SetAlgorithmType( DiameterScholarAttribute<diameter_unsigned32_t> &mipAlgorithmType)
+  int SetAlgorithmType( AAA_ScholarAttribute<diameter_unsigned32_t> &mipAlgorithmType)
   {
     diameter_unsigned32_t _mipAlgorithmType;
     specificAaaSServerSession.SetAlgorithmType( &_mipAlgorithmType);
@@ -238,7 +238,7 @@ class AMR_Handler:public AAASessionMessageHandler
     return 1;
   }
 
-  int SetReplayMode( DiameterScholarAttribute<diameter_unsigned32_t> &mipReplayMode)
+  int SetReplayMode( AAA_ScholarAttribute<diameter_unsigned32_t> &mipReplayMode)
   {
     diameter_unsigned32_t _mipReplayMode;
     specificAaaSServerSession.SetReplayMode( &_mipReplayMode);
@@ -247,7 +247,7 @@ class AMR_Handler:public AAASessionMessageHandler
   }
 
   int SetAuthorizationLifetime(
-	       DiameterScholarAttribute<diameter_unsigned32_t>&authLifetime)
+	       AAA_ScholarAttribute<diameter_unsigned32_t>&authLifetime)
   {
     diameter_unsigned32_t _authorizationLifetime;
     if ( specificAaaSServerSession.SetAuthorizationLifetime(
@@ -258,7 +258,7 @@ class AMR_Handler:public AAASessionMessageHandler
     return 1;
   }
 
-  void SetAuthState( DiameterScholarAttribute<diameter_enumerated_t> &state)
+  void SetAuthState( AAA_ScholarAttribute<diameter_enumerated_t> &state)
   {
     diameter_enumerated_t _state;
     specificAaaSServerSession.SetAuthState( &_state);
@@ -279,7 +279,7 @@ class AMR_Handler:public AAASessionMessageHandler
   }
 
   int SetMipMsaLifetime( 
-	       DiameterScholarAttribute<diameter_unsigned32_t>&mipMsaLifetime)
+	       AAA_ScholarAttribute<diameter_unsigned32_t>&mipMsaLifetime)
   {
       diameter_unsigned32_t _mipMsaLifetime;
       specificAaaSServerSession.SetMipMsaLifetime( &_mipMsaLifetime);
@@ -296,7 +296,7 @@ class AMR_Handler:public AAASessionMessageHandler
   {
 
     // get local realm from config file
-     if (realm == DIAMETER_CFG_TRANSPORT()->realm)
+     if (realm == AAA_CFG_TRANSPORT()->realm)
        return 1;
      else 
        return 0;
@@ -322,7 +322,7 @@ class AMR_Handler:public AAASessionMessageHandler
   
   
   int SetAaaSAllocatedHomeAgentHost(
-			 DiameterScholarAttribute<diameter_identity_t> &hostname)
+			 AAA_ScholarAttribute<diameter_identity_t> &hostname)
   {
     //return 
       (specificAaaSServerSession.SetAaaSAllocatedHomeAgentHost(hostname));

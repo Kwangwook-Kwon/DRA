@@ -4,7 +4,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -36,30 +36,30 @@
 #define __PANA_INGRESS_H__
 
 #include "pana_message.h"
+#include "pana_io.h"
 #include "framework.h"
 #include "pana_memory_manager.h"
 #include "od_utl_patterns.h"
 
-class PANA_EXPORT PANA_IngressJob :
-   public AAA_Job
+class PANA_EXPORT PANA_IngressJob : public AAA_Job
 {
    public:
-      PANA_IngressJob(AAA_GroupedJob &g, const char *name = "") :
-          m_Group(g),
-          m_MsgHandler(0),
-          m_Name(name) {
+      PANA_IngressJob(AAA_GroupedJob &g, const char *name = "") : 
+          m_Group(g), 
+          m_MsgHandler(0), 
+          m_Name(name) { 
       }
-      virtual int Schedule(AAA_Job* job, size_t backlogSize=1) {
+      virtual int Schedule(AAA_Job* job, unsigned int backlogSize=1) { 
           return m_Group.Schedule(job);
       }
       virtual int Schedule() {
           return m_Group.Schedule(this);
       }
       void RegisterHandler(OD_Utl_CbFunction1<PANA_Message&> &h) { 
-          m_MsgHandler = h.clone();
+          m_MsgHandler = h.clone(); 
       }
-      void RemoveHandler() {
-          delete m_MsgHandler;
+      void RemoveHandler() { 
+          delete m_MsgHandler; 
           m_MsgHandler = NULL;
       }
       std::string &Name() {
@@ -75,55 +75,51 @@ class PANA_EXPORT PANA_IngressJob :
 /*!
  * Ingress message parser
  */
-class PANA_EXPORT PANA_IngressMsgParser :
+class PANA_EXPORT PANA_IngressMsgParser : 
    public PANA_IngressJob
 {
    public:
       PANA_IngressMsgParser(AAA_GroupedJob &g,
                             PANA_MessageBuffer &msg,
-                            ACE_INET_Addr &srcAddr,
+                            ACE_UINT32 port,
+                            PANA_DeviceIdContainer &dev,
                             const char *name = "") :
          PANA_IngressJob(g, name),
-         m_SrcAddr(srcAddr),
-         m_Message(msg) {
+         m_SrcPort(port),
+         m_Message(msg),
+         m_SrcDevices(dev) { 
       }
-      virtual ~PANA_IngressMsgParser() {
+      virtual ~PANA_IngressMsgParser() { 
       }
 
       virtual int Serve();
 
    private:
-      ACE_INET_Addr m_SrcAddr;
+      ACE_UINT32 m_SrcPort;
       PANA_MessageBuffer &m_Message;
+      PANA_DeviceIdContainer &m_SrcDevices;
 };
 
 /*!
  * Ingress io receiver
  */
-class PANA_EXPORT PANA_IngressReceiver :
-    public PANA_IngressJob
+class PANA_EXPORT PANA_IngressReceiver : public PANA_IngressJob
 {
     public:
-      typedef enum {
-          PANA_SOCKET_RECV_TIMEOUT = 3 // sec
-      };
-
-    public:
-      PANA_IngressReceiver(AAA_GroupedJob &g,
-                           PANA_Socket &so,
+      PANA_IngressReceiver(AAA_GroupedJob &g, 
+                           PANA_ResilientIO &io,
                            const char *name = "") :
              PANA_IngressJob(g, name),
-                             m_Socket(so),
-                             m_Running(false) {
+			 m_IO(io),
+			 m_Running(false),
+             m_Abort(false) { 
       }
-      bool Running() {
-         return m_Running;
-      }
-      void Stop() {
-         m_Socket.close();
+
+      bool &Abort() {
+         return m_Abort;
       }
       virtual int Serve();
-      virtual void Wait() {
+      virtual void Wait() {		  
          while (m_Running) {
             ACE_Time_Value tm(1, 0);
             ACE_OS::sleep(tm);
@@ -131,8 +127,9 @@ class PANA_EXPORT PANA_IngressReceiver :
       }
 
    protected:
-      PANA_Socket &m_Socket;
+      PANA_ResilientIO &m_IO;
       bool m_Running;
+      bool m_Abort;
 };
 
 #endif // __PANA_INGRESS_H__

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -315,7 +315,7 @@ private:
 	}
 
       // Output notification to the application.  
-      sm.Notification(sm.NotificationString()=notification.Notification());
+      sm.Notification(sm.NotificationString());
       sm.Event(EvSgNotificationOutputFinished);
     }
   };
@@ -751,14 +751,12 @@ private:
 	    // Set the current method type
 	    sm.CurrentMethod() = type;
 
-#if 0
 	    // Extract the notification string.
 	    std::string notifStr(msg->rd_ptr(), msg->size()-
 				 (msg->rd_ptr()-msg->base()));
 
 	    // Execute the notification callback.
 	    sm.Notification(notifStr);
-#endif
 
 	    // Generate an event to send Response/Notification.
 	    sm.Event(EvRxNotification);

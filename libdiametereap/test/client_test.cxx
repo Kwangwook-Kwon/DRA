@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -133,7 +133,6 @@ class Channel
 {
  public:
   Channel() {}
-  virtual ~Channel() {}
   virtual void Transmit(AAAMessageBlock *msg)=0;
   virtual void Transmit(AAAMessageBlock *msg, int subChannel)=0;
 };
@@ -171,10 +170,10 @@ class MyDiameterEapClientSession : public DiameterEapClientSession
 
   /// Reimplemented from the parent class.
   void SetDestinationRealm
-  (DiameterScholarAttribute<diameter_utf8string_t> &realm);
+  (AAA_ScholarAttribute<diameter_utf8string_t> &realm);
 
   /// Reimplemented from parent class.
-  void SetUserName(DiameterScholarAttribute<diameter_utf8string_t> &username);
+  void SetUserName(AAA_ScholarAttribute<diameter_utf8string_t> &username);
 };
 
 // Class definition for authenticator identity method for my application.
@@ -566,7 +565,7 @@ MyDiameterEapClientSession::SignalFailure(std::string &eapMsg)
     if (eapMsg.length() > 0)
       msg = AAAMessageBlock::Acquire((char*)eapMsg.data(), (ACE_UINT32)eapMsg.length());
     else
-      AAA_LOG((LM_DEBUG, "SignalFailure without EAP-Failure.\n"));
+      AAA_LOG(LM_DEBUG, "SignalFailure without EAP-Failure.\n");
 
     JobData(Type2Type<NAS_Application>()).Eap().AAA_Failure(msg);
 
@@ -582,30 +581,27 @@ MyDiameterEapClientSession::SignalReauthentication()
 
 void
 MyDiameterEapClientSession::SetDestinationRealm
-(DiameterScholarAttribute<diameter_utf8string_t> &realm)
+(AAA_ScholarAttribute<diameter_utf8string_t> &realm)
 {
   std::string& userName 
     = JobData(Type2Type<NAS_Application>()).Eap().PeerIdentity();
 
-  size_t pos = userName.find('@');
+  size_t pos;
 
-  if (pos != std::string::npos) {
-    pos ++;
-    realm.Set(std::string(userName, pos, userName.length() - pos));
-  }
-  else {
+  if ((pos = userName.find('@')) != std::string::npos)
+    realm.Set(std::string(userName, ++pos, userName.length() - pos));
+  else
     realm.Set(std::string("research2.org"));
-  }
 }
 
 void
 MyDiameterEapClientSession::SetUserName
-(DiameterScholarAttribute<diameter_utf8string_t> &username)
+(AAA_ScholarAttribute<diameter_utf8string_t> &username)
 {
   std::string& userName 
     = JobData(Type2Type<NAS_Application>()).Eap().PeerIdentity();
 
-  size_t pos = 0;
+  size_t pos;
 
   if ((pos = userName.find('@')) != std::string::npos)
 // Modified by Santiago Zapata Hernandez for UMU
@@ -647,7 +643,7 @@ class MyInitializer
 
   void InitApplicationCore()
   {
-    AAA_LOG((LM_DEBUG, "[%N] Application starting\n"));
+    ACE_DEBUG((LM_DEBUG, "[%N] Application starting\n"));
     if (applicationCore.Open("config/client.local.xml",
                              task) != AAA_ERR_SUCCESS)
       {
@@ -658,7 +654,7 @@ class MyInitializer
 
   void InitEapTask()
   {
-    AAA_LOG((LM_DEBUG, "[%N] EAP Task starting.\n"));
+    ACE_DEBUG((LM_DEBUG, "[%N] EAP Task starting.\n"));
     methodRegistrar.registerMethod
       (std::string("Identity"), EapType(1), 
        Authenticator, myAuthIdentityCreator);
@@ -695,7 +691,13 @@ main(int argc, char *argv[])
   AAAApplicationCore applicationCore;
   MyInitializer initializer(task, applicationCore);
 
+#if defined(WIN32)
   #define num 100
+#else
+  int num;
+  std::cout << "Input number of sessions: ";
+  std::cin >> num;
+#endif
   ACE_Semaphore semaphore(2*num);
 
   TotalSuccess=0;

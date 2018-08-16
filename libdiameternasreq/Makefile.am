@@ -6,9 +6,9 @@ VPATH = @srcdir@
 AM_CPPFLAGS = @L_CPPFLAGS@ \
               -I@top_srcdir@/include \
               -I@top_srcdir@/libodutl/include \
-              -I@top_srcdir@/libdiamparser/include \
+              -I@top_srcdir@/libdiamparser \
               -I@top_srcdir@/libdiameter/include \
-              -I@top_srcdir@/libdiameternasreq/include \
+              -I./include \
               -D@HOST_OS@
 
 AM_LDFLAGS = @L_LDFLAGS@
@@ -38,16 +38,16 @@ include_HEADERS = $(DIAMETER_NASREQ_HDR)
 sysconfdir = $(prefix)/etc/opendiameter/diameternasreq
 sysconf_DATA = config/client.local.xml \
                config/configuration.xml \
-               config/configuration.dtd \
+               config/configuration.xsd \
                config/dictionary.dtd \
                config/dictionary.xml \
                config/server.local.xml
 
 LDADD = @L_LIBS@ \
-        $(top_builddir)/libdiameternasreq/libdiameternasreq.la \
-	$(top_builddir)/libdiameter/libdiameter.la \
-	$(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libodutl/libodutl.la
+        libdiameternasreq.la \
+	$(top_srcdir)/libdiameter/libdiameter.la \
+	$(top_srcdir)/libdiamparser/libdiamparser.la \
+	$(top_srcdir)/libodutl/libodutl.la
 
 noinst_PROGRAMS = client_test server_test
 
@@ -57,13 +57,3 @@ server_test_SOURCES = test/server_test.cxx
 
 EXTRA_DIST = config
 
-client_test_LDADD = $(top_builddir)/libdiameternasreq/libdiameternasreq.la\
-	$(top_builddir)/libdiameter/libdiameter.la\
-	$(top_builddir)/libdiamparser/libdiamparser.la\
-	$(top_builddir)/libodutl/libodutl.la -lACEXML_Parser -lACEXML -lACE\
-	-lACE_SSL -lssl
-server_test_LDADD = $(top_builddir)/libdiameternasreq/libdiameternasreq.la\
-	$(top_builddir)/libdiameter/libdiameter.la\
-	$(top_builddir)/libdiamparser/libdiamparser.la\
-	$(top_builddir)/libodutl/libodutl.la -lACEXML_Parser -lACEXML -lACE\
-	-lACE_SSL -lssl

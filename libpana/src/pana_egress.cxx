@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -39,16 +39,18 @@ int PANA_EgressSender::Serve()
     PANA_MessageBuffer *rawBuf = PANA_MESSAGE_POOL()->malloc();
 
     PANA_HeaderParser hp;
-    hp.setRawData(rawBuf);
+    AAADictionaryOption opt(PARSE_STRICT, PANA_DICT_PROTOCOL_ID);
+    hp.setRawData(reinterpret_cast<AAAMessageBlock*>(rawBuf));
     hp.setAppData(static_cast<PANA_MsgHeader*>(m_Msg.get()));
+    hp.setDictData(&opt);
 
     hp.parseAppToRaw();
 
     // Parse the payload
     PANA_PayloadParser pp;
-    pp.setRawData(rawBuf);
+    pp.setRawData(reinterpret_cast<AAAMessageBlock*>(rawBuf));
     pp.setAppData(&(m_Msg->avpList()));
-    pp.setDictData(hp.getDictData());
+    pp.setDictData(m_Msg->getDictHandle());
 
     pp.parseAppToRaw();
 
@@ -57,10 +59,31 @@ int PANA_EgressSender::Serve()
     hp.parseAppToRaw();
 
     /* --- send the message --- */
-    if (m_Socket.send(rawBuf->base(), m_Msg->length(),
-                      m_Msg->destAddress()) < 0) {
-        AAA_LOG((LM_ERROR, "(%P|%t) Transmit error [%s]\n",
+    int retry = 0;
+    for (; retry < RETRY_COUNT; retry ++) {
+        if (m_IO().send(rawBuf->base(), m_Msg->length(), 
+                        m_Msg->srcPort(), m_Msg->srcDevices()) < 0) {
+            ACE_DEBUG((LM_ERROR, "(%P|%t) Reransmitt error: %s, retrying\n",
                        strerror(errno)));
+            try {
+                for (int reopen = 0; reopen < RETRY_COUNT; reopen ++) {
+                    if (m_IO.ReOpen()) {
+                        throw (0);
+                    }
+                    ACE_Time_Value tout(1, 0);
+                    ACE_OS::sleep(tout);
+                }                
+                ACE_DEBUG((LM_ERROR, "(%P|%t) Unable to re-open socket, giving-up\n"));
+                break;
+            } catch (...) {
+            }
+        }
+        else {
+            break;
+        }
+    }
+    if (retry == RETRY_COUNT) {
+        ACE_DEBUG((LM_ERROR, "(%P|%t) Unable to send message, giving-up\n"));
     }
 
     PANA_MESSAGE_POOL()->free(rawBuf);

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -113,7 +113,7 @@ class DIAMETER_MIP4_AAAS_SERVER_EXPORTS DiameterMip4AaaSServerStateMachine
   /// when Notify() fails.
   virtual void Abort()
   {
-    AAA_LOG((LM_DEBUG, "Diameter AAA server session aborted.\n"));
+    AAA_LOG(LM_DEBUG, "Diameter AAA server session aborted.\n");
     //Abort();  WHAT SHOULD BE DONE HERE ??
   }
 
@@ -131,19 +131,19 @@ class DIAMETER_MIP4_AAAS_SERVER_EXPORTS DiameterMip4AaaSServerStateMachine
   */
 
   virtual int SetMnHaNonce(diameter_octetstring_t &mnHaNonce)=0;//MnHaNonce for Mn
-  virtual int SetHaMnKey( DiameterScholarAttribute<diameter_octetstring_t> &mipSessionKey)=0;//MnHaKey for HA
+  virtual int SetHaMnKey( AAA_ScholarAttribute<diameter_octetstring_t> &mipSessionKey)=0;//MnHaKey for HA
 
 
-  virtual int SetAlgorithmType( DiameterScholarAttribute<diameter_unsigned32_t> & mipAlgorithmType)=0;
-  virtual int SetReplayMode(DiameterScholarAttribute<diameter_unsigned32_t> &mipReplayMode)=0;
+  virtual int SetAlgorithmType( AAA_ScholarAttribute<diameter_unsigned32_t> & mipAlgorithmType)=0;
+  virtual int SetReplayMode(AAA_ScholarAttribute<diameter_unsigned32_t> &mipReplayMode)=0;
  
   virtual int SetAuthorizationLifetime(
-	       DiameterScholarAttribute<diameter_unsigned32_t>&authLifetime)=0;
+	       AAA_ScholarAttribute<diameter_unsigned32_t>&authLifetime)=0;
 
-  virtual void SetAuthState( DiameterScholarAttribute<diameter_enumerated_t> &state)=0;
+  virtual void SetAuthState( AAA_ScholarAttribute<diameter_enumerated_t> &state)=0;
 
   virtual int SetMipMsaLifetime(
-	       DiameterScholarAttribute<diameter_unsigned32_t>&mipMsaLifetime)=0;
+	       AAA_ScholarAttribute<diameter_unsigned32_t>&mipMsaLifetime)=0;
 
   virtual int SetErrorMessage(diameter_utf8string_t &errorMessage)=0;
 
@@ -166,7 +166,7 @@ class DIAMETER_MIP4_AAAS_SERVER_EXPORTS DiameterMip4AaaSServerStateMachine
   virtual int SetFaHaKey(diameter_octetstring_t &mipSessionKey)=0;
 
   // AAA Server will allocate HA if no HA has been requested
-  virtual int SetAaaSAllocatedHomeAgentHost(DiameterScholarAttribute<diameter_identity_t> &hostname)=0; //diameter_identity_t &hostname)=0;
+  virtual int SetAaaSAllocatedHomeAgentHost(AAA_ScholarAttribute<diameter_identity_t> &hostname)=0; //diameter_identity_t &hostname)=0;
 
   virtual void NotifyClientSession( int event)=0;
 
@@ -194,12 +194,12 @@ class DIAMETER_MIP4_AAAS_SERVER_EXPORTS DiameterMip4AaaSServerStateMachine
   {
     if (!AAA_EventQueueJob::ExistBacklog())
       {
-	AAA_LOG((LM_ERROR, "%N: no backlog to serve."));
+	AAA_LOG(LM_ERROR, "%N: no backlog to serve.");
 	return 0;
       }
 
     // Obtain the event to execute.
-    AAA_Event ev = 0;
+    AAA_Event ev;
     AAA_EventQueueJob::Dequeue(ev);
 
     bool existBacklog = AAA_EventQueueJob::ExistBacklog();

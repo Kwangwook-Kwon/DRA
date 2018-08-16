@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -93,7 +93,7 @@ class DiameterEapServerSession;
 /// const) and second argument, respectivily, where the former
 /// attribute contains a requested value and the latter contains an
 /// enforced value.  The former attributes are not enveloped with
-/// DiameterScholorAttribute or DiameterVectorAttribute since they are
+/// AAA_ScholorAttribute or AAA_VectorAttributes since they are
 /// intended to be unmodified.
 class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine 
   : public AAA_StateMachine<DiameterEapServerStateMachine>,
@@ -207,14 +207,14 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeMultiRoundTimeOut
-  (DiameterScholarAttribute<diameter_unsigned32_t> &multiRoundTimeout)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &multiRoundTimeout)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeServiceType
-  (DiameterScholarAttribute<diameter_enumerated_t> &serviceType)
+  (AAA_ScholarAttribute<diameter_enumerated_t> &serviceType)
   {
     return true;
   }
@@ -222,14 +222,14 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeServiceType
   (const diameter_enumerated_t &serviceType1,
-   DiameterScholarAttribute<diameter_enumerated_t> &serviceType2)
+   AAA_ScholarAttribute<diameter_enumerated_t> &serviceType2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeClass
-  (DiameterVectorAttribute<diameter_octetstring_t> &Class)
+  (AAA_VectorAttribute<diameter_octetstring_t> &Class)
   {
     return true;
   }
@@ -237,7 +237,7 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeClass
   (const std::vector<diameter_octetstring_t> &Class1, 
-   DiameterVectorAttribute<diameter_octetstring_t> &Class2)
+   AAA_VectorAttribute<diameter_octetstring_t> &Class2)
   {
     return true;
   }
@@ -247,70 +247,70 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// vector with appropriate set of vector elements when true is
   /// returned.
   virtual bool AuthorizeConfigurationToken
-  (DiameterVectorAttribute<diameter_octetstring_t> &configurationToken)
+  (AAA_VectorAttribute<diameter_octetstring_t> &configurationToken)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeAcctInterimInterval
-  (DiameterScholarAttribute<diameter_unsigned32_t> &acctInterimInterval)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &acctInterimInterval)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeIdleTimeout
-  (DiameterScholarAttribute<diameter_unsigned32_t> &idleTimeout)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &idleTimeout)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeAuthorizationLifetime
-  (DiameterScholarAttribute<diameter_unsigned32_t> &authorizationLifetime)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &authorizationLifetime)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeAuthGracePeriod
-  (DiameterScholarAttribute<diameter_unsigned32_t> &authGracePeriod)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &authGracePeriod)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeAuthSessionState
-  (DiameterScholarAttribute<diameter_enumerated_t> &authSessionState)
+  (AAA_ScholarAttribute<diameter_enumerated_t> &authSessionState)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeReAuthRequestType
-  (DiameterScholarAttribute<diameter_enumerated_t> &reAuthRequestType)
+  (AAA_ScholarAttribute<diameter_enumerated_t> &reAuthRequestType)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeSessionTimeout
-  (DiameterScholarAttribute<diameter_unsigned32_t> &sessionTimeout)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &sessionTimeout)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFilterId
-  (DiameterVectorAttribute<diameter_utf8string_t> &filterId)
+  (AAA_VectorAttribute<diameter_utf8string_t> &filterId)
   {
     return true;
   }
   
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizePortLimit
-  (DiameterScholarAttribute<diameter_unsigned32_t> &portLimit)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &portLimit)
   {
     return true;
   }
@@ -318,21 +318,21 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizePortLimit
   (const diameter_unsigned32_t &portLimit1,
-   DiameterScholarAttribute<diameter_unsigned32_t> &portLimit2)
+   AAA_ScholarAttribute<diameter_unsigned32_t> &portLimit2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeCallbackId
-  (DiameterScholarAttribute<diameter_utf8string_t> &callbackId)
+  (AAA_ScholarAttribute<diameter_utf8string_t> &callbackId)
   {
     return true;
   }
   
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeCallbackNumber
-  (DiameterScholarAttribute<diameter_utf8string_t> &callbackNumber)
+  (AAA_ScholarAttribute<diameter_utf8string_t> &callbackNumber)
   {
     return true;
   }
@@ -340,50 +340,50 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeCallbackNumber
   (const diameter_utf8string_t &callbackNumber1,
-   DiameterScholarAttribute<diameter_utf8string_t> &callbackNumber2)
+   AAA_ScholarAttribute<diameter_utf8string_t> &callbackNumber2)
   {
     return true;
   }
   
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedAppletalkLink
-  (DiameterScholarAttribute<diameter_unsigned32_t> &framedAppletalkLink)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &framedAppletalkLink)
   {
     return true;
   }
   
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedAppletalkZone
-  (DiameterScholarAttribute<diameter_octetstring_t> &framedAppletalkZone)
+  (AAA_ScholarAttribute<diameter_octetstring_t> &framedAppletalkZone)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedAppletalkNetwork
-  (DiameterVectorAttribute<diameter_unsigned32_t> &framedAppletalkNetwork)
+  (AAA_VectorAttribute<diameter_unsigned32_t> &framedAppletalkNetwork)
   {
     return true;
   }
   
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedCompression
-  (DiameterVectorAttribute<diameter_enumerated_t> &framedCompression)
+  (AAA_VectorAttribute<diameter_enumerated_t> &framedCompression)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedCompression
-  (const DiameterVectorAttribute<diameter_enumerated_t> &framedCompression1,
-   DiameterVectorAttribute<diameter_enumerated_t> &framedCompression2)
+  (const AAA_VectorAttribute<diameter_enumerated_t> &framedCompression1,
+   AAA_VectorAttribute<diameter_enumerated_t> &framedCompression2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedInterfaceId
-  (DiameterScholarAttribute<diameter_unsigned64_t> &framedInterfaceId)
+  (AAA_ScholarAttribute<diameter_unsigned64_t> &framedInterfaceId)
   {
     return true;
   }
@@ -391,14 +391,14 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedInterfaceId
   (const diameter_unsigned64_t &framedInterfaceId1,
-   DiameterScholarAttribute<diameter_unsigned64_t> &framedInterfaceId2)
+   AAA_ScholarAttribute<diameter_unsigned64_t> &framedInterfaceId2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedIpAddress
-  (DiameterScholarAttribute<diameter_octetstring_t> &framedIpAddress)
+  (AAA_ScholarAttribute<diameter_octetstring_t> &framedIpAddress)
   {
     return true;
   }
@@ -406,14 +406,14 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedIpAddress
   (const diameter_octetstring_t &framedIpAddress1,
-   DiameterScholarAttribute<diameter_octetstring_t> &framedIpAddress2)
+   AAA_ScholarAttribute<diameter_octetstring_t> &framedIpAddress2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedIpv6Prefix
-  (DiameterVectorAttribute<diameter_octetstring_t> &framedIpv6Prefix)
+  (AAA_VectorAttribute<diameter_octetstring_t> &framedIpv6Prefix)
   {
     return true;
   }
@@ -421,42 +421,42 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedIpv6Prefix
   (const std::vector<diameter_octetstring_t> &framedIpv6Prefix1,
-   DiameterVectorAttribute<diameter_octetstring_t> &framedIpv6Prefix2)
+   AAA_VectorAttribute<diameter_octetstring_t> &framedIpv6Prefix2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedIpv6Pool
-  (DiameterScholarAttribute<diameter_octetstring_t> &framedIpv6Pool)
+  (AAA_ScholarAttribute<diameter_octetstring_t> &framedIpv6Pool)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedPool
-  (DiameterScholarAttribute<diameter_octetstring_t> &framedPool)
+  (AAA_ScholarAttribute<diameter_octetstring_t> &framedPool)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedIpv6Route
-  (DiameterVectorAttribute<diameter_utf8string_t> &framedIpv6Route)
+  (AAA_VectorAttribute<diameter_utf8string_t> &framedIpv6Route)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedRoute
-  (DiameterVectorAttribute<diameter_utf8string_t> &framedRoute)
+  (AAA_VectorAttribute<diameter_utf8string_t> &framedRoute)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedIpNetmask
-  (DiameterScholarAttribute<diameter_octetstring_t> &framedIpNetmask)
+  (AAA_ScholarAttribute<diameter_octetstring_t> &framedIpNetmask)
   {
     return true;
   }
@@ -464,21 +464,21 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedIpNetmask
   (const diameter_octetstring_t &framedIpNetmask1,
-   DiameterScholarAttribute<diameter_octetstring_t> &framedIpNetmask2)
+   AAA_ScholarAttribute<diameter_octetstring_t> &framedIpNetmask2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedIpxNetwork
-  (DiameterScholarAttribute<diameter_utf8string_t> &framedIpxNetwork)
+  (AAA_ScholarAttribute<diameter_utf8string_t> &framedIpxNetwork)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedMtu
-  (DiameterScholarAttribute<diameter_unsigned32_t> &framedMtu)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &framedMtu)
   {
     return true;
   }
@@ -486,14 +486,14 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedMtu
   (const diameter_unsigned32_t &framedMtu1,
-   DiameterScholarAttribute<diameter_unsigned32_t> &framedMtu2)
+   AAA_ScholarAttribute<diameter_unsigned32_t> &framedMtu2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedProtocol
-  (DiameterScholarAttribute<diameter_enumerated_t> &framedProtocol)
+  (AAA_ScholarAttribute<diameter_enumerated_t> &framedProtocol)
   {
     return true;
   }
@@ -501,50 +501,50 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedProtocol
   (const diameter_enumerated_t &framedProtocol1,
-   DiameterScholarAttribute<diameter_enumerated_t> &framedProtoco2)
+   AAA_ScholarAttribute<diameter_enumerated_t> &framedProtoco2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeFramedRouting
-  (DiameterScholarAttribute<diameter_enumerated_t> &framedRouting)
+  (AAA_ScholarAttribute<diameter_enumerated_t> &framedRouting)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeNasFilterRule
-  (DiameterVectorAttribute<diameter_ipfilter_rule_t> &nasFilterRule)
+  (AAA_VectorAttribute<diameter_ipfilter_rule_t> &nasFilterRule)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeTunneling
-  (DiameterVectorAttribute<tunneling_t> &tunneling)
+  (AAA_VectorAttribute<tunneling_t> &tunneling)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeTunneling
-  (const std::vector<tunneling_t> &tunneling1,
-   DiameterVectorAttribute<tunneling_t> &tunneling2)
+  (const std::vector<tunneling_t> &tunneling1, 
+   AAA_VectorAttribute<tunneling_t> &tunneling2)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeEapMasterSessionKey
-  (DiameterScholarAttribute<diameter_octetstring_t> &eapMasterSessionKey)
+  (AAA_ScholarAttribute<diameter_octetstring_t> &eapMasterSessionKey)
   {
     return true;
   }
 
   /// An authorization function called from Authorize() function.
   virtual bool AuthorizeAccountingEapAuthMethod
-  (DiameterVectorAttribute<diameter_unsigned64_t> &accountingEapAuthMethod)
+  (AAA_VectorAttribute<diameter_unsigned64_t> &accountingEapAuthMethod)
   {
     return true;
   }
@@ -552,13 +552,13 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   /// The contents of the replyMessage should be generated depending
   /// on the value of the resultCode. 
   virtual void SetReplyMessage
-  (DiameterVectorAttribute<diameter_utf8string_t> &replyMessage, 
+  (AAA_VectorAttribute<diameter_utf8string_t> &replyMessage, 
    const diameter_unsigned32_t &resultCode)
   {}
 
   /// Returns true when the contents of ReissuedEapPayload AVP is generated.
   virtual void SetReissuedEapPayload
-  (DiameterScholarAttribute<diameter_octetstring_t> &reissuedEapPayload)
+  (AAA_ScholarAttribute<diameter_octetstring_t> &reissuedEapPayload)
   {}
 
   /// Validate User-Name AVP.
@@ -578,7 +578,7 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   }
 
   /// Used for setting State AVP in initial answer.  Do nothing by default.
-  virtual void SetState(DiameterScholarAttribute<diameter_octetstring_t> &state)
+  virtual void SetState(AAA_ScholarAttribute<diameter_octetstring_t> &state)
   {
   }
 
@@ -596,12 +596,12 @@ class DIAMETER_EAP_SERVER_EXPORTS DiameterEapServerStateMachine
   {
     if (!AAA_EventQueueJob::ExistBacklog())
       {
-	AAA_LOG((LM_ERROR, "%N: no backlog to serve."));
+	AAA_LOG(LM_ERROR, "%N: no backlog to serve.");
 	return 0;
       }
 
     // Obtain the event to execute.
-    AAA_Event ev = 0;
+    AAA_Event ev;
     AAA_EventQueueJob::Dequeue(ev);
 
     bool existBacklog = AAA_EventQueueJob::ExistBacklog();

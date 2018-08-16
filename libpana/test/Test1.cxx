@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -31,7 +31,7 @@
 /*                                                                        */
 /* END_COPYRIGHT                                                          */
 
-// $Id: Test1.cxx,v 1.35 2006/05/04 19:46:40 vfajardo Exp $ 
+// $Id: Test1.cxx,v 1.32 2005/07/30 20:11:58 vfajardo Exp $ 
 // A test program for EAP API.
 // Written by Victor Fajardo
 
@@ -91,7 +91,6 @@ class Channel
 {
  public:
   Channel() {}
-  virtual ~Channel() {}
   virtual void Transmit(AAAMessageBlock *msg)=0;
   virtual void Transmit(AAAMessageBlock *msg, int subChannel)=0;
 };
@@ -232,6 +231,7 @@ class PeerApplication : public AAA_JobData,
     md5Method(EapContinuedPolicyElement(EapType(4)))
   {
     eap->Policy().InitialPolicyElement(&md5Method);
+    pacSession.EnableDhcpBootstrap() = true;
   }
   virtual ~PeerApplication() { }
 
@@ -239,11 +239,15 @@ class PeerApplication : public AAA_JobData,
 
   ACE_Semaphore& Semaphore() { return semaphore; }
 
-  void EapStart() {
+  void EapStart(bool &nap) {
      eap->Stop();
      eap->Start();
   }
-  void EapRequest(AAAMessageBlock *request) {
+  void ChooseISP(const PANA_CfgProviderList &list,
+                 PANA_CfgProviderInfo *&choice) {
+  }
+  void EapRequest(AAAMessageBlock *request,
+                  bool nap) {
      eap->Receive(request);
   }
   void EapAltReject() {
@@ -252,16 +256,27 @@ class PeerApplication : public AAA_JobData,
      PANA_AuthScriptCtl::Print(args);
      static bool reauth = false;
      if (! reauth) {
-         pacSession.ReAuthenticate();
+         pacSession.EapReAuthenticate();
          reauth = true;
      }
+     else {
+         std::string msg = "--- message from client ---";
+         pacSession.SendNotification(msg);
+     }
   }
-  bool IsKeyAvailable(pana_octetstring_t &key) {
+  bool IsKeyAvailable(diameter_octetstring_t &key) {
      return false;
+  }
+  bool ResumeSession() {
+      return false;
   }
   void Disconnect(ACE_UINT32 cause) {
       eap->Stop();
       // semaphore.release();
+  }
+  void Notification(diameter_octetstring_t &msg) {
+      std::cout << "PANA notification: " << msg << std::endl;
+      // pacSession.Stop();
   }
   void Error(ACE_UINT32 resultCode) { 
   }
@@ -297,6 +312,7 @@ class StandAloneAuthApplication : public AAA_JobData,
   {
     // start paa session
     paaSession.Start();
+    paaSession.EnableDhcpBootstrap() = true;
     // Policy settings for the authenticator
     identityMethod.AddContinuedPolicyElement
       (&md5Method, EapContinuedPolicyElement::PolicyOnSuccess);
@@ -307,11 +323,11 @@ class StandAloneAuthApplication : public AAA_JobData,
   virtual ~StandAloneAuthApplication() {
     paaSession.Stop();  
   }
-  void EapStart() {
+  void EapStart(bool &nap) {
      eap->Stop(); 
      eap->Start();
   }
-  void EapResponse(AAAMessageBlock *response) {
+  void EapResponse(AAAMessageBlock *response, bool nap) { 
      eap->Receive(response);
   }
   void EapAltReject() {
@@ -319,11 +335,18 @@ class StandAloneAuthApplication : public AAA_JobData,
   void Authorize(PANA_AuthorizationArgs &args) {
      PANA_AuthScriptCtl::Print(args);
   }
-  bool IsKeyAvailable(pana_octetstring_t &key) {
+  bool IsKeyAvailable(diameter_octetstring_t &key) {
      return false;
   }
   bool IsUserAuthorized() {
       return true;
+  }
+  void Notification(diameter_octetstring_t &msg) {
+      std::cout << "PANA notification: " << msg << std::endl;
+      paaSession.Stop();
+  }
+  bool ResumeSession() {
+      return false;
   }
   void Disconnect(ACE_UINT32 cause) {
      eap->Stop();
@@ -461,7 +484,7 @@ int main(int argc, char **argv)
 
   // Gather command line options
   ACE_Get_Opt opt(argc, argv, "cf:u:U:P:A:", 1);
-
+    
   for (int c; (c = opt()) != (-1); ) {
       switch (c) {
           case 'f': cfgfile.assign(opt.optarg); break;
@@ -522,7 +545,7 @@ int main(int argc, char **argv)
   ACE_Semaphore semaphore(0);
 
   task.Start(5);
-
+  
   try {
       if (b_client) {
           PANA_Node node(task, cfgfile);
@@ -545,7 +568,6 @@ int main(int argc, char **argv)
           task.Stop();
           USER_DB_CLOSE();
       }
-      std::cout << "Done" << std::endl;
   }
   catch (PANA_Exception &e) {
       std::cout << "PANA exception: " << e.description() << std::endl;

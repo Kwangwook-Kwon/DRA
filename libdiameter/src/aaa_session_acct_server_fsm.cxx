@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -33,17 +33,17 @@
 
 #include "aaa_session_acct_server_fsm.h"
 
-DiameterSessAcctServerStateTable DiameterSessAcctServerStateTable::m_AcctServerStateTable;
+AAA_SessAcctServerStateTable AAA_SessAcctServerStateTable::m_AcctServerStateTable;
 
-DiameterAcctSessionServerStateMachine::DiameterAcctSessionServerStateMachine
-(AAA_Task &t, DiameterAcctSession &s, DiameterServerAcctRecStorage &r) :
-     DiameterAcctSessionStateMachine<DiameterAcctSessionServerStateMachine>
-        (t, DiameterSessAcctServerStateTable::Instance(), *this, s),
+AAA_AcctSessionServerStateMachine::AAA_AcctSessionServerStateMachine
+(AAA_Task &t, AAA_AcctSession &s, AAA_ServerAcctRecStorage &r) :
+     AAA_AcctSessionStateMachine<AAA_AcctSessionServerStateMachine>
+        (t, AAA_SessAcctServerStateTable::Instance(), *this, s),
      m_RecStorage(r)
 {
 }
 
-void DiameterAcctSessionServerStateMachine::RxACR(DiameterMsg &msg)
+void AAA_AcctSessionServerStateMachine::RxACR(AAAMessage &msg)
 {
    /*
    9.7.1.  Accounting-Request
@@ -83,47 +83,47 @@ void DiameterAcctSessionServerStateMachine::RxACR(DiameterMsg &msg)
               * [ Route-Record ]
               * [ AVP ]
     */
-    DiameterIdentityAvpContainerWidget oHostAvp(msg.acl);
-    DiameterIdentityAvpContainerWidget oRealmAvp(msg.acl);
-    DiameterUtf8AvpContainerWidget uNameAvp(msg.acl);
-    DiameterEnumAvpContainerWidget acctRecTypeAvp(msg.acl);
-    DiameterUInt32AvpContainerWidget acctRecNumAvp(msg.acl);
-    DiameterUInt32AvpContainerWidget acctRealtimeAvp(msg.acl);
+    AAA_IdentityAvpContainerWidget oHostAvp(msg.acl);
+    AAA_IdentityAvpContainerWidget oRealmAvp(msg.acl);
+    AAA_Utf8AvpContainerWidget uNameAvp(msg.acl);
+    AAA_EnumAvpContainerWidget acctRecTypeAvp(msg.acl);
+    AAA_UInt32AvpContainerWidget acctRecNumAvp(msg.acl);
+    AAA_UInt32AvpContainerWidget acctRealtimeAvp(msg.acl);
 
-    diameter_identity_t *host = oHostAvp.GetAvp(DIAMETER_AVPNAME_ORIGINHOST);
-    diameter_identity_t *realm = oRealmAvp.GetAvp(DIAMETER_AVPNAME_ORIGINREALM);
-    diameter_utf8string_t *uname = uNameAvp.GetAvp(DIAMETER_AVPNAME_USERNAME);
-    diameter_unsigned32_t *realtime = acctRealtimeAvp.GetAvp(DIAMETER_AVPNAME_ACCTREALTIME);
-    diameter_enumerated_t *recType = acctRecTypeAvp.GetAvp(DIAMETER_AVPNAME_ACCTREC_TYPE);
-    diameter_unsigned32_t *recNum = acctRecNumAvp.GetAvp(DIAMETER_AVPNAME_ACCTREC_NUM);
+    diameter_identity_t *host = oHostAvp.GetAvp(AAA_AVPNAME_ORIGINHOST);
+    diameter_identity_t *realm = oRealmAvp.GetAvp(AAA_AVPNAME_ORIGINREALM);
+    diameter_utf8string_t *uname = uNameAvp.GetAvp(AAA_AVPNAME_USERNAME);
+    diameter_unsigned32_t *realtime = acctRealtimeAvp.GetAvp(AAA_AVPNAME_ACCTREALTIME);
+    diameter_enumerated_t *recType = acctRecTypeAvp.GetAvp(AAA_AVPNAME_ACCTREC_TYPE);
+    diameter_unsigned32_t *recNum = acctRecNumAvp.GetAvp(AAA_AVPNAME_ACCTREC_NUM);
 
-    AAA_LOG((LM_INFO, "(%P|%t) *** Accounting request received ***\n"));
+    AAA_LOG(LM_INFO, "(%P|%t) *** Accounting request received ***\n");
     Attributes().MsgIdRxMessage(msg);
 
-    DiameterSessionId sid;
+    AAA_SessionId sid;
     sid.Get(msg);
     sid.Dump();
     if (host) {
-        AAA_LOG((LM_INFO, "(%P|%t) From Host  : %s\n", host->c_str()));
+        AAA_LOG(LM_INFO, "(%P|%t) From Host  : %s\n", host->data());
     }
     if (realm) {
-        AAA_LOG((LM_INFO, "(%P|%t) From Realm : %s\n", realm->c_str()));
+        AAA_LOG(LM_INFO, "(%P|%t) From Realm : %s\n", realm->data());
     }
     if (uname) {
-        AAA_LOG((LM_INFO, "(%P|%t) From User  : %s\n", uname->c_str()));
+        AAA_LOG(LM_INFO, "(%P|%t) From User  : %s\n", uname->data());
     }
     if (recType) {
-        AAA_LOG((LM_INFO, "(%P|%t) Rec Type   : %d\n", *recType));
+        AAA_LOG(LM_INFO, "(%P|%t) Rec Type   : %d\n", *recType);
     }
     if (recNum) {
-        AAA_LOG((LM_INFO, "(%P|%t) Rec Num    : %d\n", *recNum));
+        AAA_LOG(LM_INFO, "(%P|%t) Rec Num    : %d\n", *recNum);
     }
     if (realtime) {
-        AAA_LOG((LM_INFO, "(%P|%t) Realtime   : %d\n", *realtime));
+        AAA_LOG(LM_INFO, "(%P|%t) Realtime   : %d\n", *realtime);
     }
 }
 
-void DiameterAcctSessionServerStateMachine::TxACA(diameter_unsigned32_t rcode)
+void AAA_AcctSessionServerStateMachine::TxACA(diameter_unsigned32_t rcode)
 {
     /// For backward compatibility, we only generate records
     if (Attributes().BackwardCompatibility()()) {
@@ -178,39 +178,39 @@ void DiameterAcctSessionServerStateMachine::TxACA(diameter_unsigned32_t rcode)
               * [ AVP ]
    */
 
-   std::auto_ptr<DiameterMsg> msg(new DiameterMsg);
+   std::auto_ptr<AAAMessage> msg(new AAAMessage);
    ACE_OS::memset(&msg->hdr, 0, sizeof(msg->hdr));
-   msg->hdr.ver = DIAMETER_PROTOCOL_VERSION;
+   msg->hdr.ver = AAA_PROTOCOL_VERSION;
    msg->hdr.length = 0;
-   msg->hdr.flags.r = DIAMETER_FLAG_CLR;
-   msg->hdr.flags.p = DIAMETER_FLAG_CLR;
-   msg->hdr.flags.e = DIAMETER_FLAG_CLR;
-   msg->hdr.code = DIAMETER_MSGCODE_ACCOUNTING;
+   msg->hdr.flags.r = AAA_FLG_CLR;
+   msg->hdr.flags.p = AAA_FLG_CLR;
+   msg->hdr.flags.e = AAA_FLG_CLR;
+   msg->hdr.code = AAA_MSGCODE_ACCOUNTING;
    msg->hdr.appId = Attributes().ApplicationId();
 
    // required
    Attributes().SessionId().Set(*msg);
 
-   DiameterUInt32AvpWidget rcodeAvp(DIAMETER_AVPNAME_RESULTCODE);
-   DiameterIdentityAvpWidget orHostAvp(DIAMETER_AVPNAME_ORIGINHOST);
-   DiameterIdentityAvpWidget orRealmAvp(DIAMETER_AVPNAME_ORIGINREALM);
-   DiameterEnumAvpWidget acctRecTypeAvp(DIAMETER_AVPNAME_ACCTREC_TYPE);
-   DiameterUInt32AvpWidget acctRecNumAvp(DIAMETER_AVPNAME_ACCTREC_NUM);
-   DiameterUInt32AvpWidget acctIdAvp(DIAMETER_AVPNAME_ACCTAPPID);
-   DiameterUInt64AvpWidget acctSubIdAvp(DIAMETER_AVPNAME_ACCTSUBSID);
-   DiameterIdentityAvpWidget errHostAvp(DIAMETER_AVPNAME_ERRORREPORTINGHOST);
-   DiameterUInt32AvpWidget orStateId(DIAMETER_AVPNAME_ORIGINSTATEID);
-   DiameterEnumAvpWidget realtimeAvp(DIAMETER_AVPNAME_ACCTREALTIME);
-   DiameterUInt32AvpWidget intervalAvp(DIAMETER_AVPNAME_ACCTINTERVAL);
+   AAA_UInt32AvpWidget rcodeAvp(AAA_AVPNAME_RESULTCODE);
+   AAA_IdentityAvpWidget orHostAvp(AAA_AVPNAME_ORIGINHOST);
+   AAA_IdentityAvpWidget orRealmAvp(AAA_AVPNAME_ORIGINREALM);
+   AAA_EnumAvpWidget acctRecTypeAvp(AAA_AVPNAME_ACCTREC_TYPE);
+   AAA_UInt32AvpWidget acctRecNumAvp(AAA_AVPNAME_ACCTREC_NUM);
+   AAA_UInt32AvpWidget acctIdAvp(AAA_AVPNAME_ACCTAPPID);
+   AAA_UInt64AvpWidget acctSubIdAvp(AAA_AVPNAME_ACCTSUBSID);
+   AAA_IdentityAvpWidget errHostAvp(AAA_AVPNAME_ERRORREPORTINGHOST);
+   AAA_UInt32AvpWidget orStateId(AAA_AVPNAME_ORIGINSTATEID);
+   AAA_EnumAvpWidget realtimeAvp(AAA_AVPNAME_ACCTREALTIME);
+   AAA_UInt32AvpWidget intervalAvp(AAA_AVPNAME_ACCTINTERVAL);
 
    rcodeAvp.Get() = rcode;
-   orHostAvp.Get() = DIAMETER_CFG_TRANSPORT()->identity;
-   orRealmAvp.Get() = DIAMETER_CFG_TRANSPORT()->realm;
+   orHostAvp.Get() = AAA_CFG_TRANSPORT()->identity;
+   orRealmAvp.Get() = AAA_CFG_TRANSPORT()->realm;
    acctRecTypeAvp.Get() = Attributes().RecordType()();
    acctRecNumAvp.Get() = Attributes().RecordNumber()();
    acctIdAvp.Get() = Attributes().ApplicationId();
    acctSubIdAvp.Get() = Attributes().SubSessionId()();
-   errHostAvp.Get() = DIAMETER_CFG_TRANSPORT()->identity;
+   errHostAvp.Get() = AAA_CFG_TRANSPORT()->identity;
    realtimeAvp.Get() = Attributes().RealtimeRequired()();
    intervalAvp.Get() = Attributes().InterimInterval()();
 
@@ -227,27 +227,25 @@ void DiameterAcctSessionServerStateMachine::TxACA(diameter_unsigned32_t rcode)
 
    // optional avps
    if (Attributes().RadiusAcctSessionId().IsSet()) {
-       DiameterStringAvpWidget radiusIdAvp(DIAMETER_AVPNAME_ACCTSID);
+       AAA_StringAvpWidget radiusIdAvp(AAA_AVPNAME_ACCTSID);
        radiusIdAvp.Get() = Attributes().RadiusAcctSessionId()();
        msg->acl.add(radiusIdAvp());
    }
 
    if (Attributes().MultiSessionId().IsSet()) {
-       DiameterUtf8AvpWidget multiIdAvp(DIAMETER_AVPNAME_ACCTMULTISID);
+       AAA_Utf8AvpWidget multiIdAvp(AAA_AVPNAME_ACCTMULTISID);
        multiIdAvp.Get() = Attributes().MultiSessionId()();
        msg->acl.add(multiIdAvp());
    }
 
    if (Attributes().Username().IsSet()) {
-       DiameterUtf8AvpWidget unameAvp(DIAMETER_AVPNAME_USERNAME);
+       AAA_Utf8AvpWidget unameAvp(AAA_AVPNAME_USERNAME);
        unameAvp.Get() = Attributes().Username()();
        msg->acl.add(unameAvp());
    }
 
-   orStateId.Get() = DIAMETER_CFG_RUNTIME()->originStateId;
+   orStateId.Get() = AAA_CFG_RUNTIME()->originStateId;
    msg->acl.add(orStateId());
-
-   m_RecStorage.UpdateAcctResponse(*msg);
 
    m_Session.TxDelivery(msg);
 }

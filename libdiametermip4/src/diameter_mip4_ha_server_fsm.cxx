@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -59,8 +59,8 @@ class DiameterMip4HaServerStateTable_S
   {
     void operator()(DiameterMip4HaServerStateMachine& sm)
     {
-      AAA_LOG((LM_DEBUG, 
-		   "[%N] Check HAR ....\n"));
+      AAA_LOG(LM_DEBUG, 
+		   "[%N] Check HAR ....\n");
 
       HAR_Data& har = sm.HAR();
       HAA_Data& haa = sm.HAA();
@@ -101,7 +101,7 @@ class DiameterMip4HaServerStateTable_S
   {
     void operator()(DiameterMip4HaServerStateMachine& sm)
     {
-      AAA_LOG((LM_DEBUG, "[%N] Send positive HAA.\n"));
+      AAA_LOG(LM_DEBUG, "[%N] Send positive HAA.\n");
 
       HAR_Data& har = sm.HAR();
       HAA_Data& haa = sm.HAA();
@@ -141,7 +141,7 @@ class DiameterMip4HaServerStateTable_S
   {
     void operator()(DiameterMip4HaServerStateMachine& sm)
     {
-      AAA_LOG((LM_DEBUG, "[%N] Sending HAA with Auth Rejected result-code.\n"));
+      AAA_LOG(LM_DEBUG, "[%N] Sending HAA with Auth Rejected result-code.\n");
       
       HAR_Data& har = sm.HAR();
       HAA_Data& haa = sm.HAA();
@@ -166,7 +166,7 @@ class DiameterMip4HaServerStateTable_S
   {
     void operator()(DiameterMip4HaServerStateMachine& sm)
     {
-      AAA_LOG((LM_DEBUG, "[%N] Sending HAA with Auth Rejected result-code: Invalid Mip Registration Request.\n"));
+      AAA_LOG(LM_DEBUG, "[%N] Sending HAA with Auth Rejected result-code: Invalid Mip Registration Request.\n");
 
       HAR_Data& har = sm.HAR();
       HAA_Data& haa = sm.HAA();
@@ -266,7 +266,7 @@ DiameterMip4HaServerStateMachine::DiameterMip4HaServerStateMachine
 void 
 DiameterMip4HaServerStateMachine::SendHAA()
 {
-  DiameterMsg msg;
+  AAAMessage msg;
 
   HAA_Data &haaData= HAA();
   
@@ -285,17 +285,17 @@ DiameterMip4HaServerStateMachine::SendHAA()
     parser.parseAppToRaw();
   }
   catch (DiameterParserError) {
-    AAA_LOG((LM_ERROR, "[%N] Parsing error.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Parsing error.\n");
     return;
   }
   AAAServerSession &session = Session();
   
   AAAMessageControl msgControl( &session );  
   if (msgControl.Send(msg) != AAA_ERR_SUCCESS) {
-    AAA_LOG((LM_ERROR, "Failed sending message.\n"));
+    AAA_LOG(LM_ERROR, "Failed sending message.\n");
   }
   else {
-    AAA_LOG((LM_DEBUG, "Sent HAA Message.\n"));
+    AAA_LOG(LM_DEBUG, "Sent HAA Message.\n");
   }
 }
 

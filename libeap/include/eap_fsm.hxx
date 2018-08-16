@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -30,7 +30,7 @@
 /* changes to one unified version of this software.                       */
 /*                                                                        */
 /* END_COPYRIGHT                                                          */
-// $Id: eap_fsm.hxx,v 1.42 2006/03/16 17:01:51 vfajardo Exp $
+// $Id: eap_fsm.hxx,v 1.41 2005/04/22 16:34:05 vfajardo Exp $
 
 // eap_fsm.hxx:  header file for EAP finite state machine
 // Written by Yoshihiro Ohba
@@ -76,7 +76,7 @@ class EapJobMultiplexor : public AAA_JobQueueJob
 	return 0;
       }
 
-    AAA_Job *job = 0;
+    AAA_Job *job;
     Dequeue(job);
     bool existBacklog = ExistBacklog();
     job->Serve();
@@ -134,7 +134,7 @@ class EapStateMachine :
   inline int Serve()
   {
     // Obtain the event to execute.
-    AAA_Event ev = 0;
+    AAA_Event ev;
     AAA_EventQueueJob::Dequeue(ev);
 
     bool existBacklog = AAA_EventQueueJob::ExistBacklog();

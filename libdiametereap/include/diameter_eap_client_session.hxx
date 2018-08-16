@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -61,7 +61,7 @@ class DIAMETER_EAP_CLIENT_EXPORTS DEA_Handler :
       session(s)
   {}
  private:
-  AAAReturnCode HandleMessage (DiameterMsg &msg);
+  AAAReturnCode HandleMessage (AAAMessage &msg);
   DiameterEapClientSession &session;
 };
 
@@ -87,7 +87,7 @@ class DIAMETER_EAP_CLIENT_EXPORTS DiameterEapClientSession :
   /// method. It is the responsibility of the derived class to
   /// override this function and capture the events if it is
   /// interested in it.
-  AAAReturnCode HandleMessage(DiameterMsg &msg);
+  AAAReturnCode HandleMessage(AAAMessage &msg);
 
   /// Reimplemented from AAAClientSession. This is invoked during
   /// session disconnect event. Disconnection occurs when a session is

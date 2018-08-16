@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -34,7 +34,10 @@
 #ifndef __AAA_DATA_DEFS_H__
 #define __AAA_DATA_DEFS_H__
 
-#include "diameter_parser.h"
+#ifdef WIN32
+#include "StdAfx.h"
+#endif
+#include "diameter_parser_api.h"
 #include "od_utl_rbtree.h"
 #include "ace/Singleton.h"
 
@@ -61,164 +64,177 @@
 #endif     // WIN32
 
 //
+// Definition of default values
+//
+#define AAA_CFG_FILENAME                  "diameter.conf"
+#define AAA_CFG_XML_ROOT                  "configuration"
+
+//
 // AVP names used internally
 //
-#define DIAMETER_AVPNAME_SESSIONID             "SessionId"
-#define DIAMETER_AVPNAME_RESULTCODE            "ResultCode"
-#define DIAMETER_AVPNAME_ORIGINHOST            "OriginHost"
-#define DIAMETER_AVPNAME_ORIGINREALM           "OriginRealm"
-#define DIAMETER_AVPNAME_ORIGINSTATEID         "OriginStateId"
-#define DIAMETER_AVPNAME_DESTHOST              "DestinationHost"
-#define DIAMETER_AVPNAME_DESTREALM             "DestinationRealm"
-#define DIAMETER_AVPNAME_AUTHSESSIONSTATE      "AuthSessionState"
-#define DIAMETER_AVPNAME_AUTHAPPID             "AuthApplicationId"
-#define DIAMETER_AVPNAME_ACCTAPPID             "AcctApplicationId"
-#define DIAMETER_AVPNAME_VENDORAPPID           "VendorSpecificApplicationId"
-#define DIAMETER_AVPNAME_REAUTHREQTYPE         "ReAuthRequestType"
-#define DIAMETER_AVPNAME_TERMINATION           "TerminationCause"
-#define DIAMETER_AVPNAME_AUTHSESSIONSTATE      "AuthSessionState"
-#define DIAMETER_AVPNAME_ERRRORREPORTINGHOST   "ErrorReportingHost"
-#define DIAMETER_AVPNAME_AUTHLIFETIME          "AuthorizationLifetime"
-#define DIAMETER_AVPNAME_AUTHGRACE             "AuthGracePeriod"
-#define DIAMETER_AVPNAME_SESSIONTIMEOUT        "SessionTimeout"
-#define DIAMETER_AVPNAME_HOSTIP                "HostIPAddress"
-#define DIAMETER_AVPNAME_VENDORID              "VendorId"
-#define DIAMETER_AVPNAME_PRODUCTNAME           "ProductName"
-#define DIAMETER_AVPNAME_ROUTERECORD           "RouteRecord"
-#define DIAMETER_AVPNAME_REDIRECTHOST          "RedirectHost"
-#define DIAMETER_AVPNAME_REDIRECTHOSTUSAGE     "RedirectHostUsage"
-#define DIAMETER_AVPNAME_USERNAME              "UserName"
-#define DIAMETER_AVPNAME_FIRMWAREREV           "FirmwareRevision"
-#define DIAMETER_AVPNAME_INBANDSECID           "InbandSecurityId"
-#define DIAMETER_AVPNAME_SUPPORTEDVENDORID     "SupportedVendorId"
-#define DIAMETER_AVPNAME_ERRORMESSAGE          "ErrorMessage"
-#define DIAMETER_AVPNAME_ERRORREPORTINGHOST    "ErrorReportingHost"
-#define DIAMETER_AVPNAME_DISCONNECT_CAUSE      "DisconnectCause"
-#define DIAMETER_AVPNAME_ACCTREC_TYPE          "AccountingRecordType"
-#define DIAMETER_AVPNAME_ACCTREC_NUM           "AccountingRecordNumber"
-#define DIAMETER_AVPNAME_ACCTSUBSID            "AccountingSubSessionId"
-#define DIAMETER_AVPNAME_ACCTREALTIME          "AccountingRealtimeRequired"
-#define DIAMETER_AVPNAME_ACCTSID               "AcctSessionId"
-#define DIAMETER_AVPNAME_ACCTMULTISID          "AcctMultiSessionId"
-#define DIAMETER_AVPNAME_ACCTINTERVAL          "AcctInterimInterval"
-#define DIAMETER_AVPNAME_CLASS                 "Class"
-#define DIAMETER_AVPNAME_PROXYINFO             "ProxyInfo"
-#define DIAMETER_AVPNAME_PROXYHOST             "ProxyHost"
-#define DIAMETER_AVPNAME_PROXYSTATE            "ProxyState"
-#define DIAMETER_AVPNAME_WILDCARD              "AVP"
+#define AAA_AVPNAME_SESSIONID             "Session-Id"
+#define AAA_AVPNAME_RESULTCODE            "Result-Code"
+#define AAA_AVPNAME_ORIGINHOST            "Origin-Host"
+#define AAA_AVPNAME_ORIGINREALM           "Origin-Realm"
+#define AAA_AVPNAME_ORIGINSTATEID         "Origin-State-Id"
+#define AAA_AVPNAME_DESTHOST              "Destination-Host"
+#define AAA_AVPNAME_DESTREALM             "Destination-Realm"
+#define AAA_AVPNAME_AUTHSESSIONSTATE      "Auth-Session-State"
+#define AAA_AVPNAME_AUTHAPPID             "Auth-Application-Id"
+#define AAA_AVPNAME_ACCTAPPID             "Acct-Application-Id"
+#define AAA_AVPNAME_VENDORAPPID           "Vendor-Specific-Application-Id"
+#define AAA_AVPNAME_REAUTHREQTYPE         "Re-Auth-Request-Type"
+#define AAA_AVPNAME_TERMINATION           "Termination-Cause"
+#define AAA_AVPNAME_AUTHSESSIONSTATE      "Auth-Session-State"
+#define AAA_AVPNAME_ERRRORREPORTINGHOST   "Error-Reporting-Host"
+#define AAA_AVPNAME_AUTHLIFETIME          "Authorization-Lifetime"
+#define AAA_AVPNAME_AUTHGRACE             "Auth-Grace-Period"
+#define AAA_AVPNAME_SESSIONTIMEOUT        "Session-Timeout"
+#define AAA_AVPNAME_HOSTIP                "Host-IP-Address"
+#define AAA_AVPNAME_VENDORID              "Vendor-Id"
+#define AAA_AVPNAME_PRODUCTNAME           "Product-Name"
+#define AAA_AVPNAME_ROUTERECORD           "Route-Record"
+#define AAA_AVPNAME_REDIRECTHOST          "Redirect-Host"
+#define AAA_AVPNAME_USERNAME              "User-Name"
+#define AAA_AVPNAME_FIRMWAREREV           "Firmware-Revision"
+#define AAA_AVPNAME_INBANDSECID           "Inband-Security-Id"
+#define AAA_AVPNAME_SUPPORTEDVENDORID     "Supported-Vendor-Id"
+#define AAA_AVPNAME_ERRORMESSAGE          "Error-Message"
+#define AAA_AVPNAME_ERRORREPORTINGHOST    "Error-Reporting-Host"
+#define AAA_AVPNAME_DISCONNECT_CAUSE      "Disconnect-Cause"
+#define AAA_AVPNAME_ACCTREC_TYPE          "Accounting-Record-Type"
+#define AAA_AVPNAME_ACCTREC_NUM           "Accounting-Record-Number"
+#define AAA_AVPNAME_ACCTSUBSID            "Accounting-Sub-Session-Id"
+#define AAA_AVPNAME_ACCTREALTIME          "Accounting-Realtime-Required"
+#define AAA_AVPNAME_ACCTSID               "Acct-Session-Id"
+#define AAA_AVPNAME_ACCTMULTISID          "Acct-Multi-Session-Id"
+#define AAA_AVPNAME_ACCTINTERVAL          "Acct-Interim-Interval"
+#define AAA_AVPNAME_CLASS                 "Class"
+#define AAA_AVPNAME_WILDCARD              "AVP"
 
 //
 // Command Codes used internally
 //
-#define DIAMETER_MSGCODE_ABORTSESSION          274
-#define DIAMETER_MSGCODE_SESSIONTERMINATION    275
-#define DIAMETER_MSGCODE_CAPABILITIES_EXCHG    257
-#define DIAMETER_MSGCODE_WATCHDOG              280
-#define DIAMETER_MSGCODE_DISCONNECT_PEER       282
-#define DIAMETER_MSGCODE_ACCOUNTING            271
-#define DIAMETER_MSGCODE_REAUTH                258
+#define AAA_MSGCODE_ABORTSESSION          274
+#define AAA_MSGCODE_SESSIONTERMINATION    275
+#define AAA_MSGCODE_CAPABILITIES_EXCHG    257
+#define AAA_MSGCODE_WATCHDOG              280
+#define AAA_MSGCODE_DISCONNECT_PEER       282
+#define AAA_MSGCODE_ACCOUNTING            271
+#define AAA_MSGCODE_REAUTH                258
+
+//
+// Transport module definitions
+//
+#define AAA_MAX_INTERFACES                10
+#define AAA_MAX_MSGLEN                    2048
+#define AAA_WATCHDOG_VERBOSE              0
+#define AAA_WATCHDOG_INTERVAL             30 // 30 sec defined in 3.4.1 of draft
+#define AAA_WATCHDOG_COUNT_ONSTART        2
+#define AAA_TRANSPORT_STATE_TIMEOUT       50
+#define AAA_DEFAULT_ROUTE_ENTRY           "***"
 
 //
 // Application Identifiers
 //
-#define DIAMETER_RELAY_APPLICATION_ID          0xffffffff
+#define AAA_RELAY_APPLICATION_ID          0xffffffff
 
 //
 // Session state values
 //
-#define DIAMETER_SESSION_STATE_MAINTAINED        0
-#define DIAMETER_SESSION_NO_STATE_MAINTAINED     1
+#define AAA_SESSION_STATE_MAINTAINED        0
+#define AAA_SESSION_NO_STATE_MAINTAINED     1
 
 //
 // Re-auth-type values
 //
-#define DIAMETER_SESSION_AUTHORIZE_ONLY          0
-#define DIAMETER_SESSION_AUTHORIZE_AUTHENTICATE  1
+#define AAA_SESSION_AUTHORIZE_ONLY          0
+#define AAA_SESSION_AUTHORIZE_AUTHENTICATE  1
 
 //
 // Accounting record types
 //
 typedef enum {
-   DIAMETER_ACCT_RECTYPE_EVENT =                 1,
-   DIAMETER_ACCT_RECTYPE_START =                 2,
-   DIAMETER_ACCT_RECTYPE_INTERIM =               3,
-   DIAMETER_ACCT_RECTYPE_STOP =                  4
-} DIAMETER_ACCT_RECTYPE;
+   AAA_ACCT_RECTYPE_EVENT =                 1,
+   AAA_ACCT_RECTYPE_START =                 2,
+   AAA_ACCT_RECTYPE_INTERIM =               3,
+   AAA_ACCT_RECTYPE_STOP =                  4
+} AAA_ACCT_RECTYPE;
 
 //
 // Accouting realtime required values
 //
 typedef enum {
-   DIAMETER_ACCT_REALTIME_DELIVER_AND_GRANT =     1,
-   DIAMETER_ACCT_REALTIME_GRANT_AND_STORE =       2,
-   DIAMETER_ACCT_REALTIME_GRANT_AND_LOSE =        3
-} DIAMETER_ACCT_REALTIME;
+   AAA_ACCT_REALTIME_DELIVER_AND_GRANT =     1,
+   AAA_ACCT_REALTIME_GRANT_AND_STORE =       2,
+   AAA_ACCT_REALTIME_GRANT_AND_LOSE =        3
+} AAA_ACCT_REALTIME;
 
 //
 // General timer type's
-typedef enum {
-   DIAMETER_TIMER_TYPE_ASR =                      1,
-   DIAMETER_TIMER_TYPE_SESSION =                  2,
-   DIAMETER_TIMER_TYPE_AUTH =                     3,
-   DIAMETER_TIMER_TYPE_INTERVAL =                 4
-} DIAMETER_TIMER_TYPE;
+typedef enum { 
+   AAA_TIMER_TYPE_ASR =                      1,
+   AAA_TIMER_TYPE_SESSION =                  2,
+   AAA_TIMER_TYPE_AUTH =                     3,
+   AAA_TIMER_TYPE_INTERVAL =                 4
+} AAA_TIMER_TYPE;       
 
 //
 // Misc definitions
 //
-#define AAA_AUTH_SESSION_GRACE_PERIOD             5
-#define AAA_AUTH_SESSION_RECLAMATION_PERIOD       60
+#define AAA_AUTH_SESSION_GRACE_PERIOD        5
 
 //
 // Configuration Data Structures
 //
-typedef std::list<diameter_unsigned32_t> DiameterApplicationIdLst;
+typedef std::list<diameter_unsigned32_t> AAA_ApplicationIdLst;
 
 typedef struct {
-   diameter_unsigned32_t vendorId;     // vendor application id 
+   AAA_ApplicationIdLst vendorIdLst;     // vendor application id 
    diameter_unsigned32_t authAppId;      // auth application id
    diameter_unsigned32_t acctAppId;      // acct application id
-} DiameterDataVendorSpecificApplicationId;
+} AAA_DataVendorSpecificApplicationId;
 
-typedef std::list<DiameterDataVendorSpecificApplicationId> DiameterVendorSpecificIdLst;
+typedef std::list<AAA_DataVendorSpecificApplicationId> AAA_VendorSpecificIdLst;
 
 typedef struct {
    std::string product;                  // readable string product name
    diameter_unsigned32_t version;        // current version
    diameter_unsigned32_t vendor;         // local vendor id
    diameter_unsigned32_t threadCount;    // number of threads to use 
-   DiameterApplicationIdLst supportedVendorIdLst; // supported vendor application id
-   DiameterApplicationIdLst authAppIdLst;    // auth application id
-   DiameterApplicationIdLst acctAppIdLst;    // acct application id
-   DiameterVendorSpecificIdLst vendorSpecificId; // vendor specific app id 
-} DiameterDataGeneral;
+   AAA_ApplicationIdLst supportedVendorIdLst; // supported vendor application id
+   AAA_ApplicationIdLst authAppIdLst;    // auth application id
+   AAA_ApplicationIdLst acctAppIdLst;    // acct application id
+   AAA_VendorSpecificIdLst vendorSpecificId; // vendor specific app id 
+} AAA_DataGeneral;
 
 typedef struct {
    std::string dictionary;               // filename of parser dictionary
-} DiameterDataParser;
+} AAA_DataParser;
 
 typedef struct {
    std::string hostname;                 // hostname of peer
    diameter_unsigned32_t port;           // port number
-   diameter_unsigned32_t use_sctp;       // Use SCTP for this connection
    diameter_unsigned32_t tls_enabled;    // TLS support
-} DiameterDataPeer;
+} AAA_DataPeer;
+
+typedef struct {
+   std::string realm;                    // realm of route
+   std::string role;                     // realm role 
+   AAAApplicationId id;                  // application id
+   AAA_DataPeer *peer;                   // peer data
+} AAA_DataRoute;
 
 typedef struct {
    std::string identity;                 // local hostname
    std::string realm;                    // local realm
-   diameter_unsigned32_t tcp_listen_port; // TCP listening port
-   diameter_unsigned32_t sctp_listen_port; // SCTP listening port
-   diameter_unsigned32_t use_ipv6;       // TLS listening port
+   diameter_unsigned32_t tcp_port;       // TCP listening port
+   diameter_unsigned32_t tls_port;       // TLS listening port
    diameter_unsigned32_t watchdog_timeout; // Watchdog timeout
-   diameter_unsigned32_t reconnect_interval; // ReConnect interval
-   diameter_unsigned32_t reconnect_max; // ReConnect max
-   diameter_unsigned32_t retx_interval;  // Req ReTx interval
-   diameter_unsigned32_t retx_max_count; // Req ReTx max count
-   diameter_unsigned32_t rx_buffer_size; // Receive Buffer Size
-   std::list<std::string> advertised_hostname; // List of hostnames used by this node
+   diameter_unsigned32_t retry_interval; // Retry interval
+   std::list<std::string> advertised_host_ip; // List of host ip
                                          // addresses provided by this peer
-} DiameterDataTransportMngt;
+} AAA_DataTransportMngt;
 
 typedef struct {
    diameter_unsigned32_t stateful;       // stateful/stateless session flags
@@ -226,85 +242,81 @@ typedef struct {
    diameter_unsigned32_t lifetimeTm;     // lifetime timer
    diameter_unsigned32_t graceTm;        // grace period timer
    diameter_unsigned32_t abortRetryTm;   // abort retry timer
-} DiameterDataAuthSession;
+} AAA_DataAuthSession;
 
 typedef struct {
    diameter_unsigned32_t sessionTm;      // lifetime timer
    diameter_unsigned32_t recIntervalTm;  // record interval
    diameter_unsigned32_t realtime;       // realtime required value
-} DiameterDataAcctSession;
+} AAA_DataAcctSession;
 
 typedef struct {
    diameter_unsigned32_t maxSessions;    // maximum number of sessions allowed
-   DiameterDataAuthSession authSessions;     // auth session config
-   DiameterDataAcctSession acctSessions;     // acct session config
-} DiameterDataSessionMngt;
+   AAA_DataAuthSession authSessions;     // auth session config
+   AAA_DataAcctSession acctSessions;     // acct session config
+} AAA_DataSessionMngt;
 
 typedef struct {
    diameter_integer32_t debug:1;         // debug flag
    diameter_integer32_t trace:1;         // trace flag
    diameter_integer32_t info:1;          // info flag
    diameter_integer32_t reserved:29;     // un-used
-} DiameterDataLogFlags;
+} AAA_DataLogFlags;
 
 typedef struct {
-   diameter_integer32_t console:1;         // enable|disable stdout target
+   diameter_integer32_t console;         // enable|disable stdout target
    diameter_integer32_t syslog:1;        // enable|disable syslog target
    diameter_integer32_t reserved:30;     // un-used
-} DiameterDataLogTragetFlags;
+} AAA_DataLogTragetFlags;
 
 typedef struct {
-   DiameterDataLogFlags flags;             // log flags
-   DiameterDataLogTragetFlags targets;     // targets
-} DiameterDataLog;
+   AAA_DataLogFlags flags;             // log flags
+   AAA_DataLogTragetFlags targets;     // targets
+} AAA_DataLog;
 
 typedef struct {
    diameter_integer32_t originStateId; // runtime origin state
-} DiameterRunTime;
+} AAA_RunTime;
 
 typedef struct {
-   DiameterRunTime runtime;                // runtime configuration
-   DiameterDataGeneral general;            // general configuration
-   DiameterDataParser parser;              // parser configuration
-   DiameterDataTransportMngt transport;    // transport configuration
-   DiameterDataSessionMngt session;        // session configuration
-   DiameterDataLog log;                    // logging configuration
-} DiameterDataRoot;
+   AAA_RunTime runtime;                // runtime configuration
+   AAA_DataGeneral general;            // general configuration
+   AAA_DataParser parser;              // parser configuration
+   AAA_DataTransportMngt transport;    // transport configuration
+   AAA_DataSessionMngt session;        // session configuration
+   AAA_DataLog log;                    // logging configuration
+} AAA_DataRoot;
 
 typedef struct {
    diameter_unsigned32_t reAuthType;   // re-authentication type
    diameter_unsigned32_t resultCode;   // result code
-} DiameterReAuthValue;
+} AAA_ReAuthValue;
 
-typedef ACE_Singleton<DiameterDataRoot, ACE_Thread_Mutex> DiameterDataRoot_S;
+typedef ACE_Singleton<AAA_DataRoot, ACE_Thread_Mutex> AAA_DataRoot_S;
+#define AAA_CFG_ROOT()            (AAA_DataRoot_S::instance())
+#define AAA_CFG_RUNTIME()         (&(AAA_DataRoot_S::instance()->runtime))
+#define AAA_CFG_GENERAL()         (&(AAA_DataRoot_S::instance()->general))
+#define AAA_CFG_PARSER()          (&(AAA_DataRoot_S::instance()->parser))
+#define AAA_CFG_TRANSPORT()       (&(AAA_DataRoot_S::instance()->transport))
+#define AAA_CFG_SESSION()         (&(AAA_DataRoot_S::instance()->session))
+#define AAA_CFG_AUTH_SESSION()    (&(AAA_DataRoot_S::instance()->session.authSessions))
+#define AAA_CFG_ACCT_SESSION()    (&(AAA_DataRoot_S::instance()->session.acctSessions))
+#define AAA_CFG_LOG()             (&(AAA_DataRoot_S::instance()->log))
 
-#define DIAMETER_CFG_ROOT()            (DiameterDataRoot_S::instance())
-#define DIAMETER_CFG_RUNTIME()         (&(DiameterDataRoot_S::instance()->runtime))
-#define DIAMETER_CFG_GENERAL()         (&(DiameterDataRoot_S::instance()->general))
-#define DIAMETER_CFG_PARSER()          (&(DiameterDataRoot_S::instance()->parser))
-#define DIAMETER_CFG_TRANSPORT()       (&(DiameterDataRoot_S::instance()->transport))
-#define DIAMETER_CFG_SESSION()         (&(DiameterDataRoot_S::instance()->session))
-#define DIAMETER_CFG_AUTH_SESSION()    (&(DiameterDataRoot_S::instance()->session.authSessions))
-#define DIAMETER_CFG_ACCT_SESSION()    (&(DiameterDataRoot_S::instance()->session.acctSessions))
-#define DIAMETER_CFG_LOG()             (&(DiameterDataRoot_S::instance()->log))
-
-class DiameterBaseException
+class AAA_BaseException
 {
    public:
       typedef enum {
           ALLOC_FAILURE = 0,
           INVALID_ID_TYPE,
           MISSING_SESSION_ID,
-          MISSING_ORIGIN_HOST,
-          MISSING_ORIGIN_REALM,
-          IO_FAILURE
       } ERROR_CODE;
-
+    
    public:
-      DiameterBaseException(int code, std::string &desc) :
+      AAA_BaseException(int code, std::string &desc) :
         m_Code(code), m_Description(desc) {
       }
-      DiameterBaseException(int code, const char* desc) :
+      AAA_BaseException(int code, const char* desc) :
         m_Code(code), m_Description(desc) {
       }
       int &Code() {
@@ -319,10 +331,10 @@ class DiameterBaseException
       std::string m_Description;
 };
 
-class DiameterMsgQuery
+class AAA_MsgQuery
 {
     public:
-       DiameterMsgQuery(DiameterMsg &msg) :
+       AAA_MsgQuery(AAAMessage &msg) :
            m_Msg(msg) {
        }
        bool IsRequest() {
@@ -332,31 +344,31 @@ class DiameterMsgQuery
            return ! IsRequest();
        }
        bool IsCapabilities() {
-           return (m_Msg.hdr.code == DIAMETER_MSGCODE_CAPABILITIES_EXCHG);
+           return (m_Msg.hdr.code == AAA_MSGCODE_CAPABILITIES_EXCHG);
        }
        bool IsReAuth() {
-           return (m_Msg.hdr.code == DIAMETER_MSGCODE_REAUTH);
+           return (m_Msg.hdr.code == AAA_MSGCODE_REAUTH);
        }
        bool IsWatchDog() {
-           return (m_Msg.hdr.code == DIAMETER_MSGCODE_WATCHDOG);
+           return (m_Msg.hdr.code == AAA_MSGCODE_WATCHDOG);
        }
        bool IsPeerDisconnect() {
-           return (m_Msg.hdr.code == DIAMETER_MSGCODE_DISCONNECT_PEER);
+           return (m_Msg.hdr.code == AAA_MSGCODE_DISCONNECT_PEER);
        }
        diameter_unsigned32_t Code() {
            return m_Msg.hdr.code;
        }
        bool IsBaseProtocol() {
            static diameter_unsigned32_t msgBaseProto[] = {
-               DIAMETER_MSGCODE_ABORTSESSION,
-               DIAMETER_MSGCODE_SESSIONTERMINATION,
-               DIAMETER_MSGCODE_CAPABILITIES_EXCHG,
-               DIAMETER_MSGCODE_WATCHDOG,
-               DIAMETER_MSGCODE_DISCONNECT_PEER,
-               DIAMETER_MSGCODE_ACCOUNTING,
-               DIAMETER_MSGCODE_REAUTH
+               AAA_MSGCODE_ABORTSESSION,
+               AAA_MSGCODE_SESSIONTERMINATION,
+               AAA_MSGCODE_CAPABILITIES_EXCHG,
+               AAA_MSGCODE_WATCHDOG,
+               AAA_MSGCODE_DISCONNECT_PEER,
+               AAA_MSGCODE_ACCOUNTING,
+               AAA_MSGCODE_REAUTH
            };
-           for (unsigned int i=0;
+           for (int i=0;
                 i<sizeof(msgBaseProto)/sizeof(diameter_unsigned32_t);
                 i++) {
                if (msgBaseProto[i] == m_Msg.hdr.code) {
@@ -367,133 +379,49 @@ class DiameterMsgQuery
        }
 
     private:
-       DiameterMsg &m_Msg;
+       AAAMessage &m_Msg;
 };
 
-class DiameterErrorMsg
+template <class ARG>
+class AAA_ProtectedQueue : 
+   private std::list<ARG>
 {
-    /*
+   public:
+      virtual ~AAA_ProtectedQueue() {
+      }
+      virtual void Enqueue(ARG arg) {
+         ACE_Write_Guard<ACE_RW_Mutex> guard(m_Lock);
+         std::list<ARG>::push_back(arg);  
+      }
+      virtual ARG Dequeue() {
+         ACE_Write_Guard<ACE_RW_Mutex> guard(m_Lock);
+         ARG a = std::list<ARG>::front();
+         std::list<ARG>::pop_front();
+         return a;
+      }
+      virtual bool IsEmpty() {
+         ACE_Read_Guard<ACE_RW_Mutex> guard(m_Lock);
+         return std::list<ARG>::empty() ? true : false;
+      }
 
-    7.2.  Error Bit
+   private:
+      ACE_RW_Mutex m_Lock;
+};
 
-       The 'E' (Error Bit) in the Diameter header is set when the request
-       caused a protocol-related error (see Section 7.1.3).  A message with
-       the 'E' bit MUST NOT be sent as a response to an answer message.
-       Note that a message with the 'E' bit set is still subjected to the
-       processing rules defined in Section 6.2.  When set, the answer
-       message will not conform to the ABNF specification for the command,
-       and will instead conform to the following ABNF:
+template <class ARG>
+class AAA_ProtectedPtrQueue 
+{
+   public:
+      void Enqueue(std::auto_ptr<ARG> a) {
+         m_Queue.Enqueue(a.release());
+      }
+      std::auto_ptr<ARG> Dequeue() {
+         std::auto_ptr<ARG> arg(m_Queue.Dequeue());
+         return arg;
+      }
 
-       Message Format
-
-       <answer-message> ::= < Diameter Header: code, ERR [PXY] >
-                         0*1< Session-Id >
-                            { Origin-Host }
-                            { Origin-Realm }
-                            { Result-Code }
-                            [ Origin-State-Id ]
-                            [ Error-Reporting-Host ]
-                            [ Proxy-Info ]
-                          * [ AVP ]
-
-       Note that the code used in the header is the same than the one found
-       in the request message, but with the 'R' bit cleared and the 'E' bit
-       set.  The 'P' bit in the header is set to the same value as the one
-       found in the request message.
-    */
-
-    public:
-       static std::auto_ptr<DiameterMsg> Generate(DiameterMsg &request,
-                                                  diameter_unsigned32_t rcode) {
-
-          DiameterMsgWidget errAnswer(request.hdr.code, false,
-                                      request.hdr.appId);
-          errAnswer()->hdr = request.hdr;
-          errAnswer()->hdr.flags.e = DIAMETER_FLAG_SET;
-          errAnswer()->hdr.flags.r = DIAMETER_FLAG_CLR;
-
-          DiameterUtf8AvpContainerWidget sidReqAvp(request.acl);
-          DiameterUInt32AvpContainerWidget originStateReqAvp(request.acl);
-          DiameterGroupedAvpContainerWidget proxyInfoReqAvp(request.acl);
-
-          DiameterIdentityAvpWidget originHostAvp(DIAMETER_AVPNAME_ORIGINHOST);
-          DiameterIdentityAvpWidget originRealmAvp(DIAMETER_AVPNAME_ORIGINREALM);
-          DiameterUInt32AvpWidget resultCodeAvp(DIAMETER_AVPNAME_RESULTCODE);
-          DiameterUInt32AvpWidget originStateAvp(DIAMETER_AVPNAME_ORIGINSTATEID);
-          DiameterIdentityAvpWidget errorHostAvp(DIAMETER_AVPNAME_ERRORREPORTINGHOST);
-          DiameterGroupedAvpWidget proxyInfoAvp(DIAMETER_AVPNAME_PROXYINFO);
-
-          DiameterUtf8AvpContainerWidget sidAvp(errAnswer()->acl);
-          diameter_utf8string_t *sidReq = sidReqAvp.GetAvp(DIAMETER_AVPNAME_SESSIONID);
-          if (sidReq) {
-             diameter_utf8string_t &sid = sidAvp.AddAvp(DIAMETER_AVPNAME_SESSIONID);
-             sid = *sidReq;
-          }
-
-          diameter_unsigned32_t *oStateId = originStateReqAvp.GetAvp(DIAMETER_AVPNAME_ORIGINSTATEID);
-          if (oStateId) {
-              originStateAvp.Get() = *oStateId;
-              errAnswer()->acl.add(originStateAvp());
-          }
-
-          diameter_grouped_t *proxyInfo = proxyInfoReqAvp.GetAvp(DIAMETER_AVPNAME_PROXYINFO);
-          if (proxyInfo) {
-              DiameterGroupedAvpContainerWidget pInfoAvp(errAnswer()->acl);
-              diameter_grouped_t &pInfoAns = pInfoAvp.AddAvp(DIAMETER_AVPNAME_PROXYINFO);
-
-              DiameterIdentityAvpContainerWidget pHostReq(*proxyInfo);
-              DiameterStringAvpContainerWidget pStateReq(*proxyInfo);
-
-              DiameterIdentityAvpContainerWidget pHostAns(pInfoAns);
-              DiameterStringAvpContainerWidget pStateAns(pInfoAns);
-
-              diameter_identity_t *hostReq = pHostReq.GetAvp(DIAMETER_AVPNAME_PROXYHOST);
-              diameter_identity_t &hostAns = pHostAns.AddAvp(DIAMETER_AVPNAME_PROXYHOST);
-              hostAns = *hostReq;
-
-              diameter_identity_t *stateReq = pStateReq.GetAvp(DIAMETER_AVPNAME_PROXYSTATE);
-              diameter_identity_t &stateAns = pStateAns.AddAvp(DIAMETER_AVPNAME_PROXYSTATE);
-              stateAns = *stateReq;
-          }
-
-          originHostAvp.Get() = DIAMETER_CFG_TRANSPORT()->identity;
-          originRealmAvp.Get() = DIAMETER_CFG_TRANSPORT()->realm;
-          errorHostAvp.Get() = DIAMETER_CFG_TRANSPORT()->identity;
-          resultCodeAvp.Get() = rcode;
-
-          errAnswer()->acl.add(originHostAvp());
-          errAnswer()->acl.add(originRealmAvp());
-          errAnswer()->acl.add(resultCodeAvp());
-          errAnswer()->acl.add(errorHostAvp());
-
-          return errAnswer();
-       }
-
-       static std::auto_ptr<DiameterMsg> Generate(DiameterMsgHeader hdr,
-                                                  diameter_unsigned32_t rcode) {
-
-          DiameterMsgWidget errAnswer(hdr.code, false, hdr.appId);
-          errAnswer()->hdr = hdr;
-          errAnswer()->hdr.flags.e = DIAMETER_FLAG_SET;
-          errAnswer()->hdr.flags.r = DIAMETER_FLAG_CLR;
-
-          DiameterIdentityAvpWidget originHostAvp(DIAMETER_AVPNAME_ORIGINHOST);
-          DiameterIdentityAvpWidget originRealmAvp(DIAMETER_AVPNAME_ORIGINREALM);
-          DiameterUInt32AvpWidget resultCodeAvp(DIAMETER_AVPNAME_RESULTCODE);
-          DiameterIdentityAvpWidget errorHostAvp(DIAMETER_AVPNAME_ERRORREPORTINGHOST);
-
-          originHostAvp.Get() = DIAMETER_CFG_TRANSPORT()->identity;
-          originRealmAvp.Get() = DIAMETER_CFG_TRANSPORT()->realm;
-          errorHostAvp.Get() = DIAMETER_CFG_TRANSPORT()->identity;
-          resultCodeAvp.Get() = rcode;
-
-          errAnswer()->acl.add(originHostAvp());
-          errAnswer()->acl.add(originRealmAvp());
-          errAnswer()->acl.add(resultCodeAvp());
-          errAnswer()->acl.add(errorHostAvp());
-
-          return errAnswer();
-       }
+   private:
+      AAA_ProtectedQueue<ARG*> m_Queue;
 };
 
 #endif // __AAA_DEFS_H__

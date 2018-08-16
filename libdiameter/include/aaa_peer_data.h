@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -38,103 +38,81 @@
 #include "aaa_transport_ace.h"
 #include "aaa_data_defs.h"
 
-#ifdef ACE_HAS_SCTP
-extern "C" {
-#include <netinet/sctp.h>
-};
-#else
-#ifndef IPPROTO_SCTP
-#define IPPROTO_SCTP 132 /* always the same value on every platform */
-#endif
-#define SCTP_NODELAY -1
-#endif
+typedef AAA_ACE_Transport<ACE_SOCK_Acceptor,
+                          ACE_SOCK_Connector,
+                          ACE_SOCK_Stream> AAA_TransportTCP;
+typedef AAA_ACE_Transport<ACE_SSL_SOCK_Acceptor,
+                          ACE_SSL_SOCK_Connector,
+                          ACE_SSL_SOCK_Stream> AAA_TransportTLS;
 
-typedef Diameter_ACE_Transport<ACE_SOCK_Acceptor,
-                               ACE_SOCK_Connector,
-                               ACE_SOCK_Stream,
-                               ACE_INET_Addr,
-                               IPPROTO_TCP> DiameterTransportTCP;
-typedef Diameter_ACE_Transport<ACE_SOCK_SEQPACK_Acceptor,
-                               ACE_SOCK_SEQPACK_Connector,
-                               ACE_SOCK_SEQPACK_Association,
-                               ACE_Multihomed_INET_Addr,
-                               IPPROTO_SCTP> DiameterTransportSCTP;
+typedef AAA_IO_Connector<AAA_TransportTCP, AAA_MsgCollector> AAA_TcpConnector;
+typedef AAA_IO_Connector<AAA_TransportTLS, AAA_MsgCollector> AAA_TlsConnector;
 
-typedef Diameter_IO_Connector<DiameterTransportTCP,
-                              ACE_INET_Addr,
-                              DiameterRxMsgCollector> DiameterTcpConnector;
-typedef Diameter_IO_Connector<DiameterTransportSCTP,
-                              ACE_Multihomed_INET_Addr,
-                              DiameterRxMsgCollector> DiameterSctpConnector;
+typedef AAA_IO_Acceptor<AAA_TransportTCP, AAA_MsgCollector> AAA_TcpAcceptor;
+typedef AAA_IO_Acceptor<AAA_TransportTLS, AAA_MsgCollector> AAA_TlsAcceptor;
 
-typedef Diameter_IO_Acceptor<DiameterTransportTCP,
-                             ACE_INET_Addr,
-                             DiameterRxMsgCollector> DiameterTcpAcceptor;
-typedef Diameter_IO_Acceptor<DiameterTransportSCTP,
-                             ACE_Multihomed_INET_Addr,
-                             DiameterRxMsgCollector> DiameterSctpAcceptor;
-
-typedef Diameter_ACE_TransportAddress DiameterIpAddress;
+typedef AAA_ACE_TransportAddress AAA_IpAddress;
 
 typedef enum {
-    DIAMETER_PEER_CONN_INITIATOR = 0,
-    DIAMETER_PEER_CONN_RESPONDER,
-    DIAMETER_PEER_CONN_MAX,
-} DIAMETER_PEER_CONN;
+    AAA_PEER_CONN_INITIATOR = 0,
+    AAA_PEER_CONN_RESPONDER,
+    AAA_PEER_CONN_MAX,
+} AAA_PEER_CONN;
 
 typedef enum {
-    DIAMETER_PEER_TTYPE_SCTP = 0,
-    DIAMETER_PEER_TTYPE_TCP,
-    DIAMETER_PEER_TTYPE_MAX
-} DIAMETER_PEER_TTYPE;
+    AAA_PEER_TTYPE_TLS = 0,
+    AAA_PEER_TTYPE_TCP,
+    AAA_PEER_TTYPE_MAX
+} AAA_PEER_TTYPE;
 
 typedef enum {
-    AAA_DISCONNECT_REBOOTING       = 0,
-    AAA_DISCONNECT_BUSY            = 1,
-    AAA_DISCONNECT_DONTWANTTOTALK  = 2,
-    AAA_DISCONNECT_UNKNOWN         = 1000,
-    AAA_DISCONNECT_TRANSPORT       = 10001,
-    AAA_DISCONNECT_TIMEOUT         = 10002,
-} DIAMETER_DISCONNECT_CAUSE;
+    AAA_DISCONNECT_UNKNOWN        = -3,
+    AAA_DISCONNECT_TRANSPORT      = -2,
+    AAA_DISCONNECT_TIMEOUT        = -1,
+    AAA_DISCONNECT_REBOOTING      = 0,
+    AAA_DISCONNECT_BUSY           = 1,
+    AAA_DISCONNECT_DONTWANTTOTALK = 2,
+} AAA_DISCONNECT_CAUSE;
+
+typedef std::list<diameter_address_t*> AAA_HostIpLst;
 
 typedef struct
 {
-   AAA_ProtectedMap<diameter_unsigned32_t, diameter_unsigned32_t> m_LastTxHopId;
-   AAA_ProtectedMap<diameter_unsigned32_t, diameter_unsigned32_t> m_LastTxEndId;
-   AAA_ProtectedQueue<diameter_unsigned32_t> m_LastRxHopId;
-   AAA_ProtectedQueue<diameter_unsigned32_t> m_LastRxEndId;
-} DiameterMsgId;
+   diameter_unsigned32_t m_LastTxHopId;
+   diameter_unsigned32_t m_LastTxEndId;
+   diameter_unsigned32_t m_LastRxHopId;
+   diameter_unsigned32_t m_LastRxEndId;
+} MsgId;
 
 typedef struct
 {
    diameter_octetstring_t m_Host;
    diameter_octetstring_t m_Realm;
-   diameter_utf8string_t m_ProductName; 
+   AAA_HostIpLst m_HostIpLst;
    diameter_unsigned32_t m_VendorId;
-   diameter_unsigned32_t m_InbandSecurityId;
+   diameter_utf8string_t m_ProductName; 
    diameter_unsigned32_t m_OriginStateId;
+   AAA_ApplicationIdLst m_SupportedVendorIdLst;
+   AAA_ApplicationIdLst m_AuthAppIdLst;
+   diameter_unsigned32_t m_InbandSecurityId;
+   AAA_ApplicationIdLst m_AcctAppIdLst;
+   AAA_VendorSpecificIdLst m_VendorSpecificId;
    diameter_unsigned32_t m_FirmwareRevision;
-   DiameterApplicationIdLst m_SupportedVendorIdLst;
-   DiameterApplicationIdLst m_AuthAppIdLst;
-   DiameterHostIpLst m_HostIpLst;
-   DiameterApplicationIdLst m_AcctAppIdLst;
-   DiameterVendorSpecificIdLst m_VendorSpecificId;
-   DiameterMsgId m_MsgId;
-} DiameterPeerCapabilities;
+   MsgId m_MsgId;
+} AAA_PeerCapabilities;
 
 typedef struct
 {
    diameter_octetstring_t m_Identity;
    diameter_unsigned32_t  m_Port;
-   DIAMETER_DISCONNECT_CAUSE  m_DisconnectCause;
+   AAA_DISCONNECT_CAUSE  m_DisconnectCause;
    int m_Expiration;
    bool m_Static;
    bool m_TLS;
-   bool m_UseSctp;
-   std::auto_ptr<Diameter_IO_Base> m_IOInitiator;
-   std::auto_ptr<Diameter_IO_Base> m_IOResponder;
-   DiameterPeerCapabilities m_PeerCapabilities; 
-} DiameterPeerData;
+   std::auto_ptr<AAA_IO_Base> m_IOInitiator;
+   std::auto_ptr<AAA_IO_Base> m_IOResponder;
+   AAA_PeerCapabilities m_PeerCapabilities; 
+} AAA_PeerData;
 
 #endif /* __AAA_PEER_DATA_H__ */
 

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -44,13 +44,20 @@ class PANA_AuthScriptCtl
    public:
       PANA_AuthScriptCtl() {
       }
-      PANA_AuthScriptCtl(pana_octetstring_t &script) :
-         m_Script(script) {
+      PANA_AuthScriptCtl(diameter_octetstring_t &script) :
+         m_Script(script) { 
       }
       ~PANA_AuthScriptCtl() {
+         ClearEp();
       }
       void Seed(PANA_SessionEventInterface::PANA_AuthorizationArgs &args) {
          m_Args = args;
+         m_Args.m_Ep.Clear();
+         if (args.m_Ep.IsSet()) {
+            ClearEp();
+            m_Args.m_Ep = new PANA_DeviceIdContainer;
+            m_Args.m_Ep()->clone(*args.m_Ep());
+         }
       }
       void Add() {
          SendCmd("add");
@@ -70,19 +77,19 @@ class PANA_AuthScriptCtl
       static void Print(PANA_SessionEventInterface::PANA_AuthorizationArgs &args) {
          char buf[512];
 
-         if (args.m_PacAddress.IsSet()) {
-            FormatToString(args.m_PacAddress(), buf, sizeof(buf));
-            AAA_LOG((LM_INFO, "PaC Address: %s\n", buf));
+         if (args.m_Pac.IsSet()) {        
+            FormatToString(args.m_Pac(), buf, sizeof(buf));
+            ACE_DEBUG((LM_INFO, "PaC Device Id: %s\n", buf));
          }
 
-         if (args.m_PaaAddress.IsSet()) {
-            FormatToString(args.m_PaaAddress(), buf, sizeof(buf));
-            AAA_LOG((LM_INFO, "PAA Address: %s\n", buf));
+         if (args.m_Paa.IsSet()) {        
+            FormatToString(args.m_Paa(), buf, sizeof(buf));
+            ACE_DEBUG((LM_INFO, "PAA Device Id: %s\n", buf));
          }
 
          if (args.m_Key.IsSet()) {
             FormatToString(args.m_Key(), buf, sizeof(buf));
-            AAA_LOG((LM_INFO, "AAA-Key: %s\n", buf));
+            ACE_DEBUG((LM_INFO, "AAA-Key: %s\n", buf));
          }
 
          if (args.m_KeyId.IsSet()) {
@@ -92,12 +99,58 @@ class PANA_AuthScriptCtl
          if (args.m_Lifetime.IsSet()) {
             printf("Lifetime: %d\n", args.m_Lifetime());
          }
+
+         if (args.m_ProtectionCapability.IsSet()) {
+            printf("Protection Cap: %d\n", args.m_ProtectionCapability());
+         }
+
+         if (args.m_DhcpKey.IsSet()) {
+            FormatToString(args.m_DhcpKey(), buf, sizeof(buf));
+            ACE_DEBUG((LM_INFO, "DHCP-Key: %s\n", buf));
+         }
+
+         if (args.m_PMKKeyList.IsSet()) {
+            PAMA_PMKKeyListIterator i;
+            for (i = args.m_PMKKeyList().begin(); 
+                 i != args.m_PMKKeyList().end(); 
+                 i ++ ) {
+                FormatToString((*i), buf, sizeof(buf));
+                ACE_DEBUG((LM_INFO, "PMK-Key: %s\n", buf));
+            }
+         }
+
+         if (args.m_PreferedISP.IsSet()) {
+            ACE_DEBUG((LM_INFO, "Prefered ISP: %s\n", 
+	              args.m_PreferedISP().m_Name.data()));
+         }
+
+         if (args.m_PreferedNAP.IsSet()) {
+            ACE_DEBUG((LM_INFO, "Prefered NAP: %s\n", 
+		      args.m_PreferedNAP().m_Name.data()));
+         }
+
+         if (args.m_Ep.IsSet()) {
+            PANA_DeviceId *id;
+            PANA_DeviceIdIterator i = args.m_Ep()->begin();
+            for (;i != args.m_Ep()->end(); i++) {
+                id = (*i);
+                FormatToString(*id, buf, sizeof(buf));
+	        ACE_DEBUG((LM_INFO, "EP Device id: %s\n", buf));
+            }
+         }
       }
 
    protected:
+      void ClearEp() {
+         if (m_Args.m_Ep.IsSet()) {
+             delete m_Args.m_Ep();
+             m_Args.m_Ep.Clear();
+         }
+      }
       void SendCmd(const char *cmd) {
          char buf[512];
          ACE_INET_Addr addr;
+         PANA_DeviceId *id;
          std::string sysCmd;
 
 #if defined(WIN32)
@@ -108,14 +161,14 @@ class PANA_AuthScriptCtl
          sysCmd += cmd;
          sysCmd += " ";
 
-         if (m_Args.m_PacAddress.IsSet()) {
-            FormatToString(m_Args.m_PacAddress(), buf, sizeof(buf));
+         if (m_Args.m_Pac.IsSet()) {        
+            FormatToString(m_Args.m_Pac(), buf, sizeof(buf));
             sysCmd += buf;
             sysCmd += " ";
          }
 
-         if (m_Args.m_PaaAddress.IsSet()) {
-            FormatToString(m_Args.m_PaaAddress(), buf, sizeof(buf));
+         if (m_Args.m_Paa.IsSet()) {        
+            FormatToString(m_Args.m_Paa(), buf, sizeof(buf));
             sysCmd += buf;
             sysCmd += " ";
          }
@@ -138,17 +191,64 @@ class PANA_AuthScriptCtl
             sysCmd += " ";
          }
 
+         if (m_Args.m_ProtectionCapability.IsSet()) {
+            sprintf(buf, "%d", m_Args.m_ProtectionCapability());
+            sysCmd += buf;
+            sysCmd += " ";
+         }
+
+         if (m_Args.m_DhcpKey.IsSet()) {
+            FormatToString(m_Args.m_DhcpKey(), buf, sizeof(buf));
+            sysCmd += buf;
+            sysCmd += " ";
+         }
+
+         if (m_Args.m_PMKKeyList.IsSet()) {
+            PAMA_PMKKeyListIterator i;
+            for (i = m_Args.m_PMKKeyList().begin(); 
+                 i != m_Args.m_PMKKeyList().end(); 
+                 i ++ ) {
+                FormatToString((*i), buf, sizeof(buf));
+                sysCmd += buf;
+                sysCmd += " ";
+            }
+         }
+
+         if (m_Args.m_PreferedISP.IsSet()) {
+            sysCmd += m_Args.m_PreferedISP().m_Name;
+            sysCmd += ":";
+            sysCmd += m_Args.m_PreferedISP().m_Id;
+            sysCmd += " ";
+         }
+
+         if (m_Args.m_PreferedNAP.IsSet()) {
+            sysCmd += m_Args.m_PreferedNAP().m_Name;
+            sysCmd += ":";
+            sysCmd += m_Args.m_PreferedNAP().m_Id;
+            sysCmd += " ";
+         }
+
+         if (m_Args.m_Ep.IsSet()) {
+            PANA_DeviceIdIterator i = m_Args.m_Ep()->begin();
+            for (;i != m_Args.m_Ep()->end(); i++) {
+                id = (*i);
+                FormatToString(*id, buf, sizeof(buf));
+                sysCmd += buf;
+                sysCmd += " ";
+            }
+         }
+
          if (m_Script.length() > 0) {
             system(sysCmd.data());
          }
-         else {
-            AAA_LOG((LM_INFO, "%s is invalid !\n"));
-         }
+	 else {
+            ACE_DEBUG((LM_INFO, "%s is invalid !\n"));
+	 }
       }
    protected:
-      static void FormatToString(pana_octetstring_t &data,
-                                 char *buf,
-                                 size_t bsize) {
+      static void FormatToString(diameter_octetstring_t &data,
+                          char *buf,
+                          size_t bsize) {
          ACE_OS::memset(buf, 0, bsize);
          char *tbuf = new char[data.size()+1];
          for (size_t i=0; i<data.size();i++) {
@@ -161,15 +261,27 @@ class PANA_AuthScriptCtl
          }
          delete tbuf;
       }
-      static void FormatToString(ACE_INET_Addr &addr,
-                                 char *buf,
-                                 size_t bsize) {
-         addr.addr_to_string(buf, bsize);
+      static void FormatToString(PANA_DeviceId &id, 
+                          char *buf,
+                          size_t bsize) {
+         switch (id.type) {
+            case AAA_ADDR_FAMILY_IPV4:
+            case AAA_ADDR_FAMILY_IPV6: {
+                  ACE_INET_Addr addr;
+                  PANA_DeviceIdConverter::FormatToAddr(id, addr);
+                  addr.addr_to_string(buf, bsize);
+               }
+               break;
+            case AAA_ADDR_FAMILY_802:
+            default: 
+               FormatToString(id.value, buf, bsize);  
+               break;
+         }
       }
 
    private:
       PANA_SessionEventInterface::PANA_AuthorizationArgs m_Args;
-      pana_octetstring_t m_Script;
+      diameter_octetstring_t m_Script;
 };
 
 #endif // __PANA_AUTH_SCRIPT_H__

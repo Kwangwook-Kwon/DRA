@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -60,9 +60,6 @@
 #include "aaa_session_client.h"
 #include "aaa_session_server.h"
 #include "aaa_session_server_factory.h"
-#include "aaa_session_acct_rec_transformer.h"
-#include "diameter_parser_api.h"
-#include "diameter_compatibility_api.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 /////////////      !!!!            WARNING              !!!!       ////////////////
@@ -71,11 +68,11 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 
-typedef DiameterServerSessionFactory AAAServerSessionFactory;
+typedef AAA_ServerSessionFactory AAAServerSessionFactory;
 
-typedef std::auto_ptr<DiameterApplication> AAAApplicationHandle;
+typedef std::auto_ptr<AAA_Application> AAAApplicationHandle;
 
-typedef DiameterSessionPayload AAASessionPayload;
+typedef void* AAASessionPayload;
 
 class DIAMETERBASEPROTOCOL_EXPORT AAAApplicationCore 
 {
@@ -92,8 +89,8 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAApplicationCore
         AAAReturnCode Open(char *configFileName, 
                            AAA_Task &task) {
 	    if (! m_Handle.get()) {
-	        m_Handle = std::auto_ptr<DiameterApplication>
-                              (new DiameterApplication(task));
+	        m_Handle = std::auto_ptr<AAA_Application>
+                              (new AAA_Application(task));
                 return m_Handle->Open(configFileName);
 	    }
             return (AAA_ERR_SUCCESS);
@@ -136,7 +133,7 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAApplicationCore
 	}
 
     private:
-        std::auto_ptr<DiameterApplication> m_Handle;
+        std::auto_ptr<AAA_Application> m_Handle;
 };
 
 template<class SESSION_SERVER>
@@ -149,7 +146,7 @@ class AAAServerSessionClassFactory :
 	  AAAServerSessionFactory(c.GetTask(), appId),
           m_Core(c) {
        }
-       DiameterSessionIO *CreateInstance() {        
+       AAA_SessionIO *CreateInstance() {        
            SESSION_SERVER *s = new SESSION_SERVER
               (m_Core, GetApplicationId());
            return s->IO();
@@ -160,11 +157,11 @@ class AAAServerSessionClassFactory :
 };
 
 class DIAMETERBASEPROTOCOL_EXPORT AAAPeerManager : 
-    public DiameterPeerManager
+    public AAA_PeerManager
 {
     public:
         AAAPeerManager(AAAApplicationCore &core) :
-            DiameterPeerManager(core.GetTask()) {
+            AAA_PeerManager(core.GetTask()) {
 	}
 };
 
@@ -176,7 +173,7 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAEventHandler
         }
         virtual ~AAAEventHandler() { 
         }
-        virtual AAAReturnCode HandleMessage(DiameterMsg &msg) {
+        virtual AAAReturnCode HandleMessage(AAAMessage &msg) {
             return (AAA_ERR_SUCCESS);
         }
         virtual AAAReturnCode HandleDisconnect() {
@@ -280,17 +277,20 @@ class DIAMETERBASEPROTOCOL_EXPORT AAASession :
 	    m_LastEvent = event;
             return (AAA_ERR_SUCCESS);           
 	}
+        const AAASessionHandle GetSessionHandle() {
+	    return (this);
+	}
 	diameter_unsigned32_t GetApplicationId() { 
             return m_Id; 
         }
 	virtual void GetSessionId(diameter_octetstring_t &id) {
 	}
-        DiameterSessionIO *IO() {
+        AAA_SessionIO *IO() {
 	    return m_IO;
 	}
 
     protected:   
-        virtual AAAReturnCode CallMsgHandler(DiameterMsg &msg) {
+        virtual AAAReturnCode CallMsgHandler(AAAMessage &msg) {
 	    AAAMessageMap::iterator i = m_MsgMap.find
                     (msg.hdr.code);
 	    if (m_MsgMap.end() != i) {
@@ -303,30 +303,32 @@ class DIAMETERBASEPROTOCOL_EXPORT AAASession :
 	AAAMessageMap m_MsgMap;
         diameter_unsigned32_t m_Id;
         EVENT m_LastEvent;
-        DiameterSessionIO *m_IO;
+        AAA_SessionIO *m_IO;
 };
 
 class DIAMETERBASEPROTOCOL_EXPORT AAAClientSession : 
     public AAASession,
-    public DiameterClientAuthSession
+    public AAA_ClientAuthSession
 
 {
     public:
         AAAClientSession(AAAApplicationCore &appCore,
                          diameter_unsigned32_t id) :
 	    AAASession(appCore, id),
-	    DiameterClientAuthSession(appCore.GetTask(), id) {
+	    AAA_ClientAuthSession(appCore.GetTask(), id) {
 	    m_IO = this;
 	}
         virtual ~AAAClientSession() {
-	    DiameterClientAuthSession::End();
+	    AAA_ClientAuthSession::End();
 	}        
         virtual AAAReturnCode SetTimeout(time_t timeout) {
-	    DIAMETER_CFG_AUTH_SESSION()->lifetimeTm = (diameter_unsigned32_t)timeout;
+	    AAA_CFG_AUTH_SESSION()->lifetimeTm = (diameter_unsigned32_t)timeout;
             return (AAA_ERR_SUCCESS);
 	}
 	virtual void GetSessionId(diameter_octetstring_t &id) {
-	    Attributes().SessionId().Dump(id);
+	    char cbuf[128];
+	    Attributes().SessionId().Dump(cbuf);
+            id = cbuf;
 	}
         AAAReturnCode Start() {
 	    return Begin();
@@ -336,22 +338,19 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAClientSession :
             return (AAA_ERR_SUCCESS);
 	}
         AAAReturnCode End() {
-	    return DiameterClientAuthSession::End();
+	    return AAA_ClientAuthSession::End();
 	}
     private:
-        virtual AAAReturnCode RequestMsg(DiameterMsg &msg) {
+        virtual AAAReturnCode RequestMsg(AAAMessage &msg) {
 	    return CallMsgHandler(msg);
         }
-        virtual AAAReturnCode AnswerMsg(DiameterMsg &msg) {
+        virtual AAAReturnCode AnswerMsg(AAAMessage &msg) {
 	    return CheckUpdateEvent(msg);
 	}
-        virtual AAAReturnCode ErrorMsg(DiameterMsg &msg) {
+        virtual AAAReturnCode ErrorMsg(AAAMessage &msg) {
 	    return CallMsgHandler(msg);
 	}
         virtual AAAReturnCode Disconnect() {
-            return this->HandleDisconnect();
-        }
-        virtual AAAReturnCode ReClaimSession() {
             return this->HandleDisconnect();
         }
         virtual AAAReturnCode SessionTimeout() {
@@ -365,7 +364,7 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAClientSession :
         virtual AAAReturnCode AbortSession() {
 	    return this->HandleAbort();
         }
-        AAAReturnCode CheckUpdateEvent(DiameterMsg &msg) {
+        AAAReturnCode CheckUpdateEvent(AAAMessage &msg) {
 	    CallMsgHandler(msg);
 	    switch (m_LastEvent) {
 	    case EVENT_AUTH_SUCCESS:  return AAA_ERR_SUCCESS;
@@ -377,13 +376,13 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAClientSession :
 
 class DIAMETERBASEPROTOCOL_EXPORT AAAServerSession : 
     public AAASession,
-    public DiameterServerAuthSession
+    public AAA_ServerAuthSession
 {
     public:
         AAAServerSession(AAAApplicationCore &appCore,
                          diameter_unsigned32_t id) :
 	    AAASession(appCore, id),
-	    DiameterServerAuthSession(appCore.GetTask(), id) {
+	    AAA_ServerAuthSession(appCore.GetTask(), id) {
 	    m_IO = this;
 	}
         virtual ~AAAServerSession() {
@@ -393,13 +392,13 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAServerSession :
 	    return End();
 	}
     private:
-        virtual AAAReturnCode RequestMsg(DiameterMsg &msg) {
+        virtual AAAReturnCode RequestMsg(AAAMessage &msg) {
 	    return CheckUpdateEvent(msg);
         }
-        virtual AAAReturnCode AnswerMsg(DiameterMsg &msg) {
+        virtual AAAReturnCode AnswerMsg(AAAMessage &msg) {
 	    return CallMsgHandler(msg);
 	}
-        virtual AAAReturnCode ErrorMsg(DiameterMsg &msg) {
+        virtual AAAReturnCode ErrorMsg(AAAMessage &msg) {
 	    return CallMsgHandler(msg);
 	}
         virtual AAAReturnCode Disconnect() {
@@ -416,7 +415,7 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAServerSession :
         virtual AAAReturnCode AbortSession() {
 	    return this->HandleAbort();
         }
-        AAAReturnCode CheckUpdateEvent(DiameterMsg &msg) {
+        AAAReturnCode CheckUpdateEvent(AAAMessage &msg) {
 	    CallMsgHandler(msg);
 	    switch (m_LastEvent) {
 	    case EVENT_AUTH_SUCCESS:  return AAA_ERR_SUCCESS;
@@ -434,15 +433,15 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAMessageControl
         }
         virtual ~AAAMessageControl() {
 	}
-        AAAReturnCode SetResultCode(DiameterMsg &response, 
-                                    DiameterMsg &request, 
-                                    DiameterResultCode resultCode) {
-           DiameterMsgResultCode rcode(response);
+        AAAReturnCode SetResultCode(AAAMessage &response, 
+                                    AAAMessage &request, 
+                                    AAAResultCode resultCode) {
+           AAA_MsgResultCode rcode(response);
            rcode.ResultCode(resultCode);
            return (AAA_ERR_SUCCESS);
 	}
-        AAAReturnCode Send(DiameterMsg &msg) {
-	   std::auto_ptr<DiameterMsg> newMsg(new DiameterMsg);
+        AAAReturnCode Send(AAAMessage &msg) {
+	   std::auto_ptr<AAAMessage> newMsg(new AAAMessage);
            newMsg->hdr = msg.hdr;          
            while (! msg.acl.empty()) {
 	       AAAAvpContainer *c = msg.acl.front();
@@ -450,29 +449,29 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAMessageControl
                newMsg->acl.add(c);
 	   }
 
-           DiameterIdentityAvpContainerWidget oHostAvp(newMsg->acl);
-           DiameterIdentityAvpContainerWidget oRealmAvp(newMsg->acl);
+           AAA_IdentityAvpContainerWidget oHostAvp(newMsg->acl);
+           AAA_IdentityAvpContainerWidget oRealmAvp(newMsg->acl);
 
            // resolve origin host
            diameter_identity_t *oHost = oHostAvp.GetAvp
-                 (DIAMETER_AVPNAME_ORIGINHOST);
+                 (AAA_AVPNAME_ORIGINHOST);
            if (oHost == NULL) {
-               oHostAvp.AddAvp(DIAMETER_AVPNAME_ORIGINHOST) = 
-		   DIAMETER_CFG_TRANSPORT()->identity;
+               oHostAvp.AddAvp(AAA_AVPNAME_ORIGINHOST) = 
+		   AAA_CFG_TRANSPORT()->identity;
            }
            else if (oHost->length() == 0) {
-	       *oHost = DIAMETER_CFG_TRANSPORT()->identity;
+	       *oHost = AAA_CFG_TRANSPORT()->identity;
 	   }
 
            // resolve origin realm
            diameter_identity_t *oRealm = oRealmAvp.GetAvp
-                   (DIAMETER_AVPNAME_ORIGINREALM);
+                   (AAA_AVPNAME_ORIGINREALM);
            if (oRealm == NULL) {
-               oRealmAvp.AddAvp(DIAMETER_AVPNAME_ORIGINREALM) = 
-		   DIAMETER_CFG_TRANSPORT()->realm;
+               oRealmAvp.AddAvp(AAA_AVPNAME_ORIGINREALM) = 
+		   AAA_CFG_TRANSPORT()->realm;
            }
            else if (oRealm->length() == 0) {
-	       *oRealm = DIAMETER_CFG_TRANSPORT()->realm;
+	       *oRealm = AAA_CFG_TRANSPORT()->realm;
 	   }
 
 	   return m_Session.IO()->Send(newMsg);
@@ -492,7 +491,7 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingSession :
 	}
         virtual ~AAAAccountingSession() {
 	}
-        AAAReturnCode Send(DiameterMsg &reqMsg) {
+        AAAReturnCode Send(AAAMessage &reqMsg) {
 	    AAAMessageControl msgCntrl(this);
             return msgCntrl.Send(reqMsg);
 	}
@@ -502,7 +501,7 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingClientSession :
     public AAAAccountingSession
 {
     private:
-        class LocalCollector : public DiameterClientAcctRecCollector {
+        class LocalCollector : public AAA_ClientAcctRecCollector {
             public:
 	        LocalCollector() : 
                    m_Session(0) {
@@ -546,8 +545,8 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingClientSession :
 	   AAAAccountingSession(appCore, id),
 	   m_ParentSession(appCore.GetTask(), id),
            m_LastPayload(NULL) {
-           m_SubSession = std::auto_ptr<DiameterClientAcctSubSession<LocalCollector> >
-                (new DiameterClientAcctSubSession<LocalCollector>(m_ParentSession));
+           m_SubSession = std::auto_ptr<AAA_ClientAcctSubSession<LocalCollector> >
+                (new AAA_ClientAcctSubSession<LocalCollector>(m_ParentSession));
            m_SubSession->RecCollector().m_Session = this;
            m_IO = m_SubSession.get();
            m_SubSession->Attributes().BackwardCompatibility() = true;
@@ -557,7 +556,7 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingClientSession :
         AAAReturnCode SetInterimRecordInterval(RECTYPE type, 
                                                int interval = 0,
                                                AAASessionPayload payload = NULL) {
-	   DIAMETER_CFG_ACCT_SESSION()->recIntervalTm = interval;
+	   AAA_CFG_ACCT_SESSION()->recIntervalTm = interval;
            m_LastPayload = payload;
            switch (type) {
 	      case RECTYPE_EVENT: m_SubSession->Begin(true); break;
@@ -572,21 +571,44 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingClientSession :
 	   return (AAA_ERR_SUCCESS);
 	}
      private:
-        DiameterClientAcctSession m_ParentSession;
-        std::auto_ptr<DiameterClientAcctSubSession<LocalCollector> >
+        AAA_ClientAcctSession m_ParentSession;
+        std::auto_ptr<AAA_ClientAcctSubSession<LocalCollector> >
                m_SubSession;
         AAASessionPayload m_LastPayload;
 };
 
-typedef DiameterAccountingRecTransformer AAAAccountingRecTransformer;
+class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingRecTransformer
+{
+    public:
+        AAAAccountingRecTransformer() {
+        }
+        virtual ~AAAAccountingRecTransformer() {
+	}
+        virtual AAAReturnCode Convert(AAAMessage *msg) = 0;
+        virtual AAAReturnCode OutputRecord(AAAMessage *originalMsg) = 0;
+};
 
-typedef DiameterAccountingXMLRecTransformer AAAAccountingXMLRecTransformer;
+class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingXMLRecTransformer : 
+    public AAAAccountingRecTransformer
+{
+    public:
+        AAAAccountingXMLRecTransformer() {
+        }
+        virtual ~AAAAccountingXMLRecTransformer() {
+	}
+        virtual AAAReturnCode Convert(AAAMessage *msg);
+        virtual AAAReturnCode OutputRecord(AAAMessage *originalMsg);
+
+   protected:
+        AAASessionPayload record;
+        ACE_UINT32 record_size;
+};
 
 class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingServerSession : 
     public AAAAccountingSession
 {
     private:
-        class LocalStorage : public DiameterServerAcctRecStorage
+        class LocalStorage : public AAA_ServerAcctRecStorage
         {
             public:
 	       LocalStorage() :
@@ -599,14 +621,14 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingServerSession :
                                         int recordType,
                                         int recordNum) {
 		  if (m_Session) {
-		      DiameterMsg msg;
+		      AAAMessage msg;
                       ACE_OS::memset(&msg.hdr, 0, sizeof(msg.hdr));
-                      msg.hdr.ver = DIAMETER_PROTOCOL_VERSION;
+                      msg.hdr.ver = AAA_PROTOCOL_VERSION;
                       msg.hdr.length = 0;
-                      msg.hdr.flags.r = DIAMETER_FLAG_SET;
-                      msg.hdr.flags.p = DIAMETER_FLAG_CLR;
-                      msg.hdr.flags.e = DIAMETER_FLAG_CLR;
-                      msg.hdr.code = DIAMETER_MSGCODE_ACCOUNTING;
+                      msg.hdr.flags.r = AAA_FLG_SET;
+                      msg.hdr.flags.p = AAA_FLG_CLR;
+                      msg.hdr.flags.e = AAA_FLG_CLR;
+                      msg.hdr.code = AAA_MSGCODE_ACCOUNTING;
                       msg.hdr.appId = m_Session->GetApplicationId();
 
                       while (! avpList.empty()) {
@@ -619,8 +641,6 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingServerSession :
                       m_Session->GetTransformer()->OutputRecord(&msg);
 		  }
 	       }           
-               virtual void UpdateAcctResponse(DiameterMsg &aca) {
-	       }
                AAAAccountingServerSession *m_Session;
         };
 
@@ -628,24 +648,24 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAAccountingServerSession :
         AAAAccountingServerSession(AAAApplicationCore &appCore,
                                    diameter_unsigned32_t id) :
 	    AAAAccountingSession(appCore, id) {
-            m_Session = std::auto_ptr<DiameterServerAcctSession<LocalStorage> >
-                (new DiameterServerAcctSession<LocalStorage>(appCore.GetTask(), id));
+            m_Session = std::auto_ptr<AAA_ServerAcctSession<LocalStorage> >
+                (new AAA_ServerAcctSession<LocalStorage>(appCore.GetTask(), id));
             m_Session->RecStorage().m_Session = this;
             m_Session->Attributes().BackwardCompatibility() = true;
             m_IO = m_Session.get();
 	}
         virtual ~AAAAccountingServerSession() {
 	}
-        void SetTransformer(DiameterAccountingRecTransformer *trns) { 
+        void SetTransformer(AAAAccountingRecTransformer *trns) { 
             m_Transformer = trns; 
         }
-	DiameterAccountingRecTransformer *GetTransformer() { 
+	AAAAccountingRecTransformer *GetTransformer() { 
             return m_Transformer; 
         }
 
     protected:
-        DiameterAccountingRecTransformer *m_Transformer;
-        std::auto_ptr<DiameterServerAcctSession<LocalStorage> >
+        AAAAccountingRecTransformer *m_Transformer;
+        std::auto_ptr<AAA_ServerAcctSession<LocalStorage> >
 	    m_Session;
 };
 
@@ -663,13 +683,13 @@ class DIAMETERBASEPROTOCOL_EXPORT AAAProxyServices
                }
                virtual ~LocalHandler() {
                }
-               virtual AAAReturnCode RequestMsg(DiameterMsg &msg) {
+               virtual AAAReturnCode RequestMsg(AAAMessage &msg) {
 		  return m_Handler->HandleMessage(msg);
                }
-               virtual AAAReturnCode AnswerMsg(DiameterMsg &msg) {
+               virtual AAAReturnCode AnswerMsg(AAAMessage &msg) {
 		  return m_Handler->HandleMessage(msg);
                }
-               virtual AAAReturnCode ErrorMsg(DiameterMsg &msg) {
+               virtual AAAReturnCode ErrorMsg(AAAMessage &msg) {
 		  return m_Handler->HandleMessage(msg);
                }
                diameter_unsigned32_t &ApplicationId() {

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -36,20 +36,20 @@
 
 #include "aaa_session.h"
 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterServerSessionFactory
+class DIAMETERBASEPROTOCOL_EXPORT AAA_ServerSessionFactory 
 {
     public:
-       virtual ~DiameterServerSessionFactory() { 
+       virtual ~AAA_ServerSessionFactory() { 
        }
        diameter_unsigned32_t GetApplicationId() { 
            return m_ApplicationId; 
        }
 
        // This function is implemented by derived class
-       virtual DiameterSessionIO *CreateInstance() = 0;
+       virtual AAA_SessionIO *CreateInstance() = 0;
 
     protected:
-       DiameterServerSessionFactory(AAA_Task &task,
+       AAA_ServerSessionFactory(AAA_Task &task,
                                 diameter_unsigned32_t appId) :
            m_Task(task),
            m_ApplicationId(appId) { 
@@ -61,15 +61,15 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterServerSessionFactory
 };
 
 template<class SESSION_SERVER>
-class DiameterServerSessionAllocator : 
-    public DiameterServerSessionFactory
+class AAA_ServerSessionAllocator : 
+    public AAA_ServerSessionFactory
 {
     public:
-       DiameterServerSessionAllocator(AAA_Task &task,
+       AAA_ServerSessionAllocator(AAA_Task &task,
                                   diameter_unsigned32_t appId) : 
-            DiameterServerSessionFactory(task, appId) { 
+            AAA_ServerSessionFactory(task, appId) { 
        }
-       DiameterSessionIO *CreateInstance() {
+       AAA_SessionIO *CreateInstance() {
             return new SESSION_SERVER(m_Task, m_ApplicationId);
        }
 };

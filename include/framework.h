@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2006 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -30,14 +30,13 @@
 /* changes to one unified version of this software.                       */
 /*                                                                        */
 /* END_COPYRIGHT                                                          */
-// $Id: framework.h,v 1.61 2006/04/20 21:46:40 vfajardo Exp $
+// $Id: framework.h,v 1.59 2005/09/08 13:13:53 vfajardo Exp $
 // framework.h: Protocol Framework API based on ACE.
 // Written by Yoshihiro Ohba
 
 #ifndef __FRAMEWORK_H__
 #define __FRAMEWORK_H__
 
-#include <aaa_global_config.h>
 #include <list>
 #include <map>
 #include <string>
@@ -54,7 +53,6 @@
 #include <ace/Token.h>
 #include <ace/Log_Msg.h>
 #include <ace/Atomic_Op_T.h>
-#include <ace/Condition_T.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/shared_array.hpp>
@@ -96,9 +94,6 @@ class AAA_ScopeLock
   }
   ~AAA_ScopeLock() {
     lock.release();
-  }
-  LOCK &Lock() {
-    return lock;
   }
 
  private:
@@ -316,10 +311,7 @@ template <class T, class LOCK = ACE_Thread_Mutex>
  }
 
   /// Overloaded by derived class's destractors.
-  virtual ~AAA_QueueJob() {
-   indexQueue.reset();
-   dataQueue.reset();
-  }
+  virtual ~AAA_QueueJob() {}
 
   /// Inherited from the base class.
   virtual int Serve()=0;
@@ -865,10 +857,7 @@ public:
       reactor(0);
     }
 
-  virtual ~AAA_Task()
-  {
-     Stop();
-  }
+  virtual ~AAA_Task() { Stop(); }
   
   /// Activate specified number of threads.  A negative integer is
   /// thrown when the task could not be started.
@@ -914,7 +903,7 @@ public:
   /// non-zero.  The specified argment is used when the event is
   /// executed.
   inline long ScheduleTimer(ACE_Event_Handler* eventHandler, const void* arg, 
-			    ACE_Time_Value delay, ACE_Time_Value interval=ACE_Time_Value::zero)
+			    ACE_Time_Value delay, ACE_Time_Value interval=0)
   {
     if (Running())
       return reactor()->schedule_timer(eventHandler, arg, delay, interval);
@@ -1098,10 +1087,8 @@ public:
   { 
     for (typename std::list< AAA_StateTableEntry <ARG> * >::iterator 
 	 i=std::list< AAA_StateTableEntry <ARG> * >::begin(); 
-         i!=std::list< AAA_StateTableEntry <ARG> * >::end();
-         i ++) {
-         delete (*i);
-    }
+         i!=std::list< AAA_StateTableEntry <ARG> * >::end(); 
+         delete *(i++));
   }
 
   
@@ -1289,7 +1276,7 @@ public:
 	return;
       }
 
-    AAA_StateTableEntry<ARG>* entry = 0;
+    AAA_StateTableEntry<ARG>* entry;
 
     // Search state table for StateTableEntry containing the event
     // defined in the current state.
@@ -1460,237 +1447,6 @@ private:
   ACE_Reactor& reactor;
   TimerHandleMap timerHandleMap;
   AAA_FsmTimerEventHandler timerEventHandler;
-};
-
-/*!
- *! \brief AAALogMsg Generic/Global log facility
- * Log facility
- * Open Diameter logging facity derived directly from ACE
- */
-class AAALogMsg :
-    public ACE_Log_Msg
-{
-    friend class ACE_Singleton<AAALogMsg, ACE_Recursive_Thread_Mutex>;    /**< ACE logger */
-
-    private:
-        /*
-         * protected constructors/destructors to prevent derivation
-         */
-        AAALogMsg() {
-        }
-        ~AAALogMsg() {
-        }
-};
-
-typedef ACE_Singleton<AAALogMsg, ACE_Recursive_Thread_Mutex> AAALogMsg_S;
-ACE_EXPORT_SINGLETON_DECLARE(ACE_Singleton, AAALogMsg, ACE_Recursive_Thread_Mutex);
-
-#define AAA_LOG(X) do { \
-                         AAALogMsg_S::instance()->log X; \
-                     } while(0)
-
-template <class ARG>
-class AAA_ProtectedQueue :
-   private std::list<ARG>
-{
-   public:
-      virtual ~AAA_ProtectedQueue() {
-      }
-      virtual void Enqueue(ARG arg) {
-         ACE_Write_Guard<ACE_RW_Mutex> guard(m_Lock);
-         std::list<ARG>::push_back(arg);  
-      }
-      virtual ARG Dequeue() {
-         ACE_Write_Guard<ACE_RW_Mutex> guard(m_Lock);
-         ARG a = std::list<ARG>::front();
-         std::list<ARG>::pop_front();
-         return a;
-      }
-      virtual bool IsEmpty() {
-         ACE_Read_Guard<ACE_RW_Mutex> guard(m_Lock);
-         return std::list<ARG>::empty() ? true : false;
-      }
-
-   private:
-      ACE_RW_Mutex m_Lock;
-};
-
-template <class ARG>
-class AAA_IterAction
-{
-   public:
-      // return TRUE to delete entry in iteration
-      // return FALSE to sustain entry
-      virtual bool operator()(ARG&)=0;
-
-   protected:
-      virtual ~AAA_IterAction() {
-      }
-      AAA_IterAction() {
-      }
-};
-
-template <class ARG>
-class AAA_IterActionDelete :
-   public AAA_IterAction<ARG>
-{
-   public:
-      // return TRUE to delete entry in iteration
-      // return FALSE to sustain entry
-      virtual bool operator()(ARG&) {
-         return true;
-      }
-      virtual ~AAA_IterActionDelete() {
-      }
-};
-
-template <class ARG>
-class AAA_IterActionNone :
-   public AAA_IterAction<ARG>
-{
-   public:
-      // return TRUE to delete entry in iteration
-      // return FALSE to sustain entry
-      virtual bool operator()(ARG&) {
-         return false;
-      }
-      virtual ~AAA_IterActionNone() {
-      }
-};
-
-template <class INDEX,
-          class DATA>
-class AAA_ProtectedMap  :
-   private std::map<INDEX, DATA>
-{
-   public:
-      virtual ~AAA_ProtectedMap() {
-      }
-      virtual void Add(INDEX ndx, DATA data) {
-         ACE_Write_Guard<ACE_RW_Mutex> guard(m_Lock);
-         std::map<INDEX, DATA>::insert(std::pair
-             <INDEX, DATA>(ndx, data));
-      }
-      virtual bool Lookup(INDEX ndx, DATA &data) {
-         ACE_Read_Guard<ACE_RW_Mutex> guard(m_Lock);
-         typename std::map<INDEX, DATA>::iterator i;
-         i = std::map<INDEX, DATA>::find(ndx);
-         if (i != std::map<INDEX, DATA>::end()) {
-             data = i->second;
-             return (true);
-         }
-         return (false);
-       }
-      virtual bool Remove(INDEX ndx,
-                          AAA_IterAction<DATA> &e) {
-         ACE_Write_Guard<ACE_RW_Mutex> guard(m_Lock);
-         typename std::map<INDEX, DATA>::iterator i;
-         i = std::map<INDEX, DATA>::find(ndx);
-         if (i != std::map<INDEX, DATA>::end()) {
-             e(i->second);
-             std::map<INDEX, DATA>::erase(i);
-             return (true);
-         }
-         return (false);
-      }
-      virtual bool IsEmpty() {
-         ACE_Read_Guard<ACE_RW_Mutex> guard(m_Lock);
-         return std::map<INDEX, DATA>::empty() ? true : false;
-      }
-      virtual void Iterate(AAA_IterAction<DATA> &e) {
-         ACE_Write_Guard<ACE_RW_Mutex> guard(m_Lock);
-         typename std::map<INDEX, DATA>::iterator i =
-             std::map<INDEX, DATA>::begin();
-         while (i != std::map<INDEX, DATA>::end()) {
-             if (e(i->second)) {
-                 typename std::map<INDEX, DATA>::iterator h = i;
-                 i ++;
-                 std::map<INDEX, DATA>::erase(h);
-                 continue;
-             }
-             i ++;
-         }
-      }
-
-   private:
-      ACE_RW_Mutex m_Lock;
-};
-
-template <class ARG>
-class AAA_ProtectedPtrQueue
-{
-   public:
-      void Enqueue(std::auto_ptr<ARG> a) {
-         m_Queue.Enqueue(a.release());
-      }
-      std::auto_ptr<ARG> Dequeue() {
-         std::auto_ptr<ARG> arg(m_Queue.Dequeue());
-         return arg;
-      }
-
-   private:
-      AAA_ProtectedQueue<ARG*> m_Queue;
-};
-
-template <class ARG>
-class AAA_ProtectedPtrMap
-{
-   public:
-      void Enqueue(std::auto_ptr<ARG> a) {
-         m_Queue.Enqueue(a.release());
-      }
-      std::auto_ptr<ARG> Dequeue() {
-         std::auto_ptr<ARG> arg(m_Queue.Dequeue());
-         return arg;
-      }
-
-   private:
-      AAA_ProtectedQueue<ARG*> m_Queue;
-};
-
-class AAA_RangedValue
-{
-   public:
-      typedef enum {
-          DEFAULT_LOW  = 0,
-          DEFAULT_HIGH = 3,
-      };
-
-   public:
-      AAA_RangedValue(int level = DEFAULT_LOW,
-                      int low = DEFAULT_LOW, 
-                      int high = DEFAULT_HIGH) {
-          Reset(level, low, high);
-      }
-      virtual ~AAA_RangedValue() {
-      }
-      virtual int operator++() {
-          m_CurrentLevel += 1;
-          return (m_CurrentLevel > m_HighThreshold) ? true : false;
-      }
-      virtual int operator--() {
-          m_CurrentLevel -= 1;
-          return (m_CurrentLevel < m_LowThreshold) ? true : false;
-      }
-      virtual int operator()() {
-          return m_CurrentLevel;
-      }
-      virtual bool InRange() {
-          return ((m_CurrentLevel > m_LowThreshold) &&
-                  (m_CurrentLevel < m_HighThreshold));
-      }
-      void Reset(int level = DEFAULT_LOW,
-                 int low = DEFAULT_LOW, 
-                 int high = DEFAULT_HIGH) {
-          m_CurrentLevel = level;
-          m_LowThreshold = low;
-          m_HighThreshold = high;
-      } 
-
-   private:
-      int m_CurrentLevel;
-      int m_LowThreshold;
-      int m_HighThreshold;
 };
 
 #endif // __FRAMEWORK_H__

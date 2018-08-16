@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -52,7 +52,7 @@
 class PANA_EXPORT PANA_Node
 {
    public:
-       PANA_Node(AAA_Task &t, std::string &cfg_file) :
+       PANA_Node(AAA_Task &t, std::string &cfg_file) : 
            m_Task(t) {
            Start(cfg_file);
        }

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -33,109 +33,111 @@
 
 #include "aaa_peer_table.h"
 
-void DiameterPeerEntry::Start() throw (AAA_Error)
+void AAA_PeerEntry::Start() throw (AAA_Error)
 {
-   Notify(DIAMETER_PEER_EV_START);
+   Notify(AAA_PEER_EV_START);
    m_PeerInitiator.Connect(PeerData().m_Identity,
                            PeerData().m_Port,
-                           PeerData().m_UseSctp);
+                           PeerData().m_TLS);
 }
 
-void DiameterPeerEntry::Stop(DIAMETER_DISCONNECT_CAUSE cause)
+void AAA_PeerEntry::Stop(AAA_DISCONNECT_CAUSE cause)
 {
    PeerData().m_DisconnectCause = cause;
-   Notify(DIAMETER_PEER_EV_STOP);
+   Notify(AAA_PEER_EV_STOP);
    m_PeerInitiator.Stop();
+   AAA_PeerStateMachine::WaitOnCleanup();
 }
 
-void DiameterPeerEntry::IncommingConnectionRequest(std::auto_ptr<Diameter_IO_Base> io,
-                                                   std::auto_ptr<DiameterMsg> cer)
+void AAA_PeerEntry::IncommingConnectionRequest(std::auto_ptr<AAA_IO_Base> io,
+                                               std::auto_ptr<AAAMessage> cer)
 {
-   DiameterRxMsgCollector *h = reinterpret_cast<DiameterRxMsgCollector*>(io->Handler());
+   AAA_MsgCollector *h = reinterpret_cast<AAA_MsgCollector*>(io->Handler());
    h->RegisterHandler(*this);
    MsgIdRxMessage(*cer);
-   Notify(DIAMETER_PEER_EV_R_CONN_CER, cer, io);
+   Notify(AAA_PEER_EV_R_CONN_CER, cer, io);
 }
 
-void DiameterPeerEntry::ConnectionRequestAccepted(std::auto_ptr<Diameter_IO_Base> io)
+void AAA_PeerEntry::ConnectionRequestAccepted(std::auto_ptr<AAA_IO_Base> io)
 {
-   DiameterRxMsgCollector *h = reinterpret_cast<DiameterRxMsgCollector*>(io->Handler());
+   AAA_MsgCollector *h = reinterpret_cast<AAA_MsgCollector*>(io->Handler());
    h->RegisterHandler(*this);
-   Notify(DIAMETER_PEER_EV_I_RCV_CONN_ACK, io);
+   Notify(AAA_PEER_EV_I_RCV_CONN_ACK, io);
 }
 
-void DiameterPeerEntry::ConnectionRequestFailed()
+void AAA_PeerEntry::ConnectionRequestFailed()
 {
-   Notify(DIAMETER_PEER_EV_I_RCV_CONN_NACK);
+   Notify(AAA_PEER_EV_I_RCV_CONN_NACK);
 }
 
-void DiameterPeerEntry::Message(std::auto_ptr<DiameterMsg> msg)
+void AAA_PeerEntry::Message(std::auto_ptr<AAAMessage> msg)
 {
 
    ////////////////////////////////////////////
    // inspect msg and send proper notification
    ////////////////////////////////////////////
 
-   DiameterMsgQuery query(*msg);
-   if (state == DIAMETER_PEER_ST_WAIT_I_CEA) {
+   AAA_MsgQuery query(*msg);
+   if (state == AAA_PEER_ST_WAIT_I_CEA) {
        if (! query.IsCapabilities() || query.IsRequest()) {
-           Notify(DIAMETER_PEER_EV_I_RCV_NON_CEA);
+           Notify(AAA_PEER_EV_I_RCV_NON_CEA);
            return;
        }
 
    }
 
    static diameter_unsigned32_t cmdCode[] = { 
-                              DIAMETER_MSGCODE_CAPABILITIES_EXCHG,
-                              DIAMETER_MSGCODE_WATCHDOG,
-                              DIAMETER_MSGCODE_DISCONNECT_PEER 
+                              AAA_MSGCODE_CAPABILITIES_EXCHG,
+                              AAA_MSGCODE_WATCHDOG,
+                              AAA_MSGCODE_DISCONNECT_PEER 
                             };
    static AAA_Event requestIEv[] = { 
-                              DIAMETER_PEER_EV_I_RCV_CER,
-                              DIAMETER_PEER_EV_I_RCV_DWR,
-                              DIAMETER_PEER_EV_I_RCV_DPR 
+                              AAA_PEER_EV_I_RCV_CER,
+                              AAA_PEER_EV_I_RCV_DWR,
+                              AAA_PEER_EV_I_RCV_DPR 
                             };
    static AAA_Event requestREv[] = { 
-                              DIAMETER_PEER_EV_R_RCV_CER,
-                              DIAMETER_PEER_EV_R_RCV_DWR,
-                              DIAMETER_PEER_EV_R_RCV_DPR 
+                              AAA_PEER_EV_R_RCV_CER,
+                              AAA_PEER_EV_R_RCV_DWR,
+                              AAA_PEER_EV_R_RCV_DPR 
                             };
    static AAA_Event answerIEv[]  = { 
-                              DIAMETER_PEER_EV_I_RCV_CEA,
-                              DIAMETER_PEER_EV_I_RCV_DWA,
-                              DIAMETER_PEER_EV_I_RCV_DPA 
+                              AAA_PEER_EV_I_RCV_CEA,
+                              AAA_PEER_EV_I_RCV_DWA,
+                              AAA_PEER_EV_I_RCV_DPA 
                             };
    static AAA_Event answerREv[]  = { 
-                              DIAMETER_PEER_EV_R_RCV_CEA,
-                              DIAMETER_PEER_EV_R_RCV_DWA,
-                              DIAMETER_PEER_EV_R_RCV_DPA 
+                              AAA_PEER_EV_R_RCV_CEA,
+                              AAA_PEER_EV_R_RCV_DWA,
+                              AAA_PEER_EV_R_RCV_DPA 
                             };
 
-   for (unsigned int i=0;
+   for (int i=0;
         i<sizeof(cmdCode)/sizeof(diameter_unsigned32_t);
         i++) {
-       if (cmdCode[i] == query.Code()) {
+       if (cmdCode[i] == query.Code()) {           
            if (! MsgIdRxMessage(*msg) && ! query.IsRequest()) {
-               AAA_LOG((LM_INFO,
+               AAA_LOG(LM_INFO,
                    "(%P|%t) Msg[%d] Invalid hop-by-hop or end-to-end id\
-                    in answer message\n", query.Code()));
+                    in answer message\n", query.Code());
                return;
            }
            switch (state) {
-               case DIAMETER_PEER_ST_I_OPEN:
+               case AAA_PEER_ST_I_OPEN:
                    Notify(query.IsRequest() ?
                           requestIEv[i] : answerIEv[i],
                           msg);
                    break;
-               case DIAMETER_PEER_ST_R_OPEN:
+               case AAA_PEER_ST_R_OPEN:
                    Notify(query.IsRequest() ?
                           requestREv[i] : answerREv[i],
                           msg);
                    break;
-               case DIAMETER_PEER_ST_CLOSING:
+               case AAA_PEER_ST_CLOSING:                   
                    if (PeerData().m_IOInitiator.get()) {
                        Notify(query.IsRequest() ?
-                              requestIEv[i] : answerIEv[i], msg);
+                              requestIEv[i] : answerIEv[i],
+                       msg);
                    }
                    else {
                        Notify(query.IsRequest() ?
@@ -143,52 +145,56 @@ void DiameterPeerEntry::Message(std::auto_ptr<DiameterMsg> msg)
                        msg);
                    }
                    break;
-               case DIAMETER_PEER_ST_WAIT_RETURNS:
-               case DIAMETER_PEER_ST_WAIT_I_CEA:
+               case AAA_PEER_ST_WAIT_RETURNS:
+               case AAA_PEER_ST_WAIT_I_CEA:
                    if (query.IsCapabilities() &&
                        (! query.IsRequest())) {
-                       Notify(DIAMETER_PEER_EV_I_RCV_CEA, msg);
+                       Notify(AAA_PEER_EV_I_RCV_CEA, msg);
                        break;
                    }
                    // fall through
                default:
-                   AAA_LOG((LM_DEBUG,
+                   AAA_LOG(LM_DEBUG,
                              "(%P|%t) Message [%d,%d] in unlikely state [%d], discarding\n",
-                              cmdCode[i], query.IsRequest(), state));
+                              cmdCode[i], query.IsRequest(), state);
            }
            return;
        }
    }
 
    switch (state) {
-       case DIAMETER_PEER_ST_I_OPEN:
-           Notify(DIAMETER_PEER_EV_I_RCV_MESSAGE, msg);
+       case AAA_PEER_ST_I_OPEN:
+           Notify(AAA_PEER_EV_I_RCV_MESSAGE, msg);
            break;
-       case DIAMETER_PEER_ST_R_OPEN:
-           Notify(DIAMETER_PEER_EV_R_RCV_MESSAGE, msg);
+       case AAA_PEER_ST_R_OPEN:
+           Notify(AAA_PEER_EV_R_RCV_MESSAGE, msg);
            break;
        default:
-           AAA_LOG((LM_INFO,
+           AAA_LOG(LM_INFO,
                       "(%P|%t) Received session non base protocol message\
-                       in an un-opened state, discarding\n"));
+                       in an un-opened state, discarding\n");
            break;
    }
 }
 
-void DiameterPeerEntry::Error(COLLECTOR_ERROR error,
-                              std::string &io_name)
-{
-   AAA_LOG((LM_DEBUG, "(%P|%t) Message Collector reported [%s]\n",
-              io_name.c_str()));
+void AAA_PeerEntry::Error(COLLECTOR_ERROR error, 
+                          std::string &io_name)
+{   
+   static char *errMsg[] = { "Parsing error",
+                             "Allocation failure",
+                             "Transport disconnection",
+                             "Invalid message" };
 
+   AAA_LOG(LM_DEBUG, "(%P|%t) IO [%s] reported: %s\n",
+              io_name.data(), errMsg[error-PARSING_ERROR]);
+   
    switch (error) {
-       case CORRUPTED_BYTE_STREAM:
        case TRANSPORT_ERROR:
            if (io_name == std::string(AAA_IO_ACCEPTOR_NAME)) {
-               Notify(DIAMETER_PEER_EV_R_PEER_DISC);
+               Notify(AAA_PEER_EV_R_PEER_DISC);
            }
            else if (io_name == std::string(AAA_IO_CONNECTOR_NAME)) {
-               Notify(DIAMETER_PEER_EV_I_PEER_DISC);
+               Notify(AAA_PEER_EV_I_PEER_DISC);
            }
            else {
                Cleanup();
@@ -203,8 +209,4 @@ void DiameterPeerEntry::Error(COLLECTOR_ERROR error,
    }
 }
 
-int DiameterPeerEntry::SendErrorAnswer(std::auto_ptr<DiameterMsg> &msg)
-{
-   return DiameterPeerStateMachine::Send(msg);
-}
 

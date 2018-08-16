@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -137,22 +137,22 @@ public:
   {
     if (!chapAuth.ChapAlgorithm.IsSet())
       {
-	AAA_LOG((LM_ERROR, "%N: missing CHAP algorithm.\n."));
+	AAA_LOG(LM_ERROR, "%N: missing CHAP algorithm.\n.");
 	return false;
       }
     if (chapAuth.ChapAlgorithm() != CHAP_ALGORITHM_MD5)
       {
-	AAA_LOG((LM_ERROR, "%N: invalid CHAP algorithm\n."));
+	AAA_LOG(LM_ERROR, "%N: invalid CHAP algorithm\n.");
 	return false;
       }
     if (!chapAuth.ChapResponse.IsSet())
       {
-	AAA_LOG((LM_ERROR, "%N: missing CHAP response\n."));
+	AAA_LOG(LM_ERROR, "%N: missing CHAP response\n.");
 	return false;
       }
     if (!chapAuth.ChapIdent.IsSet())
       {
-	AAA_LOG((LM_ERROR, "%N: missing CHAP identifier\n."));
+	AAA_LOG(LM_ERROR, "%N: missing CHAP identifier\n.");
 	return false;
       }
 
@@ -177,7 +177,7 @@ public:
 	(unsigned)rawResponse.size(), (unsigned char*)md5Result.data());
     if (md5Result != chapAuth.ChapResponse())
       {
-	AAA_LOG((LM_ERROR, "%N: validation failed\n."));
+	AAA_LOG(LM_ERROR, "%N: validation failed\n.");
 	return false;
       }
     return true;

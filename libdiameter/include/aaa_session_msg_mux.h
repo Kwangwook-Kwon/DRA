@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -35,52 +35,52 @@
 #define __AAA_SESSION_MSG_MUX_H__
 
 #include <map>
-#include "diameter_parser.h"
+#include "diameter_parser_api.h"
 
 template<class ARG>
-class DiameterSessionMsgMuxHandler
+class AAA_SessionMsgMuxHandler
 {
     public:
-        virtual ~DiameterSessionMsgMuxHandler() {
+        virtual ~AAA_SessionMsgMuxHandler() {
 	}
         /// This function is called when incomming request message is received
-        virtual AAAReturnCode RequestMsg(ARG &arg, DiameterMsg &msg) = 0;
+        virtual AAAReturnCode RequestMsg(ARG &arg, AAAMessage &msg) = 0;
 
         /// This function is called when incomming answer message is received
-        virtual AAAReturnCode AnswerMsg(ARG &arg, DiameterMsg &msg) = 0;
+        virtual AAAReturnCode AnswerMsg(ARG &arg, AAAMessage &msg) = 0;
 
         /// This function is called when incomming error message is received
-        virtual AAAReturnCode ErrorMsg(ARG &arg, DiameterMsg &msg) = 0;
+        virtual AAAReturnCode ErrorMsg(ARG &arg, AAAMessage &msg) = 0;
 
     protected:
-        DiameterSessionMsgMuxHandler() {
+        AAA_SessionMsgMuxHandler() {
 	}
 };
 
 template<class ARG>
-class DiameterSessionMsgMux
+class AAA_SessionMsgMux
 {
     public:
-        DiameterSessionMsgMux(ARG &arg) :
+        AAA_SessionMsgMux(ARG &arg) :
             m_Arg(arg) {
 	}
-        virtual ~DiameterSessionMsgMux() {
+        virtual ~AAA_SessionMsgMux() {
 	}
-        void Register(AAACommandCode code, DiameterSessionMsgMuxHandler<ARG> &handler) {
+        void Register(AAACommandCode code, AAA_SessionMsgMuxHandler<ARG> &handler) {
 	    m_Map.insert(std::pair<AAACommandCode, 
-                         DiameterSessionMsgMuxHandler<ARG>* >
+                         AAA_SessionMsgMuxHandler<ARG>* >
                           (code, &handler));
 	}
         void Remove(AAACommandCode code) {
 	    typename std::map<AAACommandCode, 
-		    DiameterSessionMsgMuxHandler<ARG>* >::iterator i = m_Map.find(code);
+		    AAA_SessionMsgMuxHandler<ARG>* >::iterator i = m_Map.find(code);
             if (i != m_Map.end()) {
 		m_Map.erase(i);
 	    }
 	}
-        AAAReturnCode Mux(DiameterMsg &msg) {
+        AAAReturnCode Mux(AAAMessage &msg) {
 	    typename std::map<AAACommandCode, 
-		    DiameterSessionMsgMuxHandler<ARG>* >::iterator i = m_Map.find(msg.hdr.code);
+		    AAA_SessionMsgMuxHandler<ARG>* >::iterator i = m_Map.find(msg.hdr.code);
             if (i != m_Map.end()) {
                 if (msg.hdr.flags.e) {
                     return i->second->ErrorMsg(m_Arg, msg);
@@ -97,7 +97,7 @@ class DiameterSessionMsgMux
     private:
         ARG &m_Arg;
 	std::map<AAACommandCode, 
-		 DiameterSessionMsgMuxHandler<ARG>* > m_Map;
+		 AAA_SessionMsgMuxHandler<ARG>* > m_Map;
 };
 
 #endif

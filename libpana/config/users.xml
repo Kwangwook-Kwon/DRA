@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE user_dbase SYSTEM "users.dtd">
-<user_dbase>
+<user_dbase xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation='users.xsd'>
    <user>
       <name>user1</name>
       <pass>12345</pass>
       <auth>md5</auth>
    </user>
    <user>
-      <name>user1@isp.net</name>
-      <pass>12345</pass>
-      <auth>archie</auth>
-   </user>
-   <user>
-      <name>local_nas@opendiameter.org</name>
+      <name>user2</name>
       <pass>12345</pass>
       <auth>archie</auth>
    </user>

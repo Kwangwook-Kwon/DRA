@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -82,7 +82,7 @@ class OD_Utl_DbaseTree : public OD_Utl_RbTreeTree
             }
             throw (ENTRY_INSERTION_FAILURE);
          }
-         throw (ENTRY_ALLOC_FAILURE);
+	 throw (ENTRY_ALLOC_FAILURE);
       }
       void Remove(TYPE &index, ARG **arg = NULL) {
          OD_Utl_DbEntry lookupEntry(index), *searchEntry;

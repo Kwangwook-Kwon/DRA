@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE configuration SYSTEM "configuration.dtd">
 
 <!-- Sample configuration file, version 1.0.3 and above. -->
 <!-- Configuration table starts always starts with "configuration"
      element as root -->
 
-<configuration>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation='configuration.xsd'>
 
    <!-- General configuration has a fixed list of elements. Note
         that information in the general section includes to info 
@@ -35,17 +35,13 @@
 
       <!-- List of locally supported auth application 
            id's. This contains one or more auth application
-           id's that will be broadcasted to peers. To
-	   advertise this node as a relay, place a '-1'
-	   in either auth_application_id or acct_application_id -->
+           id's that will be broadcasted to peers. -->
       <auth_application_id>1</auth_application_id>
       <auth_application_id>2</auth_application_id>
 
       <!-- List of locally supported acct application
            id's. This contains one or more auth application
-           id's that will be broadcasted to peers. To
-	   advertise this node as a relay, place a '-1'
-	   in either auth_application_id or acct_application_id -->
+           id's that will be broadcasted to peers. -->
       <acct_application_id>3</acct_application_id>
       <acct_application_id>4</acct_application_id>
 
@@ -57,18 +53,25 @@
            id -->
       <vendor_specific_application_id>
 
-          <!-- Exactly one instance of the vendor id is advertized
-               by this diameter entity -->
+          <!-- List of vendor id's advertized by this diameter
+               entity -->
           <vendor_id>31</vendor_id>
+          <vendor_id>32</vendor_id>
+          <vendor_id>33</vendor_id>
 
           <!-- Exactly one instance of the
-               vendor's auth application id -->
+               vendor's auth application id -->  
           <auth_application_id>1</auth_application_id>
+
+          <!-- Or Exactly one instance of the
+               vendor's acct application id -->  
+          <acct_application_id>4</acct_application_id>
       </vendor_specific_application_id>
       <vendor_specific_application_id>
           <vendor_id>41</vendor_id>
-          <!-- Or Exactly one instance of the
-               vendor's acct application id -->
+          <vendor_id>42</vendor_id>
+          <vendor_id>43</vendor_id>
+          <auth_application_id>5</auth_application_id>
           <acct_application_id>6</acct_application_id>
       </vendor_specific_application_id>
    </general>
@@ -104,69 +107,32 @@
            to for peer connection request. When using virtual
            domains, make sure each entity listens to different
            port numbers -->
-      <tcp_listen_port>1812</tcp_listen_port>
+      <tcp_port>1812</tcp_port>
 
-      <!-- Diameter SCTP listening port. Port number to listen
+      <!-- Diameter TLS listening port. Port number to listen
            to for peer connection request. When using virtual
            domains, make sure each entity listens to different
            port numbers -->
-      <sctp_listen_port>1813</sctp_listen_port>
-
-      <!-- Enables or disables IPv6 support for this stack -->
-      <use_ipv6>0</use_ipv6>
+      <tls_port>1912</tls_port>
 
       <!-- Watchdog timeout. Interval between watchdog messages 
            -->
       <watchdog_timeout>0</watchdog_timeout>
 
-      <!-- Retry connection interval. Amount of time in between
-           attempts to reconnect to a disconnected peer. If the
+      <!-- Retry connection interval. Interval on when to retry
+           a connection attempt to a disconnected peer. If the
            value is 0, then no retry attempt will be made.
            -->
-      <reconnect_interval>30</reconnect_interval>
+      <retry_interval>30</retry_interval>
 
-      <!-- Max re-connection attempt. Number of times a reconnection
-           attempt will be made until it gives up. If the
-           value is 0, then no retry attempt will be made.
-           -->
-      <reconnect_max>30</reconnect_max>
-
-      <!-- Request retransmission interval. Retransmission of
-           pending request will be done until max_request_retransmission
-           is exceeded. Care should be taken in defining this
-           value. A high value (>60) will slow down retransmission,
-           a low value (<5) will cause performance issues. If the
-           value is 0, then no retransmission attempt will be made.
-           -->
-      <request_retransmission_interval>10</request_retransmission_interval>
-
-      <!-- Max request retransmission. Maximum number of pending
-           request retransmission. Care should be taken in defining this
-           value. A high value (>10) will cause too much traffic.
-           If the value is 0, then no retransmission attempt will be made.
-           -->
-      <max_request_retransmission_count>3</max_request_retransmission_count>
-
-      <!-- This is the initial amount of buffer that is pre-allocated for
-           message reception. Each time a message is received that does
-           not fit this value, the buffer will be enlarged by this value
-           multiplied by increments of 1 until the message fits or up to
-           a maximum of 10 increments. A default vaule of 2048 is recommended.
-           -->
-      <receive_buffer_size>2048</receive_buffer_size>
-
-      <!-- Provides a customized list of local hostnames
+      <!-- Provides a customized list of local host IP 
            addresses that will be advertised to other
-           peers during CER/CEA exchange. For SCTP, 
-	   the IP addresses MUST be valid addresses
-	   for all interface address present in the
-	   system. For TCP, only the first IP address
-	   will be used.
+           peers during CER/CEA exchange. 
            -->
-      <advertised_hostname>192.168.1.100</advertised_hostname>
-      <advertised_hostname>192.168.1.101</advertised_hostname>
-      <advertised_hostname>192.168.1.102</advertised_hostname>
-
+      <advertised_host_ip>192.168.1.100</advertised_host_ip>
+      <advertised_host_ip>192.168.1.101</advertised_host_ip>
+      <advertised_host_ip>192.168.1.102</advertised_host_ip>
+      
       <!-- Peer table lists peers that this open diameter 
            application will attempt to connect to on startup.
            Each peer entry contains host, port and tls
@@ -180,10 +146,6 @@
           <peer>
               <hostname>tari-dhcp163.research.telcordia.com</hostname>
               <port>1812</port>
-              <!-- This flag indicates whether this connection will
-                   be an SCTP connection. If set to 1, SCTP will be
-                   used. If set to 0, TCP will be used -->
-              <use_sctp>1</use_sctp>
               <tls_enabled>0</tls_enabled>
           </peer>
       </peer_table>
@@ -222,30 +184,6 @@
                    2 (proxy)    - application acting as proxy server
                    3 (redirect) - application acting as redirect agent -->
              <role>0</role> 
-
-             <!-- Re-direct host usage. This provides a hint to
-                  the receiver of the redirect indication on what
-                  to do with the request. If this route is acting
-                  as a redirect agent, the Redirect-Host-Usage AVP
-                  sent in the redirect indication will have this value.
-                  Note that this is valid only if <role> is set to
-                  redirect(3). Valid values are:
-                    0  DONT_CACHE  - redirect host should not be cached.
-                    1  ALL_SESSION - All messages within the same session id
-                                     MAY be sent to the redirect host
-                    2  ALL_REALM   - All messages destined for the realm
-                                     MAY be sent to the redirect host
-                    3  REALM_AND_APPLICATION - All messages for the application
-                                     requested to the realm specified MAY be
-                                     sent to the redirect host
-                    4  ALL_APPLICATION - All messages for the application
-                                     requested MAY be sent to the redirect host
-                    5  ALL_HOST    - All messages that would be sent to the
-                                     host that generated the Redirect-Host 
-                                     MAY be sent to the redirect host
-                    6  ALL_USER    - All messages for the user requested MAY 
-                                     be sent to the redirect host -->
-             <redirect_usage>0</redirect_usage>
 
              <!-- For each route, there is a set of applications
                   that are supported. This is used by the base
@@ -407,11 +345,7 @@
          <stateful>1</stateful>
 
          <!-- Timeout in seconds before a session requires 
-              re-authentication. For stateless sessions, a value
-              of zero(0) will cause the client session to be maintained
-              indefinitely. For stateless server sessions, the library
-              will ask you periodically if you want to reclaim the session
-              in ReClaimSession() method -->
+              re-authentication -->
          <session_timeout>30</session_timeout>
 
          <!-- Timeout in seconds before a session is 

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -33,173 +33,87 @@
 
 #include "ace/Log_Msg.h"
 #include "ace/INET_Addr.h"
-#include "od_utl_xml_sax_parser.h"
-#include "framework.h"
+#include "od_utl_xml_parser.h"
 #include "user_db.h"
 
-class AAA_XMLUserEntry :
-    public OD_Utl_XML_RegisteredElement
-              <AAA_UserEntryDb, 
-               OD_Utl_XML_ContentConvNull<AAA_UserEntryDb> > 
-{
-  public:
-     AAA_XMLUserEntry(AAA_UserEntryDb &arg,
-                      OD_Utl_XML_SaxParser &parser) :
-         OD_Utl_XML_RegisteredElement
-              <AAA_UserEntryDb,
-               OD_Utl_XML_ContentConvNull<AAA_UserEntryDb> > 
-                  (arg, "user", parser),
-                  m_pEntry(NULL) {
-     }        
-     virtual bool startElement(ACEXML_Attributes *atts) {
-     	 if (! OD_Utl_XML_Element::startElement(atts)) {
-     	 	 return false;
-     	 }
-         ACE_NEW_NORETURN(m_pEntry, AAA_UserEntry);
-         return true;
-     }
-     virtual bool endElement() {
-         m_arg.insert(std::pair<std::string, AAA_UserEntry*>
-                      (m_pEntry->m_Username, m_pEntry));
-         m_pEntry = NULL;
-     	 return OD_Utl_XML_Element::endElement();
-     }
-     AAA_UserEntry *Get() {
-     	 return m_pEntry;
-     }
-     
-    private:
-         AAA_UserEntry *m_pEntry;
-};
-               
-class AAA_XMLNameParser :
-    public OD_Utl_XML_RegisteredElement
-              <std::string, OD_Utl_XML_ContentConvString> 
-{
-  public:
-     AAA_XMLNameParser(OD_Utl_XML_SaxParser &parser) :
-         OD_Utl_XML_RegisteredElement
-              <std::string, OD_Utl_XML_ContentConvString> 
-                  (m_unused, "name", parser) {
-     }        
-     virtual bool characters(const ACEXML_Char *ch,
-                             int start,
-                             int length) {
-         if (! OD_Utl_XML_Element::characters(ch, start, length)) {
-             return false;
-         }
-         if (Parent()->Name() == std::string("user")) {
-             AAA_XMLUserEntry *entryElm = 
-                 (AAA_XMLUserEntry*)Parent();
-             entryElm->Get()->m_Username = ch;
-         }
-         else {
-             AAA_LOG((LM_ERROR, 
-                  "Name has an invalid parent !!!\n"));
-             throw;
-         }
-         return true;
-     }
-   private:
-     std::string m_unused;
+class AAA_XMLUserEntry : public OD_Utl_XMLElementParser {
+   public:
+      AAA_XMLUserEntry(std::string &name, AAA_UserEntry &e) :
+                       OD_Utl_XMLElementParser(name),
+	               payload(e) { }
+      int svc(DOMNode *n);
+   protected:
+      AAA_UserEntry &payload;
 };
 
-class AAA_XMLPassParser :
-    public OD_Utl_XML_RegisteredElement
-              <std::string, OD_Utl_XML_ContentConvString> 
-{
-  public:
-     AAA_XMLPassParser(OD_Utl_XML_SaxParser &parser) :
-         OD_Utl_XML_RegisteredElement
-              <std::string, OD_Utl_XML_ContentConvString> 
-                  (m_unused, "pass", parser) {
-     }        
-     virtual bool characters(const ACEXML_Char *ch,
-                             int start,
-                             int length) {
-         if (! OD_Utl_XML_Element::characters(ch, start, length)) {
-             return false;
-         }
-         if (Parent()->Name() == std::string("user")) {
-             AAA_XMLUserEntry *entryElm = 
-                 (AAA_XMLUserEntry*)Parent();
-             entryElm->Get()->m_Passphrase = ch;
-         }
-         else {
-             AAA_LOG((LM_ERROR, 
-                  "Auth has an invalid parent !!!\n"));
-             throw;
-         }
-         return true;
-     }
-   private:
-     std::string m_unused;
+class AAA_XMLUserDb : public OD_Utl_XMLElementParser {
+   public:
+      AAA_XMLUserDb(std::string &name, AAA_UserEntryDb &data) :
+                    OD_Utl_XMLElementParser(name),
+	               payload(data) { }
+      int svc(DOMNode *n);
+   protected:
+      AAA_UserEntryDb &payload;
 };
 
-class AAA_XMLAuthParser :
-    public OD_Utl_XML_RegisteredElement
-              <std::string, OD_Utl_XML_ContentConvString> 
+int AAA_XMLUserEntry::svc(DOMNode *n)
 {
-  public:
-     AAA_XMLAuthParser(OD_Utl_XML_SaxParser &parser) :
-         OD_Utl_XML_RegisteredElement
-              <std::string, OD_Utl_XML_ContentConvString> 
-                  (m_unused, "auth", parser) {
-     }        
-     virtual bool characters(const ACEXML_Char *ch,
-                             int start,
-                             int length) {
-         if (! OD_Utl_XML_Element::characters(ch, start, length)) {
-             return false;
-         }
-         if (Parent()->Name() == std::string("user")) {
-             AAA_XMLUserEntry *entryElm = 
-                 (AAA_XMLUserEntry*)Parent();
-             std::string Type(ch);
-             if (Type == std::string("md5")) {
-                 entryElm->Get()->m_AuthType = 4;
-             }
-             else if (Type == std::string("archie")) {
-                 entryElm->Get()->m_AuthType = 100;
-             }
-             else {
-                 AAA_LOG((LM_ERROR, 
-                      "Invalid type !!!\n"));
-                 throw;
-             }
-         }
-         else {
-             AAA_LOG((LM_ERROR, 
-                  "Pass has an invalid parent !!!\n"));
-             throw;
-         }
-         return true;
-     }
-     
-   private:
-     std::string m_unused;
-};
+   std::string tagName;
+
+   tagName ="name";
+   OD_Utl_XMLDataString name(tagName, payload.m_Username);
+   name.populate(n->getFirstChild());
+   
+   tagName ="pass";
+   OD_Utl_XMLDataString pass(tagName, payload.m_Passphrase);
+   pass.populate(n->getFirstChild());
+
+   tagName ="auth";
+   std::string Type;
+   OD_Utl_XMLDataString auth(tagName, Type);
+   auth.populate(n->getFirstChild());
+
+   if (Type == std::string("md5")) {
+      payload.m_AuthType = 4;
+   }
+   else if (Type == std::string("archie")) {
+      payload.m_AuthType = 100;
+   }
+   else {
+      return (-1);
+   }
+   return (0);
+}
+
+int AAA_XMLUserDb::svc(DOMNode *n)
+{
+   std::string tagName = "user";
+   DOMNode *sibling = n->getFirstChild();
+   while (sibling != NULL) {
+      if (sibling->getNodeType() == DOMNode::ELEMENT_NODE) {
+          char *c_str = XMLString::transcode(sibling->getNodeName());
+          if (XMLString::compareString(c_str, tagName.c_str()) == 0) {
+              AAA_UserEntry *e = new AAA_UserEntry;
+              AAA_XMLUserEntry entry(tagName, *e);
+              if (entry.populate(sibling) == 0) {
+                  payload.insert
+                      (std::pair<std::string, AAA_UserEntry*>
+                       (e->m_Username, e));
+              }
+          }
+          XMLString::release(&c_str);
+      }
+      sibling = sibling->getNextSibling();
+   }
+   return (0);
+}
 
 int AAA_UserDb::open(std::string &cfgFile)
-{	
-    OD_Utl_XML_SaxParser parser;
-            
-    AAA_XMLUserEntry user(m_UserDb, parser);
-    AAA_XMLNameParser name(parser);
-    AAA_XMLPassParser pass(parser);
-    AAA_XMLAuthParser auth(parser);
-        
-    try {    
-        parser.Load((char*)cfgFile.c_str());
-    }
-    catch (OD_Utl_XML_SaxException &e) {
-        e.Print();
-        return (0);
-    }
-    catch (...) {
-        return (0);
-    }
-    return (1);
+{
+    std::string cfgRoot = "user_dbase";
+    OD_Utl_XMLTreeParser parser;
+    AAA_XMLUserDb configData(cfgRoot, m_UserDb);
+    return parser.open(cfgFile, configData);
 }
 
 AAA_UserEntry *AAA_UserDb::lookup(const std::string &uname)

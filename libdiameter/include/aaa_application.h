@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -42,36 +42,20 @@
 // An application identifies itself to the diameter class library by
 // an instance of the application core. All other classes are services
 // that operates using an instance of the core. 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterApplication :
+class DIAMETERBASEPROTOCOL_EXPORT AAA_Application :
     public AAA_JobData
 {
-    private: // General Timer hanlders
-        class ReTransmissionTimerHandler : 
-            public ACE_Event_Handler 
-        {
-            public:
-               int handle_timeout(const ACE_Time_Value &tv, 
-                                  const void *arg) {
-                   DIAMETER_MSG_ROUTER()->ReTransmitEvent();
-                   return (0);
-               }
-               long &Handle() {
-                   return m_TimerHandle;
-               }
-            private:
-               long m_TimerHandle;
-        };
-
     public:
-        DiameterApplication(AAA_Task &task,
-                            char *cfgfile = NULL) :
-            m_Task(task) {
+        AAA_Application(AAA_Task &task,
+                        char *cfgfile = NULL) :
+            m_Task(task),
+            m_PeerAcceptor(task) { 
             if (cfgfile) {
                 Open(cfgfile);
             }
         }
-        virtual ~DiameterApplication() {
-            m_ReTxHandler.reactor(NULL);
+        ~AAA_Application() {
+            Close();
         }
 
         // Config file loading/un-loading
@@ -80,33 +64,47 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterApplication :
 
         // Check for active peers
         int NumActivePeers() {
-            return DiameterPeerConnector::GetNumOpenPeers();
-        }
+            return AAA_PeerConnector::GetNumOpenPeers();
+	}
 
         // Factory Registration
         AAAReturnCode RegisterServerSessionFactory
-            (DiameterServerSessionFactory &factory);
+            (AAA_ServerSessionFactory &factory) {
+            return m_SessionMsgRx.SessionFactoryMap().Add(factory) ? 
+                 AAA_ERR_SUCCESS : AAA_ERR_FAILURE;
+        }
 
         // Factory de-registration
-        AAAReturnCode RemoveServerSessionFactory(diameter_unsigned32_t appId);
+        AAAReturnCode RemoveServerSessionFactory
+            (diameter_unsigned32_t appId) {
+            return m_SessionMsgRx.SessionFactoryMap().Remove(appId) ? 
+                 AAA_ERR_SUCCESS : AAA_ERR_FAILURE;
+        }
 
         // Proxy Handler Registration
-        AAAReturnCode RegisterProxyHandler(AAA_ProxyHandler &handler);
+        AAAReturnCode RegisterProxyHandler
+            (AAA_ProxyHandler &handler) {
+            return m_SessionMsgRx.ProxyHandlerMap().Add(handler) ?
+                 AAA_ERR_SUCCESS : AAA_ERR_FAILURE;
+        }
 
         // Proxy Handler De-Registration
-        AAAReturnCode RemoveProxyHandler(diameter_unsigned32_t appId);
+        AAAReturnCode RemoveProxyHandler
+            (diameter_unsigned32_t appId) {
+            return m_SessionMsgRx.ProxyHandlerMap().Remove(appId) ? 
+                 AAA_ERR_SUCCESS : AAA_ERR_FAILURE;
+        }
 
         // Framework task
         AAA_Task& Task() {
             return m_Task;
         }
 
-    private: // Global Classes
+    private:
         AAA_Task &m_Task;
-        DiameterPeerAcceptor m_PeerAcceptor;
-        DiameterSessionMsgRx m_SessionMsgRx;
-        Diameter_IO_SigMask m_IOSigMask;
-        ReTransmissionTimerHandler m_ReTxHandler;
+        AAA_PeerAcceptor m_PeerAcceptor;
+        AAA_SessionMsgRx m_SessionMsgRx;
+        AAA_IO_SigMask m_IOSigMask;
 };
 
 #endif   // __AAA_APPLICATION_H__ 

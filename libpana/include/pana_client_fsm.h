@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -43,30 +43,65 @@ class PANA_PacEventVariable
     private:
         typedef union {
             struct {
+               ACE_UINT32 m_Ver_Flag            : 1;
                ACE_UINT32 m_Type_Msg            : 5;
-
                ACE_UINT32 m_Event_App           : 4;
-               ACE_UINT32 m_Event_Eap           : 3;
 
+               ACE_UINT32 m_Flag_Separate       : 1;
+               ACE_UINT32 m_Flag_SAResumed      : 1;
+
+               ACE_UINT32 m_Cfg_Separate        : 1;
+               ACE_UINT32 m_Cfg_AbortOnFirstEap : 1;
                ACE_UINT32 m_Cfg_EapPiggyback    : 1; // dependent
 
+               ACE_UINT32 m_Do_Separate         : 1; // dependent
+               ACE_UINT32 m_Do_ResumeSession    : 1;
                ACE_UINT32 m_Do_Ping             : 1;
                ACE_UINT32 m_Do_RetryTimeout     : 1;
                ACE_UINT32 m_Do_ReTransmission   : 1;
                ACE_UINT32 m_Do_FatalError       : 1;
                ACE_UINT32 m_Do_SessTimeout      : 1;
 
-               ACE_UINT32 m_ResultCode          : 2;
+               ACE_UINT32 m_Result_FirstEap     : 2;
+               ACE_UINT32 m_Result_Eap          : 2;
 
                ACE_UINT32 m_AvpExist_KeyId      : 1; // dependent
-               ACE_UINT32 m_AvpExist_Auth       : 1;
+               ACE_UINT32 m_AvpExist_Mac        : 1;
+               ACE_UINT32 m_AvpExist_Cookie     : 1;
                ACE_UINT32 m_AvpExist_EapPayload : 1;
-
-               ACE_UINT32 m_AlgoNotSupported    : 1;
-
-               ACE_UINT32 m_Reserved            : 8;
+               
+               ACE_UINT32 m_Reserved            : 1;
             } i;
             ACE_UINT32 p;
+        } EventParams01;
+        
+        typedef union {
+            struct {
+               ACE_UINT32 m_Ver_Flag            :  1;               
+               ACE_UINT32 m_Event_Eap           :  4;
+               
+               ACE_UINT32 m_NotSupported_Pcap   :  1;
+               ACE_UINT32 m_NotSupported_Ppac   :  1;
+               
+               ACE_UINT32 m_Cfg_EapPiggyback    :  1;
+               
+               ACE_UINT32 m_AvpExist_KeyId      :  1;
+               
+               ACE_UINT32 m_Do_Separate         :  1;
+               
+               ACE_UINT32 m_Reserved            : 22;
+            } i;
+            ACE_UINT32 p;
+        } EventParams02;
+        
+        typedef union {
+            struct {
+               ACE_UINT32 m_Ver_Flag   :  1;
+               ACE_UINT32 m_Data       : 31;
+            } i;
+            ACE_UINT32 p;
+            EventParams01 e01;
+            EventParams02 e02;            
         } EventParams;
 
     public:
@@ -75,46 +110,86 @@ class PANA_PacEventVariable
         }
         void MsgType(PANA_MSG_TYPE type) {
             m_Event.p = 0;
-            m_Event.i.m_Type_Msg = type;
+            m_Event.e01.i.m_Type_Msg = type;
         }
         void Event_App(PANA_APP_EVENT event) {
-            m_Event.i.m_Event_App = event;
+            m_Event.e01.i.m_Event_App = event;
+        }
+        void EnableFlag_Separate(bool set = true) {
+            m_Event.e01.i.m_Flag_Separate = set;
+        }
+        void EnableCfg_Separate(bool set = true) {
+            m_Event.e01.i.m_Cfg_Separate = set;
+        }
+        void EnableCfg_AbortOnFirstEap(bool set = true) {
+            m_Event.e01.i.m_Cfg_AbortOnFirstEap = set;
         }
         void EnableCfg_EapPiggyback(bool set = true) {
-            m_Event.i.m_Cfg_EapPiggyback = set;
+            if (! m_Event.i.m_Ver_Flag) {
+                m_Event.e01.i.m_Cfg_EapPiggyback = set;
+            }
+            else {
+                m_Event.e02.i.m_Cfg_EapPiggyback = set;
+            }
+        }
+        void Do_Separate(bool set = true) {
+            if (! m_Event.i.m_Ver_Flag) {
+                m_Event.e01.i.m_Do_Separate = set;
+            }
+            else {
+                m_Event.e02.i.m_Do_Separate = set;
+            }
+        }
+        void Do_ResumeSession(bool set = true) {
+            m_Event.e01.i.m_Do_ResumeSession = set;
         }
         void Do_Ping(bool set = true) {
-            m_Event.i.m_Do_Ping = set;
+            m_Event.e01.i.m_Do_Ping = set;
         }
         void Do_SessTimeout(bool set = true) {
-            m_Event.i.m_Do_SessTimeout = set;
+            m_Event.e01.i.m_Do_SessTimeout = set;
         }
         void Do_RetryTimeout(bool set = true) {
-            m_Event.i.m_Do_RetryTimeout = set;
+            m_Event.e01.i.m_Do_RetryTimeout = set;
         }
         void Do_ReTransmission(bool set = true) {
-            m_Event.i.m_Do_ReTransmission = set;
+            m_Event.e01.i.m_Do_ReTransmission = set;
         }
         void Do_FatalError(bool set = true) {
-            m_Event.i.m_Do_FatalError = set;
+            m_Event.e01.i.m_Do_FatalError = set;
         }
-        void ResultCode(PANA_RESULT_CODE event) {
-            m_Event.i.m_ResultCode = event;
+        void Result_FirstEap(PANA_EAP_RESULT event) {
+            m_Event.e01.i.m_Result_FirstEap = event;
+        }
+        void Result_Eap(PANA_EAP_RESULT event) {
+            m_Event.e01.i.m_Result_Eap = event;
         }
         void AvpExist_KeyId(bool set = true) {
-            m_Event.i.m_AvpExist_KeyId = set;
+            if (! m_Event.i.m_Ver_Flag) {
+                m_Event.e01.i.m_AvpExist_KeyId = set;
+            }
+            else {
+                m_Event.e02.i.m_AvpExist_KeyId = set;
+            }
         }
-        void AvpExist_Auth(bool set = true) {
-            m_Event.i.m_AvpExist_Auth = set;
+        void AvpExist_Mac(bool set = true) {
+            m_Event.e01.i.m_AvpExist_Mac = set;
+        }
+        void AvpExist_Cookie(bool set = true) {
+            m_Event.e01.i.m_AvpExist_Cookie = set;
         }
         void AvpExist_EapPayload(bool set = true) {
-            m_Event.i.m_AvpExist_EapPayload = set;
-        }
-        void AlgorithmNotSupported(bool set = true) {
-            m_Event.i.m_AlgoNotSupported = set;
+            m_Event.e01.i.m_AvpExist_EapPayload = set;
         }
         void Event_Eap(PANA_EAP_EVENT event) {
-            m_Event.i.m_Event_Eap = event;
+            m_Event.i.m_Ver_Flag = 1;
+            m_Event.e02.i.m_Event_Eap = event;
+        }
+        void NotSupported_Pcap(bool set = true) {
+            m_Event.e02.i.m_NotSupported_Pcap = set;
+        }
+        void NotSupported_Ppac(bool set = true) {
+            m_Event.e02.i.m_NotSupported_Ppac = set;
         }
         void Reset() {
             m_Event.p = 0;
@@ -124,180 +199,238 @@ class PANA_PacEventVariable
             return m_Event.p;
         }
         void DumpEvent() {
-#if PANA_DEBUG
-            AAA_LOG((LM_DEBUG, "Event: "));
-            if (m_Event.i.m_Type_Msg)
-                AAA_LOG((LM_DEBUG, "Msg[%d] ", m_Event.i.m_Type_Msg));
-            if (m_Event.i.m_Event_App)
-                AAA_LOG((LM_DEBUG, "App[%d] ", m_Event.i.m_Event_App));
-            if (m_Event.i.m_Event_Eap)
-                AAA_LOG((LM_DEBUG, "Eap Event[%d] ", m_Event.i.m_Event_Eap));
-            if (m_Event.i.m_Cfg_EapPiggyback)
-                AAA_LOG((LM_DEBUG, "EapPiggy "));
-            if (m_Event.i.m_AlgoNotSupported)
-                AAA_LOG((LM_DEBUG, "Algorithm "));
-            if (m_Event.i.m_Do_Ping)
-                AAA_LOG((LM_DEBUG, "DoPing "));
-            if (m_Event.i.m_Do_RetryTimeout)
-                AAA_LOG((LM_DEBUG, "RetryTout "));
-            if (m_Event.i.m_Do_ReTransmission)
-                AAA_LOG((LM_DEBUG, "Retran "));
-            if (m_Event.i.m_Do_FatalError)
-                AAA_LOG((LM_DEBUG, "Fatal "));
-            if (m_Event.i.m_Do_SessTimeout)
-                AAA_LOG((LM_DEBUG, "SessTout "));
-            if (m_Event.i.m_ResultCode)
-                AAA_LOG((LM_DEBUG, "ResultCode[%d] ", m_Event.i.m_ResultCode));
-            if (m_Event.i.m_AvpExist_KeyId)
-                AAA_LOG((LM_DEBUG, "keyId "));
-            if (m_Event.i.m_AvpExist_Auth)
-                AAA_LOG((LM_DEBUG, "Auth "));
-            if (m_Event.i.m_AvpExist_EapPayload)
-                AAA_LOG((LM_DEBUG, "EapPayload "));
-            AAA_LOG((LM_DEBUG, "\n"));
+#if defined(PANA_DEBUG)
+            if (m_Event.i.m_Ver_Flag) DumpParam02(); else DumpParam01();
 #endif
         }
 
     private:
+        void DumpParam01() {
+            ACE_DEBUG((LM_DEBUG, "Event01: "));
+            if (m_Event.e01.i.m_Type_Msg)
+                ACE_DEBUG((LM_DEBUG, "Msg[%d] ", m_Event.e01.i.m_Type_Msg));
+            if (m_Event.e01.i.m_Event_App)
+                ACE_DEBUG((LM_DEBUG, "App[%d] ", m_Event.e01.i.m_Event_App));
+            if (m_Event.e01.i.m_Flag_Separate)
+                ACE_DEBUG((LM_DEBUG, "S-flag "));
+            if (m_Event.e01.i.m_Flag_SAResumed) 
+                ACE_DEBUG((LM_DEBUG, "SA resumed "));
+            if (m_Event.e01.i.m_Cfg_Separate)
+                ACE_DEBUG((LM_DEBUG, "SepCfg "));
+            if (m_Event.e01.i.m_Cfg_AbortOnFirstEap)
+                ACE_DEBUG((LM_DEBUG, "Abort1stEap "));
+            if (m_Event.e01.i.m_Cfg_EapPiggyback)
+                ACE_DEBUG((LM_DEBUG, "EapPiggy "));
+            if (m_Event.e01.i.m_Do_Separate)
+                ACE_DEBUG((LM_DEBUG, "DoSep "));
+            if (m_Event.e01.i.m_Do_ResumeSession)
+                ACE_DEBUG((LM_DEBUG, "DoResumeSA "));
+            if (m_Event.e01.i.m_Do_Ping)
+                ACE_DEBUG((LM_DEBUG, "DoPing "));
+            if (m_Event.e01.i.m_Do_RetryTimeout)
+                ACE_DEBUG((LM_DEBUG, "RetryTout "));
+            if (m_Event.e01.i.m_Do_ReTransmission)
+                ACE_DEBUG((LM_DEBUG, "Retran "));
+            if (m_Event.e01.i.m_Do_FatalError)
+                ACE_DEBUG((LM_DEBUG, "Fatal "));
+            if (m_Event.e01.i.m_Do_SessTimeout)
+                ACE_DEBUG((LM_DEBUG, "SessTout "));
+            if (m_Event.e01.i.m_Result_FirstEap)
+                ACE_DEBUG((LM_DEBUG, "1stEAP[%d] ", m_Event.e01.i.m_Result_FirstEap));
+            if (m_Event.e01.i.m_Result_Eap)
+                ACE_DEBUG((LM_DEBUG, "EAP[%d] ", m_Event.e01.i.m_Result_Eap));
+            if (m_Event.e01.i.m_AvpExist_KeyId)
+                ACE_DEBUG((LM_DEBUG, "keyId "));
+            if (m_Event.e01.i.m_AvpExist_Mac)
+                ACE_DEBUG((LM_DEBUG, "Mac "));
+            if (m_Event.e01.i.m_AvpExist_Cookie)
+                ACE_DEBUG((LM_DEBUG, "Cookie "));
+            if (m_Event.e01.i.m_AvpExist_EapPayload)
+                ACE_DEBUG((LM_DEBUG, "EapPayload "));
+            ACE_DEBUG((LM_DEBUG, "\n"));
+        }
+        void DumpParam02() {
+            ACE_DEBUG((LM_DEBUG, "Event02: "));
+            if (m_Event.e02.i.m_Event_Eap)
+                ACE_DEBUG((LM_DEBUG, "Eap[%d] ", m_Event.e02.i.m_Event_Eap));
+            if (m_Event.e02.i.m_NotSupported_Pcap)
+                ACE_DEBUG((LM_DEBUG, "NoPcap "));
+            if (m_Event.e02.i.m_NotSupported_Ppac)
+                ACE_DEBUG((LM_DEBUG, "NoPpac "));
+            if (m_Event.e02.i.m_Cfg_EapPiggyback)
+                ACE_DEBUG((LM_DEBUG, "EapPiggy "));
+            if (m_Event.e02.i.m_AvpExist_KeyId)
+                ACE_DEBUG((LM_DEBUG, "keyId "));
+            if (m_Event.e02.i.m_Do_Separate)
+                ACE_DEBUG((LM_DEBUG, "DoSep "));
+            ACE_DEBUG((LM_DEBUG, "\n"));
+        }
         EventParams m_Event;
 };
 
-class PANA_EXPORT PANA_ClientStateTable :
+class PANA_PacSession;
+class PANA_EXPORT PANA_ClientStateTable : 
     public AAA_StateTable<PANA_Client>
 {
    public:
        PANA_ClientStateTable();
 
        class PacOfflineExitActionRxPSR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPSR();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPSR(); 
            }
        };
        class PacOfflineExitActionAuthUser : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPCI();
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPDI(); 
            }
        };
        class PacWaitEapMsgInExitActionTxPSA : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPSA(true);
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPSA(NULL); 
            }
        };
        class PacWaitPaaExitActionRxPAR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPAR();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPAR(false); 
            }
        };
        class PacWaitPaaExitActionRxPAN : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPAN();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPAN(); 
+           }
+       };
+       class PacWaitPaaExitActionRxPFER : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPFER(); 
            }
        };
        class PacWaitPaaExitActionRxPBR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPBR();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPBR(); 
            }
        };
        class PacWaitEapMsgExitActionTxPAN : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
+           virtual void operator()(PANA_Client &c) { 
                c.TxPAN(true);
            }
        };
        class PacWaitEapMsgExitActionTxPAR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
+           virtual void operator()(PANA_Client &c) { 
                c.TxPAR();
            }
        };
        class PacWaitEapMsgExitActionTxPANTout : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               if (PANA_CFG_PAC().m_EapPiggyback) {
-                   c.TxPAN(false);
-               }
-               c.Timer().CancelEapResponse();
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPAN(false);
            }
        };
        class PacWaitEapResultExitActionEapOpen : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPBA(true);
-               c.NotifyAuthorization();
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPBA(false); 
+               c.NotifyAuthorization(); 
                c.NotifyScheduleLifetime();
            }
        };
-       class PacWaitEapSuccessExitActionClose : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPBA(true);
-               c.Disconnect();
+       class PacWaitEapResultCloseExitAction : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPBA(true); 
+               c.Disconnect(); 
            }
        };
-       class PacWaitEapFailExitActionClose : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPBA(false);
-               c.Disconnect();
+       class PacWaitEapResultExitActionTxPERPpac : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPER(PANA_PPAC_CAPABILITY_UNSUPPORTED);
+           }
+       };
+       class PacWaitEapResultExitActionTxPERPcap : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPER(PANA_PROTECTION_CAPABILITY_UNSUPPORTED);
+           }
+       };
+       class PacWait1stEapResultExitAction : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPFEA(false); 
+           }
+       };
+       class PacWait1stEapResultCloseExitAction : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPFEA(true); 
+               c.Disconnect(); 
+           }
+       };       
+       class PacWait1stEapResultRestartExitAction : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.NotifyEapRestart();
            }
        };
        class PacOpenExitActionRxPPR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPPR();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPPR(); 
            }
        };
        class PacOpenExitActionTxPPR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPPR();
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPPR(); 
+           }
+       };
+       class PacOpenExitActionEapReAuth : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPDI(); 
            }
        };
        class PacOpenExitActionRxPAR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.NotifyEapRestart();
-               c.RxPAR();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPAR(true); 
            }
        };
        class PacOpenExitActionRxPTR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPTR();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPTR(); 
            }
        };
        class PacOpenExitActionTxPTR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPTR(PANA_TERMCAUSE_LOGOUT);
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPTR(PANA_TERMCAUSE_LOGOUT); 
            }
        };
        class PacOpenExitActionTxPUR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPUR();
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPUR(); 
            }
        };
        class PacOpenExitActionRxPUR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPUR();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPUR(); 
            }
        };
-       class PacOpenExitActionTxPRR : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPRR();
+       class PacOpenExitActionTxPRAR : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.TxPRAR(); 
            }
        };
-       class PacWaitPRAAExitActionRxPRA : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPRA();
+       class PacWaitPRAAExitActionRxPRAA : public AAA_Action<PANA_Client> {
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPRAA(); 
            }
        };
        class PacWaitPPAExitActionRxPPA : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
+           virtual void operator()(PANA_Client &c) { 
                c.RxPPA();
            }
        };
        class PacWaitPUAExitActionRxPUA : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPUA();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPUA(); 
            }
        };
        class PacSessTermExitActionRxPTA : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPTA();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPTA(); 
            }
        };
        class PacExitActionTimeout : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
+           virtual void operator()(PANA_Client &c) { 
                c.Disconnect(PANA_TERMCAUSE_SESSION_TIMEOUT);
            }
        };
@@ -305,18 +438,13 @@ class PANA_EXPORT PANA_ClientStateTable :
            virtual void operator()(PANA_Client &c);
        };
        class PacExitActionTxPEA : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
+           virtual void operator()(PANA_Client &c) { 
                c.TxPEA();
            }
        };
-       class PacExitActionTxPER : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.TxPER(PANA_ERROR_UNABLE_TO_COMPLY);
-           }
-       };
        class PacWaitPEAExitActionRxPEA : public AAA_Action<PANA_Client> {
-           virtual void operator()(PANA_Client &c) {
-               c.RxPEA();
+           virtual void operator()(PANA_Client &c) { 
+               c.RxPEA(true);
            }
        };
 
@@ -326,37 +454,41 @@ class PANA_EXPORT PANA_ClientStateTable :
        PacWaitEapMsgInExitActionTxPSA         m_PacWaitEapMsgInExitActionTxPSA;
        PacWaitPaaExitActionRxPAR              m_PacWaitPaaExitActionRxPAR;
        PacWaitPaaExitActionRxPAN              m_PacWaitPaaExitActionRxPAN;
+       PacWaitPaaExitActionRxPFER             m_PacWaitPaaExitActionRxPFER;
        PacWaitPaaExitActionRxPBR              m_PacWaitPaaExitActionRxPBR;
        PacWaitEapMsgExitActionTxPAR           m_PacWaitEapMsgExitActionTxPAR;
        PacWaitEapMsgExitActionTxPAN           m_PacWaitEapMsgExitActionTxPAN;
        PacWaitEapMsgExitActionTxPANTout       m_PacWaitEapMsgExitActionTxPANTout;
        PacWaitEapResultExitActionEapOpen      m_PacWaitEapResultExitActionEapOpen;
-       PacWaitEapSuccessExitActionClose       m_PacWaitEapSuccessExitActionClose;
-       PacWaitEapFailExitActionClose          m_PacWaitEapFailExitActionClose;
+       PacWaitEapResultCloseExitAction        m_PacWaitEapResultCloseExitAction;
+       PacWaitEapResultExitActionTxPERPpac    m_PacWaitEapResultExitActionTxPERPpac;
+       PacWaitEapResultExitActionTxPERPcap    m_PacWaitEapResultExitActionTxPERPcap;
+       PacWait1stEapResultExitAction          m_PacWait1stEapResultExitAction;
+       PacWait1stEapResultCloseExitAction     m_PacWait1stEapResultCloseExitAction;
+       PacWait1stEapResultRestartExitAction   m_PacWait1stEapResultRestartExitAction;
        PacOpenExitActionRxPPR                 m_PacOpenExitActionRxPPR;
        PacOpenExitActionTxPPR                 m_PacOpenExitActionTxPPR;
+       PacOpenExitActionEapReAuth             m_PacOpenExitActionEapReAuth;
        PacOpenExitActionRxPAR                 m_PacOpenExitActionRxPAR;
        PacOpenExitActionRxPTR                 m_PacOpenExitActionRxPTR;
        PacOpenExitActionTxPTR                 m_PacOpenExitActionTxPTR;
        PacOpenExitActionTxPUR                 m_PacOpenExitActionTxPUR;
        PacOpenExitActionRxPUR                 m_PacOpenExitActionRxPUR;
-       PacOpenExitActionTxPRR                 m_PacOpenExitActionTxPRR;
-       PacWaitPRAAExitActionRxPRA             m_PacWaitPRAAExitActionRxPRA;
+       PacOpenExitActionTxPRAR                m_PacOpenExitActionTxPRAR;
+       PacWaitPRAAExitActionRxPRAA            m_PacWaitPRAAExitActionRxPRAA;
        PacWaitPUAExitActionRxPUA              m_PacWaitPUAExitActionRxPUA;
        PacWaitPPAExitActionRxPPA              m_PacWaitPPAExitActionRxPPA;
        PacSessTermExitActionRxPTA             m_PacSessTermExitActionRxPTA;
        PacExitActionRetransmission            m_PacExitActionRetransmission;
        PacExitActionTimeout                   m_PacExitActionTimeout;
        PacExitActionTxPEA                     m_PacExitActionTxPEA;
-       PacExitActionTxPER                     m_PacExitActionTxPER;
        PacWaitPEAExitActionRxPEA              m_PacWaitPEAExitActionRxPEA;
 };
-
 class PANA_EXPORT PANA_PacSession : public
-      PANA_StateMachine<PANA_Client, PANA_Channel>
+      PANA_StateMachine<PANA_Client, PANA_SenderChannel>
 {
    public:
-      PANA_PacSession(PANA_Node &n,
+      PANA_PacSession(PANA_Node &n, 
                       PANA_ClientEventInterface &eif);
       virtual ~PANA_PacSession();
 
@@ -366,27 +498,44 @@ class PANA_EXPORT PANA_PacSession : public
       virtual void EapSuccess();
       virtual void EapTimeout();
       virtual void EapFailure();
-      virtual void ReAuthenticate();
-      virtual void Update(ACE_INET_Addr &addr);
+      virtual void EapReAuthenticate();
+      virtual void UpdatePostPanaAddress(ACE_INET_Addr &addr,
+                                         std::string &message);
+      virtual void SendNotification(std::string &message);
       virtual void Ping();
       virtual void Stop();
+
+      PANA_CfgProviderInfo &PreferedISP() {
+         return m_PaC.PreferedISP();
+      }
+      PANA_CfgProviderInfo &PreferedNAP() {
+         return m_PaC.PreferedNAP();
+      }
+      virtual PANA_DeviceId &PacDeviceId() {
+         return m_PaC.PacDeviceId();
+      }
+      virtual PANA_DeviceId &PaaDeviceId() {
+         return m_PaC.PaaDeviceId();
+      }
+      bool &EnableDhcpBootstrap() {
+         return m_PaC.DhcpBootstrap().Enable();
+      }
+      bool &ResumePreviousSession() {
+         return m_PaC.AuxVariables().SecAssociationResumed();
+      }
+      std::string &CurrentInterface() {
+         return PANA_CFG_GENERAL().m_Interface;
+      }
 
    private:
       virtual void InitializeMsgMaps();
       virtual void FlushMsgMaps();
+      virtual void GetBindAddress(ACE_INET_Addr &addr);
 
-   private:
-      // actual statemachine table
       static PANA_ClientStateTable m_StateTable;
-
-   private:
-      // auxillary members
       PANA_Node &m_Node;
-      PANA_Channel m_Channel;
+      PANA_SenderChannel m_Udp;
       FsmTimer<PANA_PacEventVariable, PANA_PacSession> m_Timer;
-
-   private:
-      // actual pana client
       PANA_Client m_PaC;
 };
 

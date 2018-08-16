@@ -6,7 +6,7 @@ VPATH = @srcdir@
 AM_CPPFLAGS = @L_CPPFLAGS@ @L_ODBCFLAGS@ \
               -I@top_srcdir@/include \
               -I@top_srcdir@/libodutl/include \
-              -I@top_srcdir@/libdiamparser/include \
+              -I@top_srcdir@/libdiamparser \
               -I@top_srcdir@/libdiameter/include \
               -I@top_srcdir@/libdiametermip4/include \
               -I./include \
@@ -56,7 +56,7 @@ sysconf_DATA = config/aaas_s.local.xml \
                config/aaas_s2.local.xml \
                config/client.local.xml \
                config/configuration.xml \
-               config/configuration.dtd \
+               config/configuration.xsd \
                config/dictionary.dtd \
                config/dictionary.xml \
                config/fac.local.xml \
@@ -66,10 +66,10 @@ sysconf_DATA = config/aaas_s.local.xml \
                config/server.local.xml
 
 LDADD = @L_LIBS@ \
-        $(top_builddir)/libdiametermip4/libdiametermip4.la \
-	$(top_builddir)/libdiameter/libdiameter.la \
-	$(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libodutl/libodutl.la
+        libdiametermip4.la \
+	$(top_srcdir)/libdiameter/libdiameter.la \
+	$(top_srcdir)/libdiamparser/libdiamparser.la \
+	$(top_srcdir)/libodutl/libodutl.la
 
 noinst_PROGRAMS = hac_test aaas_server_test has_test fac_test
 
@@ -89,23 +89,3 @@ fac_test_SOURCES = test/fac_test.cxx \
 # Distribution
 
 EXTRA_DIST = config
-aaas_server_test_LDADD = $(top_builddir)/libdiametermip4/libdiametermip4.la\
-	$(top_builddir)/libdiameter/libdiameter.la\
-	$(top_builddir)/libdiamparser/libdiamparser.la\
-	$(top_builddir)/libodutl/libodutl.la -lACEXML_Parser -lACEXML -lACE\
-	-lACE_SSL -lssl
-fac_test_LDADD = $(top_builddir)/libdiametermip4/libdiametermip4.la\
-	$(top_builddir)/libdiameter/libdiameter.la\
-	$(top_builddir)/libdiamparser/libdiamparser.la\
-	$(top_builddir)/libodutl/libodutl.la -lACEXML_Parser -lACEXML -lACE\
-	-lACE_SSL -lssl
-hac_test_LDADD = $(top_builddir)/libdiametermip4/libdiametermip4.la\
-	$(top_builddir)/libdiameter/libdiameter.la\
-	$(top_builddir)/libdiamparser/libdiamparser.la\
-	$(top_builddir)/libodutl/libodutl.la -lACEXML_Parser -lACEXML -lACE\
-	-lACE_SSL -lssl
-has_test_LDADD = $(top_builddir)/libdiametermip4/libdiametermip4.la\
-	$(top_builddir)/libdiameter/libdiameter.la\
-	$(top_builddir)/libdiamparser/libdiamparser.la\
-	$(top_builddir)/libodutl/libodutl.la -lACEXML_Parser -lACEXML -lACE\
-	-lACE_SSL -lssl

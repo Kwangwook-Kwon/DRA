@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -36,33 +36,28 @@
 
 #include "ace/SOCK_Connector.h"
 #include "ace/SOCK_Acceptor.h"
-#include "ace/SOCK_SEQPACK_Acceptor.h"
-#include "ace/SOCK_SEQPACK_Connector.h"
-#include "ace/Sig_Handler.h"
-#include "ace/Handle_Set.h"
+#include "ace/SSL/SSL_SOCK_Connector.h"
+#include "ace/SSL/SSL_SOCK_Acceptor.h"
+#include "ace/Signal.h"
 #include "aaa_transport_interface.h"
+
+#define AAA_ACE_MAX_TIMEOUT  3
+#define AAA_ACE_MAX_CONNECT_RETRY 6
 
 // interface implemented by transport
 // specific IO (lower layer). Assumes
 // lower layer is connection oriented
 template<class ACE_ACCEPTOR,
          class ACE_CONNECTOR,
-         class ACE_STREAM,
-         class ACE_ADDRESS,
-         int IP_PROTOCOL>
-class Diameter_ACE_Transport : public DiameterTransportInterface<ACE_ADDRESS>
+         class ACE_STREAM>
+class AAA_ACE_Transport : public AAA_TransportInterface
 {
    public:
-      typedef enum {
-          ACCEPTOR_TIMEOUT = 10   // 10 sec
-      };
-
-   public:
-      Diameter_ACE_Transport() : m_PendingStream(0) {
+      AAA_ACE_Transport() : m_PendingStream(0) { 
       }
-      virtual ~Diameter_ACE_Transport() {
+      virtual ~AAA_ACE_Transport() {
          if (m_PendingStream) {
-             ResetStream((DiameterTransportInterface<ACE_ADDRESS>*&)m_PendingStream);
+             ResetStream((AAA_TransportInterface*&)m_PendingStream);
          }
       }
       int Open() {
@@ -70,56 +65,62 @@ class Diameter_ACE_Transport : public DiameterTransportInterface<ACE_ADDRESS>
       }
       int Connect(std::string &hostname, int port) {
          if (! m_PendingStream) {
-             m_PendingStream = new Diameter_ACE_Transport
-                  <ACE_ACCEPTOR, ACE_CONNECTOR, ACE_STREAM, ACE_ADDRESS, IP_PROTOCOL>;
+             m_PendingStream = new AAA_ACE_Transport
+                 <ACE_ACCEPTOR, ACE_CONNECTOR, ACE_STREAM>;
              ACE_Time_Value tm(0, 0);
-             ACE_ADDRESS dest(port, hostname.c_str());
+             ACE_INET_Addr dest(port, hostname.data());
              int rc = m_Connector.connect(m_PendingStream->Stream(),
-                                          dest, &tm, ACE_Addr::sap_any, true);
+                                          dest, &tm);
              return AceAsynchResults(rc);
          }
          return (-1);
-      }
-      int Complete(DiameterTransportInterface<ACE_ADDRESS> *&iface) {
+      }    
+      int Complete(AAA_TransportInterface *&iface) {
          iface = 0; 
          if (m_PendingStream) {
-            int rc = m_Connector.complete(m_PendingStream->Stream());
+            ACE_Time_Value tm(AAA_ACE_MAX_TIMEOUT, 0); 
+            int rc = m_Connector.complete
+                (m_PendingStream->Stream(), 0, &tm);
             if (rc == 0) {
                 return HandOverStream(iface, 
-                                (DiameterTransportInterface<ACE_ADDRESS>*&)m_PendingStream);
+                                (AAA_TransportInterface*&)m_PendingStream);
             }
             else {
-                return ((AceAsynchResults(rc) == 0) && (errno != ETIMEDOUT)) ? 0 :
-                        ResetStream((DiameterTransportInterface<ACE_ADDRESS>*&)
+                return (AceAsynchResults(rc) == 0) ? 0 :
+                        ResetStream((AAA_TransportInterface*&)
                                     m_PendingStream);
             }
          }
          return (-1);
       }
-      int Listen(int port, ACE_ADDRESS localAddr) {
+      int Listen(int port) {
          if (! m_PendingStream) {
-             m_PendingStream = new Diameter_ACE_Transport
-                 <ACE_ACCEPTOR, ACE_CONNECTOR, ACE_STREAM, ACE_ADDRESS, IP_PROTOCOL>;
-             return AceAsynchResults(m_Acceptor.open(localAddr, true, AddressFamilyToUse(),
-                                                     ACE_DEFAULT_BACKLOG, IP_PROTOCOL));
+             m_PendingStream = new AAA_ACE_Transport
+                 <ACE_ACCEPTOR, ACE_CONNECTOR, ACE_STREAM>;
+#ifdef ACE_HAS_IPV6
+             ACE_INET_Addr localAddr(port, "::", AF_INET6); 
+#else
+             ACE_INET_Addr localAddr(port);
+#endif // ACE_HAS_IPV6
+             return AceAsynchResults(m_Acceptor.open(localAddr));
          }
          return (-1);
       }
-      virtual int Accept(DiameterTransportInterface<ACE_ADDRESS> *&iface) {
+      virtual int Accept(AAA_TransportInterface *&iface) {
          iface = 0;
          if (m_PendingStream) {
-            ACE_Time_Value wait(ACCEPTOR_TIMEOUT, 0);
-            int rc = m_Acceptor.accept(m_PendingStream->Stream(), 0, &wait);
+            ACE_Time_Value tm(AAA_ACE_MAX_TIMEOUT, 0); 
+            int rc = m_Acceptor.accept(m_PendingStream->Stream(),
+                                       0, &tm);
             if (rc == 0) {
-                HandOverStream(iface, (DiameterTransportInterface<ACE_ADDRESS>*&)
-                               m_PendingStream);
-                m_PendingStream = new Diameter_ACE_Transport
-                     <ACE_ACCEPTOR, ACE_CONNECTOR, ACE_STREAM, ACE_ADDRESS, IP_PROTOCOL>;
+                HandOverStream(iface, (AAA_TransportInterface*&)
+                                    m_PendingStream);
+                m_PendingStream = new AAA_ACE_Transport
+                     <ACE_ACCEPTOR, ACE_CONNECTOR, ACE_STREAM>;
             }
             else if (AceAsynchResults(rc) < 0) {
-                ResetStream((DiameterTransportInterface<ACE_ADDRESS>*&)
-                            m_PendingStream);
-                return (0);
+                return ResetStream((AAA_TransportInterface*&)
+                                    m_PendingStream);
             }
             return AceAsynchResults((rc == 0) ? 1 : rc);
          }
@@ -129,28 +130,14 @@ class Diameter_ACE_Transport : public DiameterTransportInterface<ACE_ADDRESS>
          return AceIOResults(m_Stream.send(data, length));
       }
       int Receive(void *data, size_t length, int timeout = 0) {
-         if (timeout > 0) {
-             ACE_Time_Value tm(0, timeout);
-             return AceIOResults(m_Stream.recv(data, length, &tm));
-         }
-         return AceIOResults(m_Stream.recv(data, length));
+         ACE_Time_Value tm(0, timeout);
+         return AceIOResults(m_Stream.recv(data, length, &tm));
       }
       int Close() {
-         // close auxillary sockets
-         m_Acceptor.close();
-
-         // close data stream
-         if (!AceAsynchResults(m_Stream.close_writer()) &&
-             !AceAsynchResults(m_Stream.close_reader())) {
-             return (0);
-         }
-         return AceAsynchResults(m_Stream.close());
+         return AceAsynchResults(m_Stream.close()); 
       }
       ACE_STREAM &Stream() {
          return m_Stream;
-      }
-      int TransportProtocolInUse() {
-         return IP_PROTOCOL;
       }
 
    private:
@@ -158,25 +145,21 @@ class Diameter_ACE_Transport : public DiameterTransportInterface<ACE_ADDRESS>
       ACE_STREAM     m_Stream;
       ACE_ACCEPTOR   m_Acceptor;
       ACE_CONNECTOR  m_Connector;
-
+      
       // pending stream
-      Diameter_ACE_Transport<ACE_ACCEPTOR,
-                             ACE_CONNECTOR,
-                             ACE_STREAM,
-                             ACE_ADDRESS,
-                             IP_PROTOCOL>*
+      AAA_ACE_Transport<ACE_ACCEPTOR, ACE_CONNECTOR, ACE_STREAM>*
                      m_PendingStream;
 
       int inline AceAsynchResults(int rc) {
          if (rc < 0) {
              if ((errno == EWOULDBLOCK) || 
                  (errno == ETIME) ||
-                 (errno == ETIMEDOUT) ||
+                 (errno == ETIMEDOUT) || 
                  (errno == EAGAIN)) { 
                 return (0);
              }
-             AAA_LOG((LM_ERROR, "(%P|%t) Async Transport Setup Reports: %s\n",
-                        strerror(errno)));
+             AAA_LOG(LM_ERROR, "(%P|%t) ACE transport error: %s\n",
+                        strerror(errno));
          }
          return (rc);
       }
@@ -187,38 +170,31 @@ class Diameter_ACE_Transport : public DiameterTransportInterface<ACE_ADDRESS>
                  (errno == EAGAIN)) { 
                 return (0);
              }
-             AAA_LOG((LM_ERROR, "(%P|%t) Async IO Reports: %s\n",
-                        strerror(errno)));
+             AAA_LOG(LM_ERROR, "(%P|%t) ACE transport error: %s\n",
+                        strerror(errno));
              rc = (-1);
          }
          else if (rc == 0) {
-             AAA_LOG((LM_ERROR, "(%P|%t) Async IO, peer has closed\n"));
+             AAA_LOG(LM_ERROR, "(%P|%t) %s\n", strerror(errno));
              rc = (-1);
          }
          return (rc);
       }
-      int inline ResetStream(DiameterTransportInterface<ACE_ADDRESS> *&stream) {
+      int inline ResetStream(AAA_TransportInterface *&stream) {
          delete stream;
          stream = NULL;
          return (-1);
       }
-      int inline HandOverStream(DiameterTransportInterface<ACE_ADDRESS> *&dest,
-                                DiameterTransportInterface<ACE_ADDRESS> *&src) {
+      int inline HandOverStream(AAA_TransportInterface *&dest,
+                                AAA_TransportInterface *&src) {
          dest = src;
          src = NULL;
          return (1);
       }
-      int inline AddressFamilyToUse() {
-#ifdef ACE_HAS_IPV6
-         return (DIAMETER_CFG_TRANSPORT()->use_ipv6) ? AF_INET6 : AF_INET;
-#else /* ! ACE_HAS_IPV6 */
-         return AF_INET;
-#endif /* ! ACE_HAS_IPV6 */
-      }
 };
 
-class Diameter_ACE_TransportAddress :
-    public DiameterTransportAddress<ACE_INET_Addr>
+class AAA_ACE_TransportAddress :
+    public AAA_TransportAddress<ACE_INET_Addr>
 {
    public:
       virtual int GetLocalAddresses(size_t &count,
@@ -226,7 +202,7 @@ class Diameter_ACE_TransportAddress :
          return ACE::get_ip_interfaces
              (count, addrs);
       }
-      virtual void *GetAddressPtr(ACE_INET_Addr &addr) {
+      virtual void *GetAddressPtr(ACE_INET_Addr &addr) {          
 #if defined (ACE_HAS_IPV6)
          if (addr.get_type() == AF_INET6) {
             sockaddr_in6 *in = (sockaddr_in6*)addr.get_addr();
@@ -256,24 +232,24 @@ class Diameter_ACE_TransportAddress :
       }
 };
 
-class Diameter_IO_SigMask : public ACE_Event_Handler
+class AAA_IO_SigMask : public ACE_Event_Handler
 {
     public:
-       Diameter_IO_SigMask() {
+       AAA_IO_SigMask() {
           m_SigRegistrar.register_handler(SIGPIPE, this);
        }
        virtual int handle_signal(int signo,
                                  siginfo_t * = 0, 
                                  ucontext_t * = 0) {
-           AAA_LOG((LM_ERROR, 
-              "(%P|%t) SIGPIPE received, closing connection\n"));
+           AAA_LOG(LM_ERROR, 
+              "(%P|%t) SIGPIPE received, closing connection\n");
 #ifndef WIN32
-           errno = EPIPE;
+           errno = ESTRPIPE;
 #endif
            return 0;
        }
    private:
        ACE_Sig_Handler m_SigRegistrar;
 };
-
+      
 #endif 

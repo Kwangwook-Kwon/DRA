@@ -2,7 +2,7 @@
 /*                                                                        */
 /* OpenDiameter: Open-source software for the Diameter protocol           */
 /*                                                                        */
-/* Copyright (C) 2002 -2007  Open Diameter Project 		          */   
+/* Copyright (C) 2002 -2004  Open Diameter Project 		          */   
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -65,7 +65,7 @@ typedef AAA_JobHandle<AAA_GroupedJob> DiameterJobHandle;
 /// functions for enforcement of attributes (i.e., EnforceXYZ) and 
 /// for setting attributes (i.e., SetXYX).  Arguments of enforcement
 /// functions are not enveloped with AAA_ScholorAttribute or
-/// DiameterVectorAttribute since they are intended to be unmodified.
+/// AAA_VectorAttributes since they are intended to be unmodified.
 class DIAMETER_MIP4_HA_CLIENT_EXPORTS DiameterMip4HaClientStateMachine 
   : public AAA_StateMachine<DiameterMip4HaClientStateMachine>,
     public AAA_EventQueueJob
@@ -145,40 +145,40 @@ class DIAMETER_MIP4_HA_CLIENT_EXPORTS DiameterMip4HaClientStateMachine
   /// This function is used for setting User-Name AVP contents.
  
   virtual void
- SetUserName(DiameterScholarAttribute<diameter_utf8string_t> &userName)=0;
+ SetUserName(AAA_ScholarAttribute<diameter_utf8string_t> &userName)=0;
  
   /// This function is used for setting Destination-Realm AVP
   /// contents.  
   virtual void SetDestinationRealm
-  (DiameterScholarAttribute<diameter_utf8string_t> &destinationRealm){}//=0; 
+  (AAA_ScholarAttribute<diameter_utf8string_t> &destinationRealm){}//=0; 
 
   // OriginHost & OriginRealm --> this will be populated from the config file
 
   virtual void SetMipMnAaaAuth
-  (DiameterScholarAttribute<mip_mn_aaa_auth_info_t> &mipMnAaaAuth)=0; 
+  (AAA_ScholarAttribute<mip_mn_aaa_auth_info_t> &mipMnAaaAuth)=0; 
 
   //optional AVPs
 
   /// This function is used for setting Destination-Host AVP
   /// contents.  
   virtual void SetDestinationHost
-  (DiameterScholarAttribute<diameter_utf8string_t> &destinationHost)
+  (AAA_ScholarAttribute<diameter_utf8string_t> &destinationHost)
   {
   }
 
   virtual void SetMipMobileNodeAddress
-  (DiameterScholarAttribute<diameter_address_t> &mipMobileNodeAddress)
+  (AAA_ScholarAttribute<diameter_address_t> &mipMobileNodeAddress)
   {
   }
 
   virtual void SetMipHomeAgentAddress
-  (DiameterScholarAttribute<diameter_address_t> &mipHomeAgentAddress)
+  (AAA_ScholarAttribute<diameter_address_t> &mipHomeAgentAddress)
   {
   }
 
   // SetMipFeatureVector for HA Client => MN co-located mode
   virtual void SetMipFeatureVector 
-  (DiameterScholarAttribute<diameter_unsigned32_t> &mipFeatureVector)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &mipFeatureVector)
   {
   
 #define FV_CO_LOCATED_MN            256
@@ -195,21 +195,21 @@ class DIAMETER_MIP4_HA_CLIENT_EXPORTS DiameterMip4HaClientStateMachine
   // return 0 - otherwise
   virtual int IsMnHaKeyRequested() =0;
 
-  //DiameterScholarAttribute<mip_originating_foreign_aaa_info_t> MipOriginatingForeignAaa;
+  //AAA_ScholarAttribute<mip_originating_foreign_aaa_info_t> MipOriginatingForeignAaa;
 
   
   virtual void
   SetAuthorizationLifetime
-  (DiameterScholarAttribute<diameter_unsigned32_t> &authorizationLifetime)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &authorizationLifetime)
   {
   }
 
   // fn not needed 
   //  virtual void  SetAuthSessionState
-  //(DiameterScholarAttribute<diameter_enumerated_t> &authSessionState) {  }
+  //(AAA_ScholarAttribute<diameter_enumerated_t> &authSessionState) {  }
 
   virtual void SetMipHomeAgentHost
-  (DiameterScholarAttribute<mip_home_agent_host_info_t> &mipHomeAgentHost)
+  (AAA_ScholarAttribute<mip_home_agent_host_info_t> &mipHomeAgentHost)
   {
   }
 
@@ -217,7 +217,7 @@ class DIAMETER_MIP4_HA_CLIENT_EXPORTS DiameterMip4HaClientStateMachine
   /// This function is used for setting Auth-Request-Type AVP
   /// contents.  
   virtual void SetAuthRequestType
-  (DiameterScholarAttribute<diameter_enumerated_t> &authRequestType)
+  (AAA_ScholarAttribute<diameter_enumerated_t> &authRequestType)
   {
     authRequestType = AUTH_REQUEST_TYPE_AUTHORIZE_AUTHENTICATE;
   }
@@ -266,12 +266,12 @@ class DIAMETER_MIP4_HA_CLIENT_EXPORTS DiameterMip4HaClientStateMachine
   ( const diameter_utf8string_t &errorMessage)=0;
 
   virtual void SetMipCandidateHomeAgentHost
-  (DiameterScholarAttribute<diameter_identity_t> &mipCandidateHomeAgentHost)
+  (AAA_ScholarAttribute<diameter_identity_t> &mipCandidateHomeAgentHost)
   {
   }
 
   virtual void SetMipHaToFaSpi
-  (DiameterScholarAttribute<diameter_unsigned32_t> &mipHaToFaSpi)
+  (AAA_ScholarAttribute<diameter_unsigned32_t> &mipHaToFaSpi)
   {
   }
   
@@ -298,12 +298,12 @@ class DIAMETER_MIP4_HA_CLIENT_EXPORTS DiameterMip4HaClientStateMachine
   {
     if (!AAA_EventQueueJob::ExistBacklog())
       {
-	AAA_LOG((LM_ERROR, "%N: no backlog to serve."));
+	AAA_LOG(LM_ERROR, "%N: no backlog to serve.");
 	return 0;
       }
 
     // Obtain the event to execute.
-    AAA_Event ev = 0;
+    AAA_Event ev;
     AAA_EventQueueJob::Dequeue(ev);
 
     bool existBacklog = AAA_EventQueueJob::ExistBacklog();

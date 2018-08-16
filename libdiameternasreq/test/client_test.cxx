@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -131,7 +131,6 @@ class Channel
 {
  public:
   Channel() {}
-  virtual ~Channel() {}
   virtual void Transmit(DiameterNasreqAuthenticationInfo &authInfo)=0;
 };
 
@@ -168,7 +167,7 @@ class MyDiameterNasreqClientSession : public DiameterNasreqClientSession
 
   /// Reimplemented from the parent class.
   void SetDestinationRealm
-  (DiameterScholarAttribute<diameter_utf8string_t> &realm);
+  (AAA_ScholarAttribute<diameter_utf8string_t> &realm);
 
   /// Reimplemented from parent class.
   void SetAuthInfo(DiameterNasreqAuthenticationInfo &authInfo);
@@ -218,7 +217,7 @@ class ClientSession : AAA_Job
       }
     else
       {
-	AAA_LOG((LM_ERROR, "invalid authenticaiton type.\n"));
+	AAA_LOG(LM_ERROR, "invalid authenticaiton type.\n");
 	Send(authInfo);
       }
   }
@@ -369,7 +368,7 @@ MyDiameterNasreqClientSession::SignalContinue
 void 
 MyDiameterNasreqClientSession::SignalSuccess()
   {
-    AAA_LOG((LM_DEBUG, "Client authentication successful.\n"));
+    AAA_LOG(LM_DEBUG, "Client authentication successful.\n");
     TotalSuccess++;
     Stop();
     JobData(Type2Type<NAS_Application>()).Semaphore().release();
@@ -378,32 +377,29 @@ MyDiameterNasreqClientSession::SignalSuccess()
 void 
 MyDiameterNasreqClientSession::SignalFailure()
   {
-    AAA_LOG((LM_DEBUG, "Client authentication failed.\n"));
+    AAA_LOG(LM_DEBUG, "Client authentication failed.\n");
     Abort();
   }
 
 void 
 MyDiameterNasreqClientSession::SignalReauthentication()
   {
-    AAA_LOG((LM_DEBUG, "Client Re-authentication triggerred (to be implemented).\n"));
+    AAA_LOG(LM_DEBUG, "Client Re-authentication triggerred (to be implemented).\n");
     Abort();
   }
 
 void
 MyDiameterNasreqClientSession::SetDestinationRealm
-(DiameterScholarAttribute<diameter_utf8string_t> &realm)
+(AAA_ScholarAttribute<diameter_utf8string_t> &realm)
 {
   std::string& userName = AuthenticationInfo().UserName();
 
-  size_t pos = userName.find('@');
+  size_t pos;
 
-  if (pos != std::string::npos) {
-    pos ++;
-    realm.Set(std::string(userName, pos, userName.length() - pos));
-  }
-  else {
+  if ((pos = userName.find('@')) != std::string::npos)
+    realm.Set(std::string(userName, ++pos, userName.length() - pos));
+  else
     realm.Set(std::string("research.org"));
-  }
 }
 
 void
@@ -452,7 +448,7 @@ class MyInitializer
   }
   void InitApplicationCore()
   {
-    AAA_LOG((LM_DEBUG, "[%N] Application starting\n"));
+    ACE_DEBUG((LM_DEBUG, "[%N] Application starting\n"));
     if (applicationCore.Open("config/client.local.xml",
                              task) != AAA_ERR_SUCCESS)
       {
@@ -473,7 +469,16 @@ main(int argc, char *argv[])
   AAAApplicationCore applicationCore;
   MyInitializer initializer(task, applicationCore);
 
+#if defined(WIN32)
   #define num 100
+  char c;
+  std::cout << "Input any characer and return after peer connection has established: ";
+  std::cin >> c;
+#else
+  int num;
+  std::cout << "Input number of sessions and return after peer connection has established: ";
+  std::cin >> num;
+#endif
 
   ACE_Semaphore semaphore(num);
 

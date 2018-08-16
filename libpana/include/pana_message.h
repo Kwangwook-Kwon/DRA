@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -39,6 +39,7 @@
 #include "ace/Message_Block.h"
 #include "pana_defs.h"
 #include "pana_exports.h"
+#include "pana_device_id.h"
 
 #if _MSC_VER > 1000
 #pragma once
@@ -46,217 +47,217 @@
 
 #define PANA_DICT_PROTOCOL_ID  1
 
-/*!
-   6.3.  AVP Header
+//
+// PANA device id mac AVP definitions.
+// We extend open diameter AVP containers
+//
+typedef struct {
+    AAA_UINT8 type;
+    diameter_octetstring_t value;
+} PANA_TVData_t;
 
-      Each AVP of type OctetString MUST be padded to align on a 32-bit
-      boundary, while other AVP types align naturally.  A number of
-      zero-valued bytes are added to the end of the AVP Data field till a
-      word boundary is reached.  The length of the padding is not reflected
-      in the AVP Length field [RFC3588].
+// MAC Algorithm assignments
+#define PANA_MACGEN_HMACSHA1   1
+#define PANA_MACGEN_HMACSIZE   20
 
-      The fields in the AVP header are sent in network byte order.  The
-      format of the header is:
+// Data type assignment
+#define AAA_AVP_MAC_TYPE      (AAA_AVP_CUSTOM_TYPE+1)
 
-       0                   1                   2                   3
-       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |           AVP Code            |           AVP Flags           |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |          AVP Length           |            Reserved           |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |                         Vendor-Id (opt)                       |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |    Data ...
-      +-+-+-+-+-+-+-+-+
+typedef AAATypeSpecificAvpContainerEntry<PANA_TVData_t> 
+                AAATVDataAvpContainerEntry;
 
-      AVP Code
+typedef AAA_AvpWidget<PANA_TVData_t, 
+                AAA_AVPDataType(AAA_AVP_MAC_TYPE)>
+                PANA_MacAvpWidget;
 
-         The AVP Code, together with the optional Vendor ID field,
-         identifies attribute that follows.  If the V-bit is not set, the
-         Vendor ID is not present and the AVP Code refers to an IETF
-         attribute.
+typedef AAA_AvpContainerWidget<PANA_TVData_t, 
+                AAA_AVPDataType(AAA_AVP_MAC_TYPE)>
+                PANA_MacAvpContainerWidget;
 
-      AVP Flags
-
-         The AVP Flags field is two octets.  The following bits are
-         assigned:
-
-       0                   1
-       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |V M r r r r r r r r r r r r r r|
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-         V(endor)
-
-            The 'V' bit, known as the Vendor-Specific bit, indicates
-            whether the optional Vendor-Id field is present in the AVP
-            header.  When set the AVP Code belongs to the specific vendor
-            code address space.
-
-         M(andatory)
-
-            The 'M' Bit, known as the Mandatory bit, indicates whether
-            support of the AVP is required.  If an AVP with the 'M' bit set
-            is received by the PaC or PAA and either the AVP or its value
-            is unrecognized, the message MUST be rejected and the receiver
-            MUST send a PANA-Error-Request message.  If the AVP was
-            unrecognized the PANA-Error-Request message result code MUST be
-            PANA_AVP_UNSUPPORTED.  If the AVP value was unrecognized the
-            PANA-Error-Request message result code MUST be
-            PANA_INVALID_AVP_DATA.  In either case the PANA-Error-Request
-            message MUST carry a Failed-AVP AVP containing the offending
-            mandatory AVP.  AVPs with the 'M' bit cleared are informational
-            only and a receiver that receives a message with such an AVP
-            that is not recognized, or whose value is not recognized, MAY
-            simply ignore the AVP.
-
-         r(eserved)
-
-            These flag bits are reserved for future use, and MUST be set to
-            zero, and ignored by the receiver.
-
-      AVP Length
-
-         The AVP Length field is two octets, and indicates the number of
-         octets in this AVP including the AVP Code, AVP Length, AVP Flags,
-         and the AVP data.
-
-      Reserved
-
-         This two-octet field is reserved for future use, and MUST be set
-         to zero, and ignored by the receiver.
-
-      Vendor-Id
-
-         The Vendor-Id field is present if the 'V' bit is set in the AVP
-         Flags field.  The optional four-octet Vendor-Id field contains the
-         IANA assigned "SMI Network Management Private Enterprise Codes"
-         [ianaweb] value, encoded in network byte order.  Any vendor
-         wishing to implement a vendor-specific PANA AVP MUST use their own
-         Vendor-Id along with their privately managed AVP address space,
-         guaranteeing that they will not collide with any other vendor's
-         vendor-specific AVP(s), nor with future IETF applications.
-
-      Data
-
-         The Data field is zero or more octets and contains information
-         specific to the Attribute.  The format and length of the Data
-         field is determined by the AVP Code and AVP Length fields.
-
-      Unless otherwise noted, AVPs defined in this document will have the
-      following default AVP Flags field settings: The 'M' bit MUST be set.
-      The 'V' bit MUST NOT be set.
- */
-class PANA_AvpHeader
+// PANA device id and mac AVP parser
+class PANA_TVDataParser : public AvpValueParser
 {
-    public:
-        typedef struct {
-            ACE_UINT16    vendor;        // Vendor flag
-            ACE_UINT16    mandatory;     // Mandatory flag
-            ACE_UINT16    reserved;      // reserved
-        } Flags;
+   public:
+      void parseRawToApp() throw(AAAErrorStatus) {
+          AAAMessageBlock* aBuffer = (AAAMessageBlock*)getRawData();
+          AAAAvpContainerEntry* e = (AAAAvpContainerEntry*)getAppData();
+          PANA_TVData_t &tve = reinterpret_cast<AAATVDataAvpContainerEntry*>
+                                                (e)->dataRef();
+          tve.type = *((AAA_UINT8*)aBuffer->base());
+          tve.value.assign(aBuffer->base() + 1, aBuffer->size() - 1);
+      }
+      void parseAppToRaw() throw(AAAErrorStatus) {
+          AAAMessageBlock* aBuffer = (AAAMessageBlock*)getRawData();
+          AAAAvpContainerEntry* e = (AAAAvpContainerEntry*)getAppData();
+          PANA_TVData_t &tve = reinterpret_cast<AAATVDataAvpContainerEntry*>
+                                                (e)->dataRef();
+          AAAErrorStatus st;
+          if (aBuffer->size() - (size_t)aBuffer->wr_ptr() < 
+              (tve.value.size() + sizeof(AAA_UINT8))) {
+              st.set(NORMAL, AAA_OUT_OF_SPACE);
+              throw st;
+          }
+          *((AAA_UINT8*)aBuffer->wr_ptr()) = tve.type;
+          aBuffer->wr_ptr(sizeof(AAA_UINT8));
+          aBuffer->copy(tve.value.data(), tve.value.size());
+      }
+};
 
-    public:
-        PANA_AvpHeader() :
-            m_Code(0),
-            m_Length(0),
-            m_Vendor(0),
-            m_pValue(0) {
-            memset(&m_Flags, 0, sizeof(PANA_AvpHeader::Flags));
-        }
+// PANA DHCP AVP definitions.
+// We extend open diameter AVP containers
+typedef struct {
+    ACE_UINT32 id;
+    diameter_octetstring_t nonce;
+} PANA_DhcpData_t;
 
-    public:
-        ACE_UINT16                 m_Code;       // AVP code
-        PANA_AvpHeader::Flags      m_Flags;      // AVP flags
-        ACE_UINT16                 m_Length;     // AVP length
-        ACE_UINT32                 m_Vendor;     // Vendor code
-        char*                      m_pValue;     // Value
-        AAAAvpParseType            m_ParseType;  // Positional parse type
-}; 
+// Data type assignment
+#define AAA_AVP_DHCP_TYPE (AAA_AVP_CUSTOM_TYPE+2)
+
+typedef AAATypeSpecificAvpContainerEntry<PANA_DhcpData_t> 
+               AAADhcpDataAvpContainerEntry;
+
+typedef AAA_AvpWidget<PANA_DhcpData_t, 
+               AAA_AVPDataType(AAA_AVP_DHCP_TYPE)>
+               PANA_DhcpAvpWidget;
+
+typedef AAA_AvpContainerWidget<PANA_DhcpData_t, 
+               AAA_AVPDataType(AAA_AVP_DHCP_TYPE)>
+               PANA_DhcpAvpContainerWidget;
+
+// PANA DHCP AVP parser
+class PANA_DhcpDataParser : public AvpValueParser
+{
+   public:
+      void parseRawToApp() throw(AAAErrorStatus) {
+          AAAMessageBlock* aBuffer = (AAAMessageBlock*)getRawData();
+          AAAAvpContainerEntry* e = (AAAAvpContainerEntry*)getAppData();
+          PANA_DhcpData_t &dhcp = reinterpret_cast<AAADhcpDataAvpContainerEntry*>
+                                                   (e)->dataRef();
+          dhcp.id = *((ACE_UINT32*)aBuffer->base());
+          dhcp.nonce.assign(aBuffer->base() + sizeof(ACE_UINT32), 
+                            aBuffer->size() - sizeof(ACE_UINT32));
+      }
+      void parseAppToRaw() throw(AAAErrorStatus) {
+          AAAMessageBlock* aBuffer = (AAAMessageBlock*)getRawData();
+          AAAAvpContainerEntry* e = (AAAAvpContainerEntry*)getAppData();
+          PANA_DhcpData_t &dhcp = reinterpret_cast<AAADhcpDataAvpContainerEntry*>
+                                                   (e)->dataRef();
+          AAAErrorStatus st;
+          if (aBuffer->size() - (size_t)aBuffer->wr_ptr() < 
+              (dhcp.nonce.size() + sizeof(ACE_UINT32))) {
+              st.set(NORMAL, AAA_OUT_OF_SPACE);
+              throw st;
+          }
+          *((ACE_UINT32*)aBuffer->wr_ptr()) = dhcp.id;
+          aBuffer->wr_ptr(sizeof(ACE_UINT32));
+          aBuffer->copy(dhcp.nonce.data(), dhcp.nonce.size());
+      }
+};
 
 /*
-   6.2.  PANA Message Header
 
-      A summary of the PANA message header format is shown below.  The
-      fields are transmitted in network byte order.
+6.2  PANA Header
+
+   A summary of the PANA header format is shown below.  The fields are
+   transmitted in network byte order.
 
 
-       0                   1                   2                   3
+          0                   1                   2                   3
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       |    Version    |   Reserved    |        Message Length         |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |             Flags             |         Message Type          |
+      |            Flags              |         Message Type          |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |                      Session Identifier                       |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |                        Sequence Number                        |
+      |                      Sequence Number                          |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       |  AVPs ...
       +-+-+-+-+-+-+-+-+-+-+-+-+-
 
-      Version
 
-         This Version field MUST be set to 1 to indicate PANA Version 1.
+   Version
 
-      Reserved
+      This Version field MUST be set to 1 to indicate PANA Version 1.
 
-         This 8-bit field is reserved for future use, and MUST be set to
-         zero, and ignored by the receiver.
+   Reserved
 
-      Message Length
+      This 8-bit field is reserved for future use, and MUST be set to
+      zero, and ignored by the receiver.
 
-         The Message Length field is two octets and indicates the length of
-         the PANA message including the header fields.
+   Message Length
 
-      Flags
+      The Message Length field is three octets and indicates the length
+      of the PANA message including the header fields.
 
-         The Flags field is two octets.  The following bits are assigned:
+   Flags
+
+      The Flags field is eight bits.  The following bits are assigned:
 
        0                   1
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |R r r r r r r r r r r r r r r r|
+      |R S N r r r r r r r r r r r r r|
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-         R(equest)
 
-            If set, the message is a request.  If cleared, the message is
-            an answer.
+      R(equest)
 
-         r(eserved)
+         If set, the message is a request.  If cleared, the message is
+         an answer.
 
-            These flag bits are reserved for future use, and MUST be set to
-            zero, and ignored by the receiver.
+      S(eparate)
 
-      Message Type
+         When the S-flag is set in a PANA-Start-Request message it
+         indicates that PAA is willing to offer separate EAP
+         authentications for NAP and ISP.  When the S-flag is set in a
+         PANA-Start-Answer message it indicates that PaC accepts on
+         performing separate EAP authentications for NAP and ISP.  When
+         the S-flag is set in a PANA-Auth-Request/Answer,
+         PANA-FirstAuth-End-Request/Answer and PANA-Bind-Request/Answer
+         messages it indicates that separate authentications are being
+         performed in the authentication phase.
 
-         The Message Type field is two octets, and is used in order to
-         communicate the message type with the message.  The 16-bit address
-         space is managed by IANA [ianaweb].
+      N(AP authentication)
 
-      Session Identifier
+         When the N-flag is set in a PANA-Auth-Request message, it
+         indicates that PAA is performing NAP authentication.  When the
+         N-flag is unset in a PANA-Auth-Request message, it indicates
+         that PAA is performing ISP authentication.  PaC MUST copy the
+         value of the flag in its requests from the last received
+         request of the PAA.  The value of the flag on an answer MUST be
+         copied from the request.  The N-flag MUST NOT be set when
+         S-flag is not set.
 
-         This field contains a 32 bit session identifier.
+      r(eserved)
 
-      Sequence Number
+         these flag bits are reserved for future use, and MUST be set to
+         zero, and ignored by the receiver.
 
-         This field contains contains a 32 bit sequence number.
+   Message Type
 
-      AVPs
+      The Message Type field is two octets, and is used in order to
+      communicate the message type with the message.  The 16-bit address
+      space is managed by IANA [ianaweb].  PANA uses its own address
+      space for this field.
 
-         AVPs are a method of encapsulating information relevant to the
-         PANA message.  See section Section 6.3 for more information on
-         AVPs.
+   Sequence Number
+
+      The Sequence Number field contains a 32 bit value.
+
+   AVPs
+
+      AVPs are a method of encapsulating information relevant to the
+      PANA message.  See section Section 6.3 for more information on
+      AVPs.
  */
-class PANA_MsgHeader
+class PANA_EXPORT PANA_MsgHeader 
 {
     public:
        typedef struct {
           ACE_UINT16 request   : 1;  // Request flag
-          ACE_UINT16 reserved  : 15; // reserved
+          ACE_UINT16 separate  : 1;  // Separate flag
+          ACE_UINT16 nap       : 1;  // Nap flag 
+          ACE_UINT16 reserved  : 13;  
        } Flags;
 
        // Default header length definition 
@@ -265,33 +266,29 @@ class PANA_MsgHeader
        };
 
     public:
-       PANA_MsgHeader() {
-           m_Version = PANA_VERSION;
-           m_Length  = 0;
-           m_Type    = 0;
-           m_SessionId = 0;
-           m_SeqNum  = 0;
-           ACE_OS::memset(&m_Flags, 0, sizeof(PANA_MsgHeader::Flags));
+       PANA_MsgHeader();
+       virtual ~PANA_MsgHeader() { 
        }
-       virtual ~PANA_MsgHeader() {
-       }
-       inline UCHAR &version() {
+       inline UCHAR &version() { 
            return m_Version; 
        }
-       inline ACE_UINT16 &length() {
-           return m_Length;
+       inline ACE_UINT16 &length() { 
+           return m_Length; 
        }
-       inline PANA_MsgHeader::Flags &flags() {
-           return m_Flags;
+       inline PANA_MsgHeader::Flags &flags() { 
+           return m_Flags; 
        }
-       inline ACE_UINT16 &type() {
-           return m_Type;
+       inline ACE_UINT16 &type() { 
+           return m_Type; 
        }
-       inline ACE_UINT32 &sessionId() {
-           return m_SessionId;
+       inline ACE_UINT32 &seq() { 
+           return m_SeqNum; 
        }
-       inline ACE_UINT32 &seq() {
-           return m_SeqNum;
+       inline AAADictionaryHandle *getDictHandle() { 
+           return m_DictHandle; 
+       }
+       inline void setDictHandle(AAADictionaryHandle *handle) { 
+           m_DictHandle = handle; 
        }
 
     protected:
@@ -300,32 +297,52 @@ class PANA_MsgHeader
        ACE_UINT16 m_Length;
        PANA_MsgHeader::Flags m_Flags;
        ACE_UINT16 m_Type;
-       ACE_UINT32 m_SessionId;
        ACE_UINT32 m_SeqNum;
+
+       // auxillary
+       AAADictionaryHandle* m_DictHandle;
 };
 
+// PANA Message Header parser
+typedef AAAParser<AAAMessageBlock*,
+                  PANA_MsgHeader*,
+                  AAADictionaryOption*> PANA_HeaderParser;
+
 // PANA Message definition
-class PANA_Message :
-     public PANA_MsgHeader
+class PANA_EXPORT PANA_Message : public PANA_MsgHeader
 {
      public:
+         PANA_Message() : 
+             m_SrcPort(0) {
+         }
          virtual ~PANA_Message() {
              m_AvpList.releaseContainers();
          }
-         AAAAvpContainerList &avpList() {
-             return m_AvpList;
+         AAAAvpContainerList &avpList() { 
+             return m_AvpList; 
          }
-         ACE_INET_Addr &srcAddress() {
-             return m_SrcAddress;
+         PANA_DeviceIdContainer &srcDevices() { 
+             return m_SrcDevices; 
          }
-         ACE_INET_Addr &destAddress() {
-             return m_DestAddress;
+         ACE_UINT32 &srcPort() { 
+             return m_SrcPort; 
          }
 
      protected:
          AAAAvpContainerList m_AvpList;
-         ACE_INET_Addr m_SrcAddress;
-         ACE_INET_Addr m_DestAddress;
+         PANA_DeviceIdContainer m_SrcDevices;
+         ACE_UINT32 m_SrcPort;
 };
+
+// AVP codec definition
+class PANA_EXPORT PANA_AvpHeaderCodec : public AvpHeaderCodec
+{
+    public:
+      virtual void parseRawToApp();
+      virtual void parseAppToRaw();
+};
+
+// Alias
+typedef PayloadParserWithCodec<PANA_AvpHeaderCodec> PANA_PayloadParser;
 
 #endif /* __PANA_MESSAGE_H__ */

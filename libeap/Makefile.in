@@ -130,37 +130,28 @@ PROGRAMS = $(noinst_PROGRAMS)
 am_archie_test_OBJECTS = tests/archie_test.$(OBJEXT)
 archie_test_OBJECTS = $(am_archie_test_OBJECTS)
 archie_test_LDADD = $(LDADD)
-@compile_EAPTLS_FALSE@archie_test_DEPENDENCIES =  \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libeap/libeaparchie.la
-@compile_EAPTLS_TRUE@archie_test_DEPENDENCIES =  \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeaparchie.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeaptls.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libdiamparser/libdiamparser.la
+@compile_EAPTLS_FALSE@archie_test_DEPENDENCIES = libeap.la \
+@compile_EAPTLS_FALSE@	libeaparchie.la
+@compile_EAPTLS_TRUE@archie_test_DEPENDENCIES = libeap.la \
+@compile_EAPTLS_TRUE@	libeaparchie.la libeaptls.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiamparser/libdiamparser.la
 am_md5_test_OBJECTS = tests/md5_test.$(OBJEXT)
 md5_test_OBJECTS = $(am_md5_test_OBJECTS)
 md5_test_LDADD = $(LDADD)
-@compile_EAPTLS_FALSE@md5_test_DEPENDENCIES =  \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libeap/libeaparchie.la
-@compile_EAPTLS_TRUE@md5_test_DEPENDENCIES =  \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeaparchie.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeaptls.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libdiamparser/libdiamparser.la
+@compile_EAPTLS_FALSE@md5_test_DEPENDENCIES = libeap.la \
+@compile_EAPTLS_FALSE@	libeaparchie.la
+@compile_EAPTLS_TRUE@md5_test_DEPENDENCIES = libeap.la libeaparchie.la \
+@compile_EAPTLS_TRUE@	libeaptls.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiamparser/libdiamparser.la
 am__tls_test_SOURCES_DIST = tests/tls_test.cxx
 @compile_EAPTLS_TRUE@am_tls_test_OBJECTS = tests/tls_test.$(OBJEXT)
 tls_test_OBJECTS = $(am_tls_test_OBJECTS)
 tls_test_LDADD = $(LDADD)
-@compile_EAPTLS_FALSE@tls_test_DEPENDENCIES =  \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_FALSE@	$(top_builddir)/libeap/libeaparchie.la
-@compile_EAPTLS_TRUE@tls_test_DEPENDENCIES =  \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeaparchie.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libeap/libeaptls.la \
-@compile_EAPTLS_TRUE@	$(top_builddir)/libdiamparser/libdiamparser.la
+@compile_EAPTLS_FALSE@tls_test_DEPENDENCIES = libeap.la \
+@compile_EAPTLS_FALSE@	libeaparchie.la
+@compile_EAPTLS_TRUE@tls_test_DEPENDENCIES = libeap.la libeaparchie.la \
+@compile_EAPTLS_TRUE@	libeaptls.la \
+@compile_EAPTLS_TRUE@	$(top_srcdir)/libdiamparser/libdiamparser.la
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -237,7 +228,6 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
-GREP = @GREP@
 HOST_OS = @HOST_OS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -251,10 +241,8 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 L_CPPFLAGS = @L_CPPFLAGS@
-L_CXXFLAGS = @L_CXXFLAGS@
 L_LDFLAGS = @L_LDFLAGS@
 L_LIBS = @L_LIBS@
-L_MPAFLAGS = @L_MPAFLAGS@
 L_ODBCFLAGS = @L_ODBCFLAGS@
 MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
@@ -272,9 +260,12 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_RANLIB = @ac_ct_RANLIB@
+ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -293,36 +284,30 @@ build_vendor = @build_vendor@
 compile_EAPTLS_FALSE = @compile_EAPTLS_FALSE@
 compile_EAPTLS_TRUE = @compile_EAPTLS_TRUE@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-htmldir = @htmldir@
 includedir = $(prefix)/include/opendiameter/eap
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = $(prefix)/etc/opendiameter/eap
 target_alias = @target_alias@
 AM_CPPFLAGS = @L_CPPFLAGS@ \
               -I@top_srcdir@/include \
+              -I@top_srcdir@/libdiamparser \
               -I@top_srcdir@/libeap/include \
               -D@HOST_OS@
 
@@ -402,6 +387,7 @@ ARCHIE_SRC = eap-archie/eap_archie_fsm.cxx
 
 include_HEADERS = $(CORE_HDR)
 sysconf_DATA = config/client.eap-tls.xml \
+               config/eap-tls.configuration.xsd \
                config/server.eap-tls.xml
 
 @compile_EAPTLS_FALSE@lib_LTLIBRARIES = libeap.la libeaparchie.la
@@ -416,14 +402,14 @@ libeaparchie_la_AR = $(AR) -qcs
 @compile_EAPTLS_TRUE@libeaptls_la_LDFLAGS = -version-info 1:0:0 
 @compile_EAPTLS_TRUE@libeaptls_la_AR = $(AR) -qcs
 @compile_EAPTLS_FALSE@LDADD = @L_LIBS@ \
-@compile_EAPTLS_FALSE@        $(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_FALSE@        $(top_builddir)/libeap/libeaparchie.la
+@compile_EAPTLS_FALSE@        libeap.la \
+@compile_EAPTLS_FALSE@        libeaparchie.la
 
 @compile_EAPTLS_TRUE@LDADD = @L_LIBS@ \
-@compile_EAPTLS_TRUE@        $(top_builddir)/libeap/libeap.la \
-@compile_EAPTLS_TRUE@        $(top_builddir)/libeap/libeaparchie.la \
-@compile_EAPTLS_TRUE@        $(top_builddir)/libeap/libeaptls.la \
-@compile_EAPTLS_TRUE@        $(top_builddir)/libdiamparser/libdiamparser.la
+@compile_EAPTLS_TRUE@        libeap.la \
+@compile_EAPTLS_TRUE@        libeaparchie.la \
+@compile_EAPTLS_TRUE@        libeaptls.la \
+@compile_EAPTLS_TRUE@        $(top_srcdir)/libdiamparser/libdiamparser.la
 
 md5_test_SOURCES = tests/md5_test.cxx
 archie_test_SOURCES = tests/archie_test.cxx 

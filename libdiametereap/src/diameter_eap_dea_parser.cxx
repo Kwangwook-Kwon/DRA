@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -31,7 +31,7 @@
 /*                                                                        */
 /* END_COPYRIGHT                                                          */
 
-/* $Id: diameter_eap_dea_parser.cxx,v 1.15 2006/03/16 17:01:32 vfajardo Exp $ */
+/* $Id: diameter_eap_dea_parser.cxx,v 1.14 2004/10/26 19:47:03 yohba Exp $ */
 /* 
    diameter_eap_dea_parser.cxx
    Diameter EAP Answer Parser
@@ -41,230 +41,229 @@
 
 #include "diameter_eap_parser.hxx"
 
-template<> void 
+void 
 DEA_Parser::parseAppToRaw()
 {
   DEA_Data &data = *getAppData();
-  DiameterMsg &aaaMessage = *getRawData();
+  AAAMessage &aaaMessage = *getRawData();
 
   
-  DiameterDictionaryManager dm;
-  DiameterAvpContainerManager cm;
+  AAADictionaryManager dm;
+  AAAAvpContainerManager cm;
   AAAAvpContainer *c;
                           
   AAACommandCode code;
-  DiameterApplicationId appId;
+  AAAApplicationId appId;
 
   // Obtain Command Code and Application Identifier.
-  if (!dm.getCommandCode("DiameterEAPAnswer", &code, &appId))
+  if (!dm.getCommandCode("Diameter-EAP-Answer", &code, &appId))
     {
-      AAA_LOG((LM_ERROR, "Cannot find Diameter message in dictionary\n."));
-      throw (DIAMETER_DICTIONARY_ERROR);
+      AAA_LOG(LM_ERROR, "Cannot find Diameter message in dictionary\n.");
+      throw (DictionaryError);
       return;
     }
 
   // Specify the header.
-  diameter_hdr_flag flag = {0,0,0};  // Answer
-  DiameterMsgHeader hdr(1, 0, flag, code, appId, 0, 0);
-  aaaMessage.hdr = hdr;
+  hdr_flag flag = {0,0,0};  // Answer
+  aaaMessage.hdr = AAADiameterHeader(1, 0, flag, code, appId, 0, 0);
 
   if (data.AuthApplicationId.IsSet())
     {
-      c = cm.acquire("AuthApplicationId");
+      c = cm.acquire("Auth-Application-Id");
       data.AuthApplicationId.CopyTo(*c, AAA_AVP_INTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.AuthRequestType.IsSet())
     {
-      c = cm.acquire("AuthRequestType");
+      c = cm.acquire("Auth-Request-Type");
       data.AuthRequestType.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.OriginStateId.IsSet())
     { 
-      c = cm.acquire("OriginStateId");
+      c = cm.acquire("Origin-State-Id");
       data.OriginStateId.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.PortLimit.IsSet())
     { 
-      c = cm.acquire("PortLimit");
+      c = cm.acquire("Port-Limit");
       data.PortLimit.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.UserName.IsSet())
     { 
-      c = cm.acquire("UserName");
+      c = cm.acquire("User-Name");
       data.UserName.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.EapPayload.IsSet())
     { 
-      c = cm.acquire("EAPPayload");
+      c = cm.acquire("EAP-Payload");
       data.EapPayload.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.EapReissuedPayload.IsSet())
     { 
-      c = cm.acquire("EAPReissuedPayload");
+      c = cm.acquire("EAP-Reissued-Payload");
       data.EapReissuedPayload.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.EapMasterSessionKey.IsSet())
     { 
-      c = cm.acquire("EAPMasterSessionKey");
+      c = cm.acquire("EAP-Master-Session-Key");
       data.EapMasterSessionKey.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.AccountingEapAuthMethod.IsSet())
     { 
-      c = cm.acquire("AccountingEapAuthMethod");
+      c = cm.acquire("Accounting-Eap-Auth-Method");
       data.AccountingEapAuthMethod.CopyTo(*c, AAA_AVP_UINTEGER64_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ServiceType.IsSet())
     { 
-      c = cm.acquire("ServiceType");
+      c = cm.acquire("Service-Type");
       data.ServiceType.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ResultCode.IsSet())
     { 
-      c = cm.acquire("ResultCode");
+      c = cm.acquire("Result-Code");
       data.ResultCode.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.MultiRoundTimeOut.IsSet())
     { 
-      c = cm.acquire("MultiRoundTimeOut");
+      c = cm.acquire("Multi-Round-Time-Out");
       data.MultiRoundTimeOut.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ConfigurationToken.IsSet())
     { 
-      c = cm.acquire("ConfigurationToken");
+      c = cm.acquire("Configuration-Token");
       data.ConfigurationToken.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.AcctInterimInterval.IsSet())
     { 
-      c = cm.acquire("AcctInterimInterval");
+      c = cm.acquire("Acct-Interim-Interval");
       data.AcctInterimInterval.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ErrorMessage.IsSet())
     { 
-      c = cm.acquire("ErrorMessage");
+      c = cm.acquire("Error-Message");
       data.ErrorMessage.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ErrorReportingHost.IsSet())
     {
-      c = cm.acquire("ErrorReportingHost");
+      c = cm.acquire("Error-Reporting-Host");
       data.ErrorReportingHost.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ReAuthRequestType.IsSet())
     { 
-      c = cm.acquire("ReAuthRequestType");
+      c = cm.acquire("Re-Auth-Request-Type");
       data.ReAuthRequestType.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ReplyMessage.IsSet())
     { 
-      c = cm.acquire("ReplyMessage");
+      c = cm.acquire("Reply-Message");
       data.ReplyMessage.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FilterId.IsSet())
     { 
-      c = cm.acquire("FilterId");
+      c = cm.acquire("Filter-Id");
       data.FilterId.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.CallbackId.IsSet())
     { 
-      c = cm.acquire("CallbackId");
+      c = cm.acquire("Callback-Id");
       data.CallbackId.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedAppletalkLink.IsSet())
     { 
-      c = cm.acquire("FramedAppletalkLink");
+      c = cm.acquire("Framed-Appletalk-Link");
       data.FramedAppletalkLink.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedAppletalkNetwork.IsSet())
     { 
-      c = cm.acquire("FramedAppletalkNetwork");
+      c = cm.acquire("Framed-Appletalk-Network");
       data.FramedAppletalkNetwork.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedAppletalkZone.IsSet())
     { 
-      c = cm.acquire("FramedAppletalkZone");
+      c = cm.acquire("Framed-Appletalk-Zone");
       data.FramedAppletalkZone.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedIpv6Route.IsSet())
     { 
-      c = cm.acquire("FramedIPv6Route");
+      c = cm.acquire("Framed-IPv6-Route");
       data.FramedIpv6Route.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedIpv6Pool.IsSet())
     { 
-      c = cm.acquire("FramedIPv6Pool");
+      c = cm.acquire("Framed-IPv6-Pool");
       data.FramedIpv6Pool.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedPool.IsSet())
     { 
-      c = cm.acquire("FramedPool");
+      c = cm.acquire("Framed-Pool");
       data.FramedPool.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedIpxNetwork.IsSet())
     { 
-      c = cm.acquire("FramedIPXNetwork");
+      c = cm.acquire("Framed-IPX-Network");
       data.FramedIpxNetwork.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedRoute.IsSet())
     { 
-      c = cm.acquire("FramedRoute");
+      c = cm.acquire("Framed-Route");
       data.FramedRoute.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedRouting.IsSet())
     { 
-      c = cm.acquire("FramedRouting");
+      c = cm.acquire("Framed-Routing");
       data.FramedRouting.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.RedirectHost.IsSet())
     {
-      c = cm.acquire("RedirectHost");
+      c = cm.acquire("Redirect-Host");
       data.RedirectHost.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.RedirectHostUsage.IsSet())
     { 
-      c = cm.acquire("RedirectHostUsage");
+      c = cm.acquire("Redirect-Host-Usage");
       data.RedirectHostUsage.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
 
   if (data.RedirectMaxCacheTime.IsSet())
     { 
-      c = cm.acquire("RedirectMaxCacheTime");
+      c = cm.acquire("Redirect-Max-Cache-Time");
       data.RedirectMaxCacheTime.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
 
   if (data.IdleTimeout.IsSet())
     { 
-      c = cm.acquire("IdleTimeout");
+      c = cm.acquire("Idle-Timeout");
       data.IdleTimeout.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
@@ -276,31 +275,31 @@ DEA_Parser::parseAppToRaw()
     }
   if (data.AuthorizationLifetime.IsSet())
     { 
-      c = cm.acquire("AuthorizationLifetime");
+      c = cm.acquire("Authorization-Lifetime");
       data.AuthorizationLifetime.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.AuthGracePeriod.IsSet())
     { 
-      c = cm.acquire("AuthGracePeriod");
+      c = cm.acquire("Auth-Grace-Period");
       data.AuthGracePeriod.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.AuthSessionState.IsSet())
     { 
-      c = cm.acquire("AuthSessionState");
+      c = cm.acquire("Auth-Session-State");
       data.AuthSessionState.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.SessionTimeout.IsSet())
     { 
-      c = cm.acquire("SessionTimeout");
+      c = cm.acquire("Session-Timeout");
       data.SessionTimeout.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.CallbackNumber.IsSet())
     { 
-      c = cm.acquire("CallbackNumber");
+      c = cm.acquire("Callback-Number");
       data.CallbackNumber.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
@@ -312,49 +311,49 @@ DEA_Parser::parseAppToRaw()
     }
   if (data.FramedCompression.IsSet())
     { 
-      c = cm.acquire("FramedCompression");
+      c = cm.acquire("Framed-Compression");
       data.FramedCompression.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedInterfaceId.IsSet())
     { 
-      c = cm.acquire("FramedInterfaceId");
+      c = cm.acquire("Framed-Interface-Id");
       data.FramedInterfaceId.CopyTo(*c, AAA_AVP_UINTEGER64_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedIpAddress.IsSet())
     { 
-      c = cm.acquire("FramedIPAddress");
+      c = cm.acquire("Framed-IP-Address");
       data.FramedIpAddress.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedIpv6Prefix.IsSet())
     {
-      c = cm.acquire("FramedIPv6Prefix");
+      c = cm.acquire("Framed-IPv6-Prefix");
       data.FramedIpv6Prefix.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedIpNetmask.IsSet())
     { 
-      c = cm.acquire("FramedIPNetmask");
+      c = cm.acquire("Framed-IP-Netmask");
       data.FramedIpNetmask.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedMtu.IsSet())
     { 
-      c = cm.acquire("FramedMTU");
+      c = cm.acquire("Framed-MTU");
       data.FramedMtu.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedProtocol.IsSet())
     { 
-      c = cm.acquire("FramedProtocol");
+      c = cm.acquire("Framed-Protocol");
       data.FramedProtocol.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.NasFilterRule.IsSet())
     {
-      c = cm.acquire("NASFilterRule");
+      c = cm.acquire("NAS-Filter-Rule");
       data.NasFilterRule.CopyTo(*c, AAA_AVP_IPFILTER_RULE_TYPE);
       aaaMessage.acl.add(c);
     }
@@ -366,7 +365,7 @@ DEA_Parser::parseAppToRaw()
     }
   if (data.ProxyInfo.IsSet())
     {
-      c = cm.acquire("ProxyInfo");
+      c = cm.acquire("Proxy-Info");
       data.ProxyInfo.CopyTo(*c);
       aaaMessage.acl.add(c);
     }
@@ -378,149 +377,149 @@ DEA_Parser::parseAppToRaw()
     }
 }
 
-template<> void 
+void 
 DEA_Parser::parseRawToApp()
 {
   DEA_Data &data = *getAppData();
-  DiameterMsg &aaaMessage = *getRawData();
+  AAAMessage &aaaMessage = *getRawData();
 
   data.Clear();
 
   //  AAAAvpContainerEntry *e;
   AAAAvpContainer *c;
-  if ((c = aaaMessage.acl.search("SessionId")))
+  if ((c = aaaMessage.acl.search("Session-Id")))
     {
       data.SessionId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthApplicationId")))
+  if ((c = aaaMessage.acl.search("Auth-Application-Id")))
     {
       data.AuthApplicationId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("OriginHost")))
+  if ((c = aaaMessage.acl.search("Origin-Host")))
     {
       data.OriginHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("OriginRealm")))
+  if ((c = aaaMessage.acl.search("Origin-Realm")))
     {
       data.OriginRealm.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("OriginStateId")))
+  if ((c = aaaMessage.acl.search("Origin-State-Id")))
     {
       data.OriginStateId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("PortLimit")))
+  if ((c = aaaMessage.acl.search("Port-Limit")))
     {
       data.PortLimit.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("UserName")))
+  if ((c = aaaMessage.acl.search("User-Name")))
     {
       data.UserName.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("EAPPayload")))
+  if ((c = aaaMessage.acl.search("EAP-Payload")))
     {
       data.EapPayload.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("EAPReissuedPayload")))
+  if ((c = aaaMessage.acl.search("EAP-Reissued-Payload")))
     {
       data.EapReissuedPayload.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("EAPMasterSessionKey")))
+  if ((c = aaaMessage.acl.search("EAP-Master-Session-Key")))
     {
       data.EapMasterSessionKey.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AccountingEapAuthMethod")))
+  if ((c = aaaMessage.acl.search("Accounting-Eap-Auth-Method")))
     {
       data.AccountingEapAuthMethod.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ServiceType")))
+  if ((c = aaaMessage.acl.search("Service-Type")))
     {
       data.ServiceType.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ResultCode")))
+  if ((c = aaaMessage.acl.search("Result-Code")))
     {
       data.ResultCode.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("MultiRoundTimeOut")))
+  if ((c = aaaMessage.acl.search("Multi-Round-Time-Out")))
     {
       data.MultiRoundTimeOut.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ConfigurationToken")))
+  if ((c = aaaMessage.acl.search("Configuration-Token")))
     {
       data.ConfigurationToken.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AcctInterimInterval")))
+  if ((c = aaaMessage.acl.search("Acct-Interim-Interval")))
     {
       data.AcctInterimInterval.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ErrorMessage")))
+  if ((c = aaaMessage.acl.search("Error-Message")))
     {
       data.ErrorMessage.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ErrorReportingHost")))
+  if ((c = aaaMessage.acl.search("Error-Reporting-Host")))
     {
       data.ErrorReportingHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ReAuthRequestType")))
+  if ((c = aaaMessage.acl.search("Re-Auth-Request-Type")))
     {
       data.ReAuthRequestType.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FilterId")))
+  if ((c = aaaMessage.acl.search("Filter-Id")))
     {
       data.FilterId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("CallbackId")))
+  if ((c = aaaMessage.acl.search("Callback-Id")))
     {
       data.CallbackId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedAppletalkLink")))
+  if ((c = aaaMessage.acl.search("Framed-Appletalk-Link")))
     {
       data.FramedAppletalkLink.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedAppletalkNetwork")))
+  if ((c = aaaMessage.acl.search("Framed-Appletalk-Network")))
     {
       data.FramedAppletalkNetwork.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedAppletalkZone")))
+  if ((c = aaaMessage.acl.search("Framed-Appletalk-Zone")))
     {
       data.FramedAppletalkZone.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedIPv6Route")))
+  if ((c = aaaMessage.acl.search("Framed-IPv6-Route")))
     {
       data.FramedIpv6Route.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedIPv6Pool")))
+  if ((c = aaaMessage.acl.search("Framed-IPv6-Pool")))
     {
       data.FramedIpv6Pool.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedPool")))
+  if ((c = aaaMessage.acl.search("Framed-Pool")))
     {
       data.FramedPool.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedIPXNetwork")))
+  if ((c = aaaMessage.acl.search("Framed-IPX-Network")))
     {
       data.FramedIpxNetwork.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedRoute")))
+  if ((c = aaaMessage.acl.search("Framed-Route")))
     {
       data.FramedRoute.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedRouting")))
+  if ((c = aaaMessage.acl.search("Framed-Routing")))
     {
       data.FramedRouting.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("RedirectHost")))
+  if ((c = aaaMessage.acl.search("Redirect-Host")))
     {
       data.RedirectHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("RedirectHostUsage")))
+  if ((c = aaaMessage.acl.search("Redirect-Host-Usage")))
     {
       data.RedirectHostUsage.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("RedirectMaxCacheTime")))
+  if ((c = aaaMessage.acl.search("Redirect-Max-Cache-Time")))
     {
       data.RedirectMaxCacheTime.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("IdleTimeout")))
+  if ((c = aaaMessage.acl.search("Idle-Timeout")))
     {
       data.IdleTimeout.CopyFrom(*c);
     }
@@ -528,23 +527,23 @@ DEA_Parser::parseRawToApp()
     {
       data.State.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthorizationLifetime")))
+  if ((c = aaaMessage.acl.search("Authorization-Lifetime")))
     {
       data.AuthorizationLifetime.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthGracePeriod")))
+  if ((c = aaaMessage.acl.search("Auth-Grace-Period")))
     {
       data.AuthGracePeriod.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthSessionState")))
+  if ((c = aaaMessage.acl.search("Auth-Session-State")))
     {
       data.AuthSessionState.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("SessionTimeout")))
+  if ((c = aaaMessage.acl.search("Session-Timeout")))
     {
       data.SessionTimeout.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("CallbackNumber")))
+  if ((c = aaaMessage.acl.search("Callback-Number")))
     {
       data.CallbackNumber.CopyFrom(*c);
     }
@@ -552,31 +551,31 @@ DEA_Parser::parseRawToApp()
     {
       data.Class.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedCompression")))
+  if ((c = aaaMessage.acl.search("Framed-Compression")))
     {
       data.FramedCompression.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedInterfaceId")))
+  if ((c = aaaMessage.acl.search("Framed-Interface-Id")))
     {
       data.FramedInterfaceId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedIPAddress")))
+  if ((c = aaaMessage.acl.search("Framed-IP-Address")))
     {
       data.FramedIpAddress.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedIPv6Prefix")))
+  if ((c = aaaMessage.acl.search("Framed-IPv6-Prefix")))
     {
       data.FramedIpv6Prefix.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedMTU")))
+  if ((c = aaaMessage.acl.search("Framed-MTU")))
     {
       data.FramedMtu.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedProtocol")))
+  if ((c = aaaMessage.acl.search("Framed-Protocol")))
     {
       data.FramedProtocol.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("NASFilterRule")))
+  if ((c = aaaMessage.acl.search("NAS-Filter-Rule")))
     {
       data.NasFilterRule.CopyFrom(*c);
     }
@@ -584,7 +583,7 @@ DEA_Parser::parseRawToApp()
     {
       data.Tunneling.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ProxyInfo")))
+  if ((c = aaaMessage.acl.search("Proxy-Info")))
     {
       data.ProxyInfo.CopyFrom(*c);
     }

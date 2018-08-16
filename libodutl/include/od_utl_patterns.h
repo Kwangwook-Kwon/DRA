@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -40,7 +40,6 @@ template<class ARG>
 class OD_Utl_CbFunction1
 {
    public:
-      virtual ~OD_Utl_CbFunction1() { }
       virtual void operator()(ARG arg) = 0;
       virtual OD_Utl_CbFunction1<ARG> *clone() const = 0;
 };
@@ -49,7 +48,6 @@ template<class ARG1, class ARG2>
 class OD_Utl_CbFunction2
 {
    public:
-      virtual ~OD_Utl_CbFunction2() { }
       virtual void operator()(ARG1 arg1, ARG2 arg2) = 0;
       virtual OD_Utl_CbFunction2<ARG1, ARG2> *clone() const = 0;
 };

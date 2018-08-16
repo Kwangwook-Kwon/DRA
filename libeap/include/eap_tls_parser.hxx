@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This program is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU General Public License as published by   */
@@ -34,7 +34,7 @@
                           eap_tls_parser.cxx  -  description
                              -------------------
     begin                : vie mar 12 2004
-    copyright            : (C) 2007 by 
+    copyright            : (C) 2004 by 
     email                : 
  ***************************************************************************/
 
@@ -59,7 +59,6 @@
 
 typedef AAAParser<AAAMessageBlock *, EapRequestTls *> EapRequestTlsParser;
 
-template <>
 inline void EapRequestTlsParser::parseRawToApp()
 {
 
@@ -108,7 +107,6 @@ inline void EapRequestTlsParser::parseRawToApp()
    
 }
 
-template <>
 inline void EapRequestTlsParser::parseAppToRaw()
 {
   AAAMessageBlock *msg = getRawData();

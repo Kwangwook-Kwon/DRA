@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -166,20 +166,20 @@ progress), July 2004.
 
 */
 
-void PANA_PMKKey::Seed(pana_octetstring_t &aaaKey,
-                       pana_octetstring_t &supplicantAddr,   
-                       pana_octetstring_t &authenticatorAddr,
+void PANA_PMKKey::Seed(diameter_octetstring_t &aaaKey,
+                       diameter_octetstring_t &supplicantAddr,   
+                       diameter_octetstring_t &authenticatorAddr,
                        size_t bit_length)
 {
     const int vector_count = (bit_length / 160) + 1;
     char O[2] = { (char)((0xFF00 &bit_length) >> 8), 
                   (char)(0x00FF & bit_length) }; 
-    pana_octetstring_t vector;
-    pana_octetstring_t &K = aaaKey;
-    pana_octetstring_t L = "IEEE 802.11i PMK derived from AAA-Key";
-    pana_octetstring_t D = supplicantAddr + authenticatorAddr;
-    pana_octetstring_t S = L + " " + D + O;
-    pana_octetstring_t *T = new pana_octetstring_t[vector_count];
+    diameter_octetstring_t vector;
+    diameter_octetstring_t &K = aaaKey;
+    diameter_octetstring_t L = "IEEE 802.11i PMK derived from AAA-Key";
+    diameter_octetstring_t D = supplicantAddr + authenticatorAddr;
+    diameter_octetstring_t S = L + " " + D + O;
+    diameter_octetstring_t *T = new diameter_octetstring_t[vector_count];
 
 #if PANA_PMK_DEBUG
     printf("AAA key: %d\n", aaaKey.size());
@@ -212,8 +212,8 @@ void PANA_PMKKey::Seed(pana_octetstring_t &aaaKey,
             vector = T[i-1] + S + index;
         }
 
-        sha1.Update((AAAUInt8*)K.data(), K.size());
-        sha1.Update((AAAUInt8*)vector.data(), vector.size());
+        sha1.Update((AAA_UINT8*)K.data(), K.size());
+        sha1.Update((AAA_UINT8*)vector.data(), vector.size());
         sha1.Final();
 
         ACE_OS::memset(hash, 0x0, sizeof(hash));

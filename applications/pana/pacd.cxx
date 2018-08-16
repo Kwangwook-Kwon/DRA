@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -146,6 +146,8 @@ class PeerChannel : public PANA_ClientEventInterface,
           m_TimerHandle(0),
           m_Task(n.Task()),
           m_AuthScriptCtl(PACD_CONFIG().m_AuthScript) {
+          m_PaC.EnableDhcpBootstrap() = PACD_CONFIG().m_DhcpBootstrap ?
+                                              true : false;
           m_PaC.Start();
        }
        virtual ~PeerChannel() {
@@ -156,11 +158,16 @@ class PeerChannel : public PANA_ClientEventInterface,
        void SendEapResponse(AAAMessageBlock *msg) {
           m_PaC.EapSendResponse(msg);
        }
-       void EapStart() {
+       void EapStart(bool &nap) {
           m_Eap.Stop();
           m_Eap.Start();
        }
-       void EapRequest(AAAMessageBlock *request) {
+       void ChooseISP(const PANA_CfgProviderList &list,
+                      PANA_CfgProviderInfo *&choice) {
+          // TBD: choose ISP here
+       }
+       void EapRequest(AAAMessageBlock *request,
+                       bool nap) {
           m_Eap.Receive(request);
        }
        void Success() {
@@ -168,6 +175,8 @@ class PeerChannel : public PANA_ClientEventInterface,
        }
        void Failure() {
           m_PaC.EapFailure();
+       }
+       void Notification(diameter_octetstring_t &msg) {
        }
        void EapAltReject() {
        }
@@ -180,7 +189,7 @@ class PeerChannel : public PANA_ClientEventInterface,
           ACE_Time_Value delay(PACD_CONFIG().m_AuthPeriod, 0);
           m_TimerHandle = m_Task.ScheduleTimer(this, 0, delay);
        }
-       virtual bool IsKeyAvailable(pana_octetstring_t &key) {
+       virtual bool IsKeyAvailable(diameter_octetstring_t &key) {
           if (m_Eap.KeyAvailable()) {
               std::cout << "Assigning key" << std::endl;
               key.assign(m_Eap.KeyData().data(), m_Eap.KeyData().size());

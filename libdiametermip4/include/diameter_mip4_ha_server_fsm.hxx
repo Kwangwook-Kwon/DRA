@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -111,7 +111,7 @@ class DiameterMip4HaServerStateMachine :
   /// when Notify() fails.
   virtual void Abort()
   {
-    AAA_LOG((LM_DEBUG, "Diameter HA server session aborted.\n"));
+    AAA_LOG(LM_DEBUG, "Diameter HA server session aborted.\n");
     //Abort();  WHAT SHOULD BE DONE HERE ??
   }
 
@@ -132,15 +132,15 @@ class DiameterMip4HaServerStateMachine :
   // called if MN-FA-Key-Requested: HA extract value from MipRegRequest
   virtual int SetMipFaToMnSpi(diameter_unsigned32_t &faMnSpi)=0;
 
-  virtual int SetErrorMessage(DiameterScholarAttribute<diameter_utf8string_t> &errorMessage)=0;
+  virtual int SetErrorMessage(AAA_ScholarAttribute<diameter_utf8string_t> &errorMessage)=0;
 
-  virtual int SetMipRegReply(DiameterScholarAttribute<diameter_octetstring_t> &reply)=0;
+  virtual int SetMipRegReply(AAA_ScholarAttribute<diameter_octetstring_t> &reply)=0;
 
  // is called if MN address does not appear in HAR
- virtual int SetMipMnAddress(DiameterScholarAttribute<diameter_address_t> &address)=0;
+ virtual int SetMipMnAddress(AAA_ScholarAttribute<diameter_address_t> &address)=0;
 
   // Must be populated by HA
-  virtual int SetAcctMultiSessionId( DiameterScholarAttribute<diameter_utf8string_t> &acctMultiSessionId)=0;
+  virtual int SetAcctMultiSessionId( AAA_ScholarAttribute<diameter_utf8string_t> &acctMultiSessionId)=0;
 
 
   inline AAA_JobData& JobData() { return *handle.Job().Data(); }
@@ -164,12 +164,12 @@ class DiameterMip4HaServerStateMachine :
   {
     if (!AAA_EventQueueJob::ExistBacklog())
       {
-	AAA_LOG((LM_ERROR, "%N: no backlog to serve."));
+	AAA_LOG(LM_ERROR, "%N: no backlog to serve.");
 	return 0;
       }
 
     // Obtain the event to execute.
-    AAA_Event ev = 0;
+    AAA_Event ev;
     AAA_EventQueueJob::Dequeue(ev);
 
     bool existBacklog = AAA_EventQueueJob::ExistBacklog();

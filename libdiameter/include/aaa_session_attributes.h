@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -34,20 +34,22 @@
 #ifndef __AAA_SESSION_ATTRIBUTES_H__
 #define __AAA_SESSION_ATTRIBUTES_H__
 
-#include "diameter_parser.h"
+#define AAA_SESSION_DEBUG 0
+
+#include "diameter_parser_api.h"
 
 template <typename T>
-class DiameterNegotiatedAttribute
+class AAA_NegotiatedAttribute
 {
  public:
-  DiameterNegotiatedAttribute() : 
+  AAA_NegotiatedAttribute() : 
        isNegotiated(false) {
   }
-  DiameterNegotiatedAttribute(T &val) : 
+  AAA_NegotiatedAttribute(T &val) : 
        value(val), 
        isNegotiated(false) {
   }
-  virtual ~DiameterNegotiatedAttribute() {
+  virtual ~AAA_NegotiatedAttribute() {
   }
   inline void Clear() { 
       isNegotiated = false; 
@@ -75,9 +77,9 @@ class DiameterNegotiatedAttribute
   bool isNegotiated;
 };
 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionCounter {
+class DIAMETERBASEPROTOCOL_EXPORT AAA_SessionCounter {
      public:
-        DiameterSessionCounter(diameter_unsigned32_t h = 0,
+        AAA_SessionCounter(diameter_unsigned32_t h = 0,
                            diameter_unsigned32_t l = 0) :
             m_High(h),
             m_Low(l) {
@@ -88,16 +90,16 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionCounter {
         diameter_unsigned32_t &Low()  {
             return m_Low;
         }
-        int operator=(DiameterSessionCounter &cntr) {
+        int operator=(AAA_SessionCounter &cntr) {
             High() = cntr.High();
             Low() = cntr.Low();
             return (true);
         }
-        int operator==(DiameterSessionCounter &cntr) {
+        int operator==(AAA_SessionCounter &cntr) {
             return ((m_High == cntr.High()) &&
                     (m_Low == cntr.Low()));
         }
-        int operator<(DiameterSessionCounter &cntr) {
+        int operator<(AAA_SessionCounter &cntr) {
            if (m_High < cntr.High()) {
               return (true);
            }
@@ -124,17 +126,15 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionCounter {
         diameter_unsigned32_t m_Low;
 };
 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionId : 
-    public DiameterSessionCounter 
-{
+class DIAMETERBASEPROTOCOL_EXPORT AAA_SessionId : public AAA_SessionCounter {
     public:
-        DiameterSessionId() {
+        AAA_SessionId() {
         }
-        virtual ~DiameterSessionId() {
+        virtual ~AAA_SessionId() {
         }
-        bool operator==(DiameterSessionId &id) {
-            if ((DiameterSessionCounter&)(*this) ==
-                (DiameterSessionCounter&)id) {
+        bool operator==(AAA_SessionId &id) {
+            if ((AAA_SessionCounter&)(*this) ==
+                (AAA_SessionCounter&)id) {
                 if (DiameterId() == id.DiameterId()) {
                     if (OptionalValue().length() > 0) {
                         if (OptionalValue() == 
@@ -149,7 +149,7 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionId :
             }
             return false;
         }
-        bool operator=(DiameterSessionId &id) {
+        bool operator=(AAA_SessionId &id) {
             High() = id.High();
             Low() = id.Low();
             DiameterId() = id.DiameterId();
@@ -165,32 +165,31 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionId :
         bool IsEmpty() {
             return (m_DiameterId.length() == 0) ? true : false;
         }
-        AAAReturnCode Get(DiameterMsg &msg);
-        AAAReturnCode Set(DiameterMsg &msg);
-        void Dump();
-        void Dump(std::string &dump);
+        AAAReturnCode Get(AAAMessage &msg);
+        AAAReturnCode Set(AAAMessage &msg);
+        void Dump(char *buf = NULL);
     private:
         std::string m_DiameterId;
         std::string m_OptionalVal;
 };
 
-class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionAttributes :
-    public AAA_JobData
+class DIAMETERBASEPROTOCOL_EXPORT AAA_SessionAttributes : 
+    public AAA_JobData 
 {
     public:
-        DiameterScholarAttribute<std::string> &DestinationHost() {
+        AAA_ScholarAttribute<std::string> &DestinationHost() {
             return m_DestinationHost;
         }
-        DiameterScholarAttribute<std::string> &DestinationRealm() {
+        AAA_ScholarAttribute<std::string> &DestinationRealm() {
             return m_DestinationRealm;
         }
-        DiameterScholarAttribute<std::string> &Username() {
+        AAA_ScholarAttribute<std::string> &Username() {
             return m_Username;
         }
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> &SessionTimeout() {
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> &SessionTimeout() {
             return m_SessionTimeout;
         }
-        DiameterSessionId &SessionId() {
+        AAA_SessionId &SessionId() {
             return m_SessionId;
         }
         diameter_unsigned32_t &LastTxHopId() {
@@ -208,84 +207,84 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterSessionAttributes :
         diameter_unsigned32_t &ApplicationId() {
             return m_ApplicationId;
         }
-        void MsgIdTxMessage(DiameterMsg &msg);
-        bool MsgIdRxMessage(DiameterMsg &msg);
+        void MsgIdTxMessage(AAAMessage &msg);
+        bool MsgIdRxMessage(AAAMessage &msg);
 
     private:
-        DiameterSessionId m_SessionId;            // session id (RTM)
+        AAA_SessionId m_SessionId;            // session id (RTM)
         diameter_unsigned32_t m_LastTxHopId;
         diameter_unsigned32_t m_LastTxEndId;
         diameter_unsigned32_t m_LastRxHopId;
         diameter_unsigned32_t m_LastRxEndId;
         diameter_unsigned32_t m_ApplicationId;
-        DiameterScholarAttribute<std::string> m_DestinationHost;
-        DiameterScholarAttribute<std::string> m_DestinationRealm;
-        DiameterScholarAttribute<std::string> m_Username;
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> m_SessionTimeout;
+        AAA_ScholarAttribute<std::string> m_DestinationHost;
+        AAA_ScholarAttribute<std::string> m_DestinationRealm;
+        AAA_ScholarAttribute<std::string> m_Username;
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> m_SessionTimeout;
 };
 
-class DiameterAuthSessionAttributes :
-    public DiameterSessionAttributes
+class AAA_AuthSessionAttributes : 
+    public AAA_SessionAttributes
 {
     public:
-        DiameterScholarAttribute<DiameterReAuthValue> &ReAuthRequestValue() {
+        AAA_ScholarAttribute<AAA_ReAuthValue> &ReAuthRequestValue() {
             return m_ReAuthRequestValue;
         }
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> &AuthSessionState() {
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> &AuthSessionState() {
             return m_AuthSessionState;
         }
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> &AuthLifetime() {
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> &AuthLifetime() {
             return m_AuthLifetime;
         }
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> &AuthGrace() {
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> &AuthGrace() {
             return m_AuthGrace;
         }
 
     private:
-        DiameterScholarAttribute<DiameterReAuthValue> m_ReAuthRequestValue;
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> m_AuthSessionState;
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> m_AuthLifetime;
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> m_AuthGrace;
+        AAA_ScholarAttribute<AAA_ReAuthValue> m_ReAuthRequestValue;
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> m_AuthSessionState;
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> m_AuthLifetime;
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> m_AuthGrace;
 };
 
-class DiameterAcctSessionAttributes :
-    public DiameterSessionAttributes
+class AAA_AcctSessionAttributes : 
+    public AAA_SessionAttributes
 {
     public:
-        DiameterScholarAttribute<diameter_unsigned64_t> &SubSessionId() {
+        AAA_ScholarAttribute<diameter_unsigned64_t> &SubSessionId() {
             return m_SubSessionId;
         }
-        DiameterNegotiatedAttribute<diameter_enumerated_t> &RealtimeRequired() {
+        AAA_NegotiatedAttribute<diameter_enumerated_t> &RealtimeRequired() {
             return m_RealtimeRequired;
         }
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> &InterimInterval() {
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> &InterimInterval() {
             return m_InterimInterval;
         }
-        DiameterScholarAttribute<diameter_unsigned32_t> &RecordType() {
+        AAA_ScholarAttribute<diameter_unsigned32_t> &RecordType() {
             return m_RecordType;
         }
-        DiameterScholarAttribute<diameter_unsigned32_t> &RecordNumber() {
+        AAA_ScholarAttribute<diameter_unsigned32_t> &RecordNumber() {
             return m_RecordNumber;
         }
-        DiameterScholarAttribute<diameter_octetstring_t> &RadiusAcctSessionId() {
+        AAA_ScholarAttribute<diameter_octetstring_t> &RadiusAcctSessionId() {
             return m_RadiusAcctSessionId;
         }
-        DiameterScholarAttribute<diameter_utf8string_t> &MultiSessionId() {
+        AAA_ScholarAttribute<diameter_utf8string_t> &MultiSessionId() {
             return m_MultiSessionId;
         }
-        DiameterScholarAttribute<bool> &BackwardCompatibility() {
+        AAA_ScholarAttribute<bool> &BackwardCompatibility() {
             return m_BackwardCompatibilityEnabled;
         }
 
     private:
-        DiameterScholarAttribute<diameter_unsigned64_t> m_SubSessionId;
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> m_RealtimeRequired;
-        DiameterNegotiatedAttribute<diameter_unsigned32_t> m_InterimInterval;
-        DiameterScholarAttribute<diameter_unsigned32_t> m_RecordType;
-        DiameterScholarAttribute<diameter_unsigned32_t> m_RecordNumber;
-        DiameterScholarAttribute<diameter_octetstring_t> m_RadiusAcctSessionId;
-        DiameterScholarAttribute<diameter_utf8string_t> m_MultiSessionId;
-        DiameterScholarAttribute<bool> m_BackwardCompatibilityEnabled;
+        AAA_ScholarAttribute<diameter_unsigned64_t> m_SubSessionId;
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> m_RealtimeRequired;
+        AAA_NegotiatedAttribute<diameter_unsigned32_t> m_InterimInterval;
+        AAA_ScholarAttribute<diameter_unsigned32_t> m_RecordType;
+        AAA_ScholarAttribute<diameter_unsigned32_t> m_RecordNumber;
+        AAA_ScholarAttribute<diameter_octetstring_t> m_RadiusAcctSessionId;
+        AAA_ScholarAttribute<diameter_utf8string_t> m_MultiSessionId;
+        AAA_ScholarAttribute<bool> m_BackwardCompatibilityEnabled;
 };
 
 #endif

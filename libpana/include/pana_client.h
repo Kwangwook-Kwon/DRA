@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -36,45 +36,75 @@
 
 #include "pana_exports.h"
 #include "pana_session.h"
+#include "pana_provider_info.h"
+#include "pana_dhcp_bootstrap.h"
 
-class PANA_EXPORT PANA_ClientEventInterface :
-   public PANA_SessionEventInterface
+typedef union {
+    struct {
+        ACE_UINT32 PcapNotSupported   :  1;
+        ACE_UINT32 PpacNotSupported   :  1;
+        ACE_UINT32 BindSuccess        :  1;
+        ACE_UINT32 Reserved           : 29;
+    } i;
+    ACE_UINT32 p;
+} PANA_ClientSupportFlags;
+
+class PANA_EXPORT PANA_ClientEventInterface : public PANA_SessionEventInterface
 {
    public:
-      virtual void EapRequest(AAAMessageBlock *request) = 0;
+      virtual void ChooseISP(const PANA_CfgProviderList &list,
+                             PANA_CfgProviderInfo *&choice) = 0;
+      virtual void EapRequest(AAAMessageBlock *request, bool nap) = 0;
+      virtual bool ResumeSession() = 0;
 };
 
-class PANA_EXPORT PANA_Client :
-   public PANA_Session
+class PANA_EXPORT PANA_Client : public PANA_Session
 {
    public:
       PANA_Client(PANA_SessionTxInterface &tp,
                   PANA_SessionTimerInterface &tm,
                   PANA_ClientEventInterface &ev);
 
+      virtual void LoadLocalAddress();
+      virtual void IspSelection(PANA_Message *psr);
+
       virtual void NotifyEapRestart();
       virtual void NotifyAuthorization();
-      virtual void NotifyEapRequest(pana_octetstring_t &payload);
+      virtual void NotifyEapRequest(diameter_octetstring_t &payload);
+      
+      virtual bool IsSessionResumed();
 
-      virtual void TxPCI();
-      virtual void TxPSA(bool eapOptimization);
+      virtual void TxPDI();
+      virtual void TxPSA(PANA_Message *psr);
       virtual void TxPAR();
       virtual void TxPAN(bool eapPiggyBack);
-      virtual void TxPBA(bool authSuccess);
-      virtual void TxPRR();
+      virtual void TxPFEA(bool closed);
+      virtual void TxPBA(bool close);
+      virtual void TxPRAR();
 
       virtual void RxPSR();
-      virtual void RxPAR();
+      virtual void RxPAR(bool eapReAuth);
       virtual void RxPAN();
+      virtual void RxPFER();
       virtual void RxPBR();
-      virtual void RxPRA();
+      virtual void RxPRAA();
 
+      PANA_ClientSupportFlags &SupportFlags() {
+          return m_Flags;
+      }
+      PANA_PacDhcpSecurityAssociation &DhcpBootstrap() {
+          return m_Dhcp;
+      }
       PANA_SessionTimerInterface &Timer() {
           return m_Timer;
       }
 
    private:
-      virtual void TxPrepareMessage(PANA_Message &msg);
+      virtual void TxFormatAddress(PANA_Message &msg);      
+
+   private:
+      PANA_PacDhcpSecurityAssociation m_Dhcp;
+      PANA_ClientSupportFlags m_Flags;
 };
 
 #endif /* __PANA_CLIENT_H__ */

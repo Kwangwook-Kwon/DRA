@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -34,6 +34,8 @@
 #ifndef __AAA_SESSION_CLIENT_H__
 #define __AAA_SESSION_CLIENT_H__
 
+#define AAA_SESSION_DEBUG 0
+
 #include "aaa_session_auth_client_fsm.h"
 #include "aaa_session_acct_client_fsm.h"
 
@@ -44,44 +46,45 @@
 /// or derived from this object to create a diameter
 /// client session.
 ///
-class DIAMETERBASEPROTOCOL_EXPORT DiameterClientAuthSession :
-    public DiameterAuthSession 
+class DIAMETERBASEPROTOCOL_EXPORT AAA_ClientAuthSession : 
+    public AAA_AuthSession 
 {
     public:
-        DiameterClientAuthSession(AAA_Task &task,
-                                  diameter_unsigned32_t id) :
-           DiameterAuthSession(id),
+        AAA_ClientAuthSession(AAA_Task &task,
+                              diameter_unsigned32_t id) :
+           AAA_AuthSession(id),
            m_Fsm(task, *this) {
         }
-        virtual ~DiameterClientAuthSession(); 
+        virtual ~AAA_ClientAuthSession() {
+        }
 
         // This function initializes an AAA client session
         AAAReturnCode Begin(char *optionValue = 0);
 
         /// This fucntion sends a message to the peer session
-        virtual AAAReturnCode Send(std::auto_ptr<DiameterMsg> msg);
+        virtual AAAReturnCode Send(std::auto_ptr<AAAMessage> msg);
 
         /// This function terminates the AAA session
         AAAReturnCode End();
 
    protected:
         /// This fucntion is called by the internal message rx
-        virtual void RxRequest(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxRequest(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxAnswer(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxAnswer(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxError(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxError(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called internally to handle messages
-        virtual AAAReturnCode RxDelivery(std::auto_ptr<DiameterMsg> msg);
+        virtual AAAReturnCode RxDelivery(std::auto_ptr<AAAMessage> msg);
 
         /// This function resets the current session attributes to default
         virtual AAAReturnCode Reset();
 
     private:
-        DiameterAuthSessionClientStateMachine m_Fsm;
+        AAA_AuthSessionClientStateMachine m_Fsm;
 };
 
 ///
@@ -94,17 +97,17 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterClientAuthSession :
 /// also responsible for creating instance of 
 /// these classes.
 ///
-class DIAMETERBASEPROTOCOL_EXPORT DiameterClientAcctSession :
-    public DiameterSessionIO
+class DIAMETERBASEPROTOCOL_EXPORT AAA_ClientAcctSession :
+    public AAA_SessionIO
 {
     public:
-	typedef std::map<diameter_unsigned64_t, DiameterAcctSession*> 
+	typedef std::map<diameter_unsigned64_t, AAA_AcctSession*> 
                    AAA_SubSessionMap;
     public:
-        DiameterClientAcctSession(AAA_Task &task,
+        AAA_ClientAcctSession(AAA_Task &task,
                               diameter_unsigned32_t id,
                               char *optionalValue = 0);
-        virtual ~DiameterClientAcctSession();
+        virtual ~AAA_ClientAcctSession();
         AAA_Task &Task() {
            return m_Task;
 	}
@@ -113,27 +116,27 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterClientAcctSession :
 	}
 
         /// Registers an instance of a sub session
-        AAAReturnCode RegisterSubSession(DiameterAcctSession &s);
+        AAAReturnCode RegisterSubSession(AAA_AcctSession &s);
 
         /// De-registers a sub session
         AAAReturnCode RemoveSubSession(diameter_unsigned64_t &id);
 
     private:
         /// This fucntion sends a message to the peer session
-        virtual AAAReturnCode Send(std::auto_ptr<DiameterMsg> msg);
+        virtual AAAReturnCode Send(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxRequest(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxRequest(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxAnswer(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxAnswer(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxError(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxError(std::auto_ptr<AAAMessage> msg);
 
     private:
         AAA_Task &m_Task;
-        DiameterSessionId m_SessionId;
+        AAA_SessionId m_SessionId;
         diameter_unsigned32_t m_ApplicationId;
         diameter_unsigned64_t m_SubSessionId;
 	AAA_SubSessionMap m_SubSessionMap;
@@ -145,18 +148,18 @@ class DIAMETERBASEPROTOCOL_EXPORT DiameterClientAcctSession :
 /// exits.
 ///
 template<class REC_COLLECTOR>
-class DiameterClientAcctSubSession :
-    public DiameterAcctSession
+class AAA_ClientAcctSubSession :
+    public AAA_AcctSession
 {
     public:
-        DiameterClientAcctSubSession(DiameterClientAcctSession &parent) :
-	   DiameterAcctSession(parent.ApplicationId()),
+        AAA_ClientAcctSubSession(AAA_ClientAcctSession &parent) :
+	   AAA_AcctSession(parent.ApplicationId()),
            m_ParentSession(parent),
            m_Fsm(m_ParentSession.Task(), *this, m_RecCollector) {
            m_ParentSession.RegisterSubSession(*this);
            m_Fsm.Start();
         }
-        virtual ~DiameterClientAcctSubSession() {
+        virtual ~AAA_ClientAcctSubSession() {
            m_ParentSession.RemoveSubSession
                   (Attributes().SubSessionId()());
            m_Fsm.Stop();
@@ -174,27 +177,27 @@ class DiameterClientAcctSubSession :
 	}
 
         /// Access function to the parent session
-        DiameterClientAcctSession &Parent() {
+        AAA_ClientAcctSession &Parent() {
 	   return m_ParentSession;
 	}
 
    protected:
         /// This fucntion sends a message to the peer session
-        virtual AAAReturnCode Send(std::auto_ptr<DiameterMsg> msg);
+        virtual AAAReturnCode Send(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxRequest(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxRequest(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxAnswer(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxAnswer(std::auto_ptr<AAAMessage> msg);
 
         /// This fucntion is called by the internal message rx
-        virtual void RxError(std::auto_ptr<DiameterMsg> msg);
+        virtual void RxError(std::auto_ptr<AAAMessage> msg);
 
     private:
-        DiameterClientAcctSession &m_ParentSession;
+        AAA_ClientAcctSession &m_ParentSession;
         REC_COLLECTOR m_RecCollector;
-        DiameterAcctSessionClientStateMachine m_Fsm;
+        AAA_AcctSessionClientStateMachine m_Fsm;
 };
 
 #include "aaa_session_client.inl"

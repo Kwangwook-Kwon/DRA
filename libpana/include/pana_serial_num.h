@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -205,9 +205,7 @@ class PANA_SerialNumber
         }
         static inline ACE_UINT32 GenerateISN(ACE_UINT32 seed = 0)  {
             if (seed == 0) {
-		time_t time_out;                
-		ACE_System_Time::get_local_system_time(time_out);
-		seed = time_out;
+                ACE_System_Time::get_local_system_time(seed);
             }
             // simple time seeded randon number generator
             ACE_OS::srand(seed + ACE_OS::rand());

@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -39,18 +39,24 @@
 #include "pana_session.h"
 #include "pana_channel.h"
 
-// #define PANA_FSM_DEBUG 1
+#define PANA_FSM_DEBUG 0
 
 typedef enum {
   PANA_ST_OFFLINE = 1,
+  PANA_ST_WAIT_EAP_MSG_IN_DISC,
+  PANA_ST_STATEFUL_DISC,
   PANA_ST_WAIT_PAA,
+  PANA_ST_WAIT_PFEA,
+  PANA_ST_WAIT_FAIL_PFEA,
   PANA_ST_WAIT_SUCC_PBA,
   PANA_ST_WAIT_FAIL_PBA,
   PANA_ST_WAIT_EAP_MSG,
   PANA_ST_WAIT_EAP_RESULT,
   PANA_ST_WAIT_EAP_RESULT_CLOSE,
+  PANA_ST_WAIT_1ST_EAP_RESULT,
+  PANA_ST_WAIT_1ST_EAP_RESULT_CLOSE,
   PANA_ST_OPEN,
-  PANA_ST_WAIT_PRA,
+  PANA_ST_WAIT_PRAA,
   PANA_ST_WAIT_PAN_OR_PAR,
   PANA_ST_WAIT_PPA,
   PANA_ST_WAIT_PUA,
@@ -60,13 +66,13 @@ typedef enum {
 } PANA_ST;
 
 typedef enum {
-  PANA_EV_MTYPE_PCI = 1,
+  PANA_EV_MTYPE_PDI = 1,
   PANA_EV_MTYPE_PSR,
   PANA_EV_MTYPE_PSA,
   PANA_EV_MTYPE_PAR,
   PANA_EV_MTYPE_PAN,
-  PANA_EV_MTYPE_PRR,
-  PANA_EV_MTYPE_PRA,
+  PANA_EV_MTYPE_PRAR,
+  PANA_EV_MTYPE_PRAA,
   PANA_EV_MTYPE_PBR,
   PANA_EV_MTYPE_PBA,
   PANA_EV_MTYPE_PPR,
@@ -75,6 +81,8 @@ typedef enum {
   PANA_EV_MTYPE_PTA,
   PANA_EV_MTYPE_PER,
   PANA_EV_MTYPE_PEA,
+  PANA_EV_MTYPE_PFER,
+  PANA_EV_MTYPE_PFEA,
   PANA_EV_MTYPE_PUR,
   PANA_EV_MTYPE_PUA
 } PANA_MSG_TYPE;
@@ -95,35 +103,32 @@ typedef enum {
   PANA_EV_APP_REAUTH,
   PANA_EV_APP_TERMINATE,
   PANA_EV_APP_AUTH_USER,
-  PANA_EV_APP_UPDATE,
+  PANA_EV_APP_NOTIFICATION,
   PANA_EV_APP_PING
 } PANA_APP_EVENT;
 
 typedef enum {
-  PANA_RESULT_CODE_UNSET = 1,
-  PANA_RESULT_CODE_FAIL,
-  PANA_RESULT_CODE_SUCCESS
-} PANA_RESULT_CODE;
+  PANA_EAP_RESULT_UNSET = 1,
+  PANA_EAP_RESULT_FAIL,
+  PANA_EAP_RESULT_SUCCESS
+} PANA_EAP_RESULT;
 
 template<class EVENT_VAR, class FSM>
 class FsmTimer : public PANA_SessionTimerInterface {
    public:
-      FsmTimer(FSM &fsm) :
-          m_fsm(fsm) {
+      FsmTimer(FSM &fsm) : 
+          m_fsm(fsm) { 
       }
       void Schedule(PANA_TID tid, ACE_UINT32 sec) {
           EVENT_VAR ev;
           switch (tid) {
-             case PANA_TID_RETRY:
-                 ev.Do_ReTransmission();
+             case PANA_TID_RETRY: 
+                 ev.Do_ReTransmission(); 
                  break;
-             case PANA_TID_SESSION:
+             case PANA_TID_SESSION: 
                  ev.Do_SessTimeout();
                  break;
              case PANA_TID_EAP_RESP:
-                 if (PANA_CFG_PAC().m_EapPiggyback) {
-                     ev.EnableCfg_EapPiggyback();
-                 }
                  ev.Event_Eap(PANA_EV_EAP_RESP_TIMEOUT);
                  break;
           }
@@ -132,16 +137,13 @@ class FsmTimer : public PANA_SessionTimerInterface {
       void Cancel(PANA_TID tid) {
           EVENT_VAR ev;
           switch (tid) {
-             case PANA_TID_RETRY:
-                 ev.Do_ReTransmission();
+             case PANA_TID_RETRY: 
+                 ev.Do_ReTransmission(); 
                  break;
-             case PANA_TID_SESSION:
+             case PANA_TID_SESSION: 
                  ev.Do_SessTimeout();
                  break;
              case PANA_TID_EAP_RESP:
-                 if (PANA_CFG_PAC().m_EapPiggyback) {
-                     ev.EnableCfg_EapPiggyback();
-                 }
                  ev.Event_Eap(PANA_EV_EAP_RESP_TIMEOUT);
                  break;
           }
@@ -159,18 +161,36 @@ class PANA_EXPORT PANA_StateMachine :
    public AAA_StateMachineWithTimer<ARG>, AAA_Job
 {
    private:
+      class EventQueue : private std::list<AAA_Event> {
+         public:
+            void Enqueue(AAA_Event ev) {
+                AAA_MutexScopeLock guard(m_Lock);
+                push_back(ev);
+            }
+            AAA_Event Dequeue() {
+                AAA_MutexScopeLock guard(m_Lock);
+                AAA_Event ev = front();
+                pop_front(); 
+                return ev;
+            }
+         private: 
+            ACE_Mutex m_Lock;
+      };
+
       class FsmTxChannel : public PANA_SessionTxInterface {
          public:
-            FsmTxChannel(CHANNEL &ch) :
-               m_Channel(ch) {
+            FsmTxChannel(CHANNEL &ch) : 
+               m_Channel(ch) { 
             }
             virtual void Send(boost::shared_ptr<PANA_Message> msg) {
                m_Channel.Send(msg);
             }
+            virtual PANA_DeviceIdContainer &GetLocalAddress() {
+               return m_Channel.GetLocalAddress();
+            }
          private:
-            CHANNEL &m_Channel;
+            CHANNEL &m_Channel; 
       };
-
    public:
 
       virtual void InitializeMsgMaps() = 0;
@@ -184,8 +204,7 @@ class PANA_EXPORT PANA_StateMachine :
          Schedule(this);
       }
       virtual void Receive(PANA_Message &msg) {
-         m_RxMsgQueue.Enqueue(&msg);
-         Schedule(this);
+         m_MsgHandlers.Receive(msg);
       }
       virtual void Error(int err) { 
          Stop(); 
@@ -220,42 +239,35 @@ class PANA_EXPORT PANA_StateMachine :
                         CHANNEL &udp) :
 	 AAA_StateMachineWithTimer<ARG>(arg, table, *node.Task().reactor(), "PANA"),
          m_GroupedJob(AAA_GroupedJob::Create(node.Job(), (AAA_JobData*)this)),
+         m_MsgHandlers(m_GroupedJob.Job()),
          m_TxChannel(udp) {
       }
       virtual ~PANA_StateMachine() { }
 
       virtual int Serve() {
+         AAA_Event ev = m_EventQueue.Dequeue();
+         try {
+#if PANA_FSM_DEBUG
+             int prevState = AAA_StateMachineWithTimer<ARG>::state;
+#endif
 
-         AAA_MutexScopeLock lock(m_FsmLock);
+             AAA_MutexScopeLock guard(m_FsmLock);
+             AAA_StateMachineWithTimer<ARG>::Event(ev);
 
-         if (! m_RxMsgQueue.IsEmpty()) {
-             PANA_Message *msg = m_RxMsgQueue.Dequeue();
-             m_MsgHandlers.Receive(*msg);
+#if PANA_FSM_DEBUG
+             ACE_DEBUG((LM_DEBUG, "(%P|%t) From state: %s to %s\n",
+                        StrState(prevState),
+                        StrState(AAA_StateMachineWithTimer<ARG>::state)));
+#endif
          }
-
-         if (! m_EventQueue.IsEmpty()) {
-             AAA_Event ev = m_EventQueue.Dequeue();
-             try {
-#if PANA_FSM_DEBUG
-                 int prevState = AAA_StateMachineWithTimer<ARG>::state;
-                 AAA_LOG((LM_DEBUG, "(%P|%t) Event: %d occurring\n", ev));
-#endif
-                 AAA_StateMachineWithTimer<ARG>::Event(ev);
-#if PANA_FSM_DEBUG
-                 AAA_LOG((LM_DEBUG, "(%P|%t) From state: %s to %s\n",
-                            StrState(prevState),
-                            StrState(AAA_StateMachineWithTimer<ARG>::state)));
-#endif
-             }
-             catch (PANA_Exception &e) {
-                 AAA_LOG((LM_ERROR, "(%P|%t) Error[%d]: %s\n",
-                            e.code(), e.description().data()));
-                 Stop();
-             }
-             catch (...) {
-                 AAA_LOG((LM_ERROR, "(%P|%t) Unknown error during FSM\n"));
-                 Stop();
-             }
+         catch (PANA_Exception &e) {
+             ACE_DEBUG((LM_ERROR, "(%P|%t) Error[%d]: %s\n",
+                        e.code(), e.description().data()));
+             Stop();
+         }
+         catch (...) {
+             ACE_DEBUG((LM_ERROR, "(%P|%t) Unknown error during FSM\n"));
+             Stop();
          }
          return (0);
       }
@@ -267,8 +279,7 @@ class PANA_EXPORT PANA_StateMachine :
       }
 
    protected:
-      AAA_ProtectedQueue<AAA_Event> m_EventQueue;
-      AAA_ProtectedQueue<PANA_Message*> m_RxMsgQueue;
+      EventQueue m_EventQueue;
       AAA_JobHandle<AAA_GroupedJob> m_GroupedJob;
       PANA_SessionRxInterfaceTable<ARG> m_MsgHandlers;
       FsmTxChannel m_TxChannel;
@@ -276,17 +287,21 @@ class PANA_EXPORT PANA_StateMachine :
 
    private:
        const char *StrState(int state) {
-           static char *str[] = { "OFFLINE",
-                                  "WAIT_EAP_MSG_IN_INIT",
-                                  "WAIT_PAC_IN_INIT",
+           static char *str[] = { "OFFLINE",       
+                                  "WAIT_EAP_MSG_IN_DISC",
+                                  "STATEFUL_DISC", 
                                   "WAIT_PAA",
-                                  "WAIT_SUCC_PBA",
+                                  "WAIT_PFEA",     
+                                  "WAIT_FAIL_PFEA",
+                                  "WAIT_SUCC_PBA", 
                                   "WAIT_FAIL_PBA",
-                                  "WAIT_EAP_MSG",
+                                  "WAIT_EAP_MSG",  
                                   "WAIT_EAP_RESULT",
-                                  "WAIT_EAP_RESULT_CLOSE",
+                                  "WAIT_EAP_RESULT_CLOSE", 
+                                  "WAIT_1ST_EAP_RESULT",
+                                  "WAIT_1ST_EAP_RESULT_CLOSE",
                                   "OPEN",
-                                  "WAIT_PRA",
+                                  "WAIT_PRAA",
                                   "WAIT_PAN_OR_PAR",
                                   "WAIT_PPA",
                                   "WAIT_PUA",
@@ -336,10 +351,10 @@ class PANA_SessionRxStateFilter : public PANA_SessionRxInterface<ARG>
 
    protected:
       SESSION &m_Session;
-
+    
    private:
       PANA_ST *m_AllowedStates;
-      int m_Count;
+      int m_Count; 
 };
 
 #endif // __PANA_FSM_H__

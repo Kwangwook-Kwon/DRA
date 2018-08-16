@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -72,13 +72,13 @@ class HAR_Handler:public AAASessionMessageHandler
     {}
   private:
     DiameterMip4HaServerSession<SpecificHaServerSession >  &session;
-    AAAReturnCode HandleMessage (DiameterMsg &msg)
+    AAAReturnCode HandleMessage (AAAMessage &msg)
     {
 
       // Header flag check.
       if (!msg.hdr.flags.r)
 	{
-	  AAA_LOG((LM_ERROR, "[%N] Received HAA instead of HAR.\n"));
+	  AAA_LOG(LM_ERROR, "[%N] Received HAA instead of HAR.\n");
 	  return AAA_ERR_UNKNOWN_CMD;
 	}
 
@@ -92,7 +92,7 @@ class HAR_Handler:public AAASessionMessageHandler
       }
       catch ( DiameterParserError ) 
 	{
-	  AAA_LOG((LM_ERROR, "[%N] Payload error.\n"));
+	  AAA_LOG(LM_ERROR, "[%N] Payload error.\n");
 	  return AAA_ERR_PARSING_ERROR;
 	}
 #ifdef PRINT_MSG_CONTENT
@@ -123,7 +123,7 @@ class HAR_Handler:public AAASessionMessageHandler
     // Register the HAR message handler
     if (RegisterMessageHandler( requestHandler) != AAA_ERR_SUCCESS)
     {
-      AAA_LOG((LM_ERROR, "[%N] HAR_Handler registration failed.\n"));
+      AAA_LOG(LM_ERROR, "[%N] HAR_Handler registration failed.\n");
       throw -1; 
     }
 
@@ -140,16 +140,16 @@ class HAR_Handler:public AAASessionMessageHandler
   DiameterMip4HaServerSession* Self() { return this; }
 
   /// Reimplemented from AAAServerSession. 
-  AAAReturnCode HandleMessage(DiameterMsg &msg)
+  AAAReturnCode HandleMessage(AAAMessage &msg)
   {
-    AAA_LOG((LM_ERROR, "[%N] Unknown command.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Unknown command.\n");
     return AAA_ERR_UNKNOWN_CMD;
   }
 
   /// Reimplemented from AAAServerSession. 
   AAAReturnCode HandleDisconnect()
   {
-    AAA_LOG((LM_ERROR, "[%N] Session termination event received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Session termination event received.\n");
     Notify(DiameterMip4HaServerStateMachine::EvSgDisconnect);
     return AAA_ERR_SUCCESS; 
   }
@@ -157,7 +157,7 @@ class HAR_Handler:public AAASessionMessageHandler
   /// Reimplemented from AAAServerSession.
   AAAReturnCode HandleSessionTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Session timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Session timeout received.\n");
     Notify(DiameterMip4HaServerStateMachine::EvSgSessionTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -165,7 +165,7 @@ class HAR_Handler:public AAASessionMessageHandler
   /// Reimplemented from AAAServerSession.
   AAAReturnCode HandleAuthLifetimeTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Timeout received.\n");
     Notify(DiameterMip4HaServerStateMachine::EvSgAuthLifetimeTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -173,7 +173,7 @@ class HAR_Handler:public AAASessionMessageHandler
   /// Reimplemented from AAAServerSession.
   AAAReturnCode HandleAuthGracePeriodTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] Timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] Timeout received.\n");
     Notify(DiameterMip4HaServerStateMachine::EvSgAuthGracePeriodTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -185,7 +185,7 @@ class HAR_Handler:public AAASessionMessageHandler
   /// event handler.
   AAAReturnCode HandleTimeout()
   { 
-    AAA_LOG((LM_ERROR, "[%N] General timeout received.\n"));
+    AAA_LOG(LM_ERROR, "[%N] General timeout received.\n");
     Notify(DiameterMip4HaServerStateMachine::EvSgTimeout);
     return AAA_ERR_SUCCESS; 
   }
@@ -225,7 +225,7 @@ class HAR_Handler:public AAASessionMessageHandler
   }
 
   /****
-  int SetHaMnKey(  DiameterScholarAttribute<diameter_octetstring_t> &mipSessionKey)
+  int SetHaMnKey(  AAA_ScholarAttribute<diameter_octetstring_t> &mipSessionKey)
   {
     diameter_octetstring_t _mipSessionKey;
     int rc = specificAaaSServerSession.SetHaMnKey( _mipSessionKey);
@@ -234,41 +234,41 @@ class HAR_Handler:public AAASessionMessageHandler
     return rc;
   }
   ********/
-  int SetErrorMessage(DiameterScholarAttribute<diameter_utf8string_t> &errorMessage)
+  int SetErrorMessage(AAA_ScholarAttribute<diameter_utf8string_t> &errorMessage)
   {
     diameter_utf8string_t _errorMessage;
     int rc;
-    if ((rc = specificHaServerSession.SetErrorMessage( _errorMessage)))
+    if (rc = specificHaServerSession.SetErrorMessage( _errorMessage))
       errorMessage.Set( _errorMessage);
     return rc;
   }
 
-  int SetMipRegReply(DiameterScholarAttribute<diameter_octetstring_t> &reply)
+  int SetMipRegReply(AAA_ScholarAttribute<diameter_octetstring_t> &reply)
   {
     diameter_octetstring_t _reply="";
     int rc=0;
-    if ((rc = specificHaServerSession.SetMipRegReply( _reply )))
+    if ( rc = specificHaServerSession.SetMipRegReply( _reply ))
       reply.Set( _reply);
     return rc;
   }
 
   // is called if MN address does not appear in HAR
-  int SetMipMnAddress(DiameterScholarAttribute<diameter_address_t> &address)
+  int SetMipMnAddress(AAA_ScholarAttribute<diameter_address_t> &address)
   {
     diameter_address_t _address;
     int rc;
-    if ((rc = specificHaServerSession.SetMipMnAddress( _address)))
+    if ( rc = specificHaServerSession.SetMipMnAddress( _address) )
       address.Set(_address);
     return rc;
   }
 
   // Must be populated by HA
-  int SetAcctMultiSessionId( DiameterScholarAttribute<diameter_utf8string_t> &acctMultiSessionId)
+  int SetAcctMultiSessionId( AAA_ScholarAttribute<diameter_utf8string_t> &acctMultiSessionId)
   {
     diameter_utf8string_t _acctMultiSessionId;
     int rc;
-    if ((rc =
-	 specificHaServerSession.SetAcctMultiSessionId( _acctMultiSessionId)))
+    if ( rc =
+	 specificHaServerSession.SetAcctMultiSessionId( _acctMultiSessionId))
       acctMultiSessionId.Set( _acctMultiSessionId);
     return rc;
   }

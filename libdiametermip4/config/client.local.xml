@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE configuration SYSTEM "configuration.dtd">
-<configuration>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation='configuration.xsd'>
 
 <!-- check attributes: vendor_id acc_appl_id role metric , MT sep. 15 2004 -->
 
@@ -16,10 +16,16 @@
       <acct_application_id>4</acct_application_id>
       <vendor_specific_application_id>
           <vendor_id>31</vendor_id>
+          <vendor_id>32</vendor_id>
+          <vendor_id>33</vendor_id>
           <auth_application_id>2</auth_application_id>
+          <acct_application_id>4</acct_application_id>
       </vendor_specific_application_id>
       <vendor_specific_application_id>
           <vendor_id>41</vendor_id>
+          <vendor_id>42</vendor_id>
+          <vendor_id>43</vendor_id>
+          <auth_application_id>5</auth_application_id>
           <acct_application_id>6</acct_application_id>
       </vendor_specific_application_id>
    </general>
@@ -29,23 +35,14 @@
    <transport_mngt>
       <identity>mhc.telcordia.com</identity>
       <realm>telcordia.com</realm>
-      <tcp_listen_port>1800</tcp_listen_port>
-      <sctp_listen_port>1801</sctp_listen_port>
-      <use_ipv6>0</use_ipv6>
+      <tcp_port>1801</tcp_port>
+      <tls_port>0</tls_port>
       <watchdog_timeout>3</watchdog_timeout>
-      <reconnect_interval>30</reconnect_interval>
-      <reconnect_max>3</reconnect_max>
-      <request_retransmission_interval>10</request_retransmission_interval>
-      <max_request_retransmission_count>3</max_request_retransmission_count>
-      <receive_buffer_size>2048</receive_buffer_size>
-      <advertised_hostname>mhc01.telcordia.com</advertised_hostname>
-      <advertised_hostname>mhc02.telcordia.com</advertised_hostname>
       <peer_table>
           <expiration_time>1</expiration_time>
           <peer>
               <hostname>aaaserver.telcordias.com</hostname>
               <port>1802</port>
-              <use_sctp>0</use_sctp>
               <tls_enabled>0</tls_enabled>
           </peer>
       </peer_table>
@@ -54,9 +51,8 @@
           <route>
              <realm>telcordias.com</realm>
              <role>1</role>
-             <redirect_usage>0</redirect_usage>
              <application>
-                <application_id>3</application_id>
+                <application_id>0</application_id>
                 <vendor_id>0</vendor_id>
                 <peer_entry>
                     <server>aaaserver.telcordias.com</server>

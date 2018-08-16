@@ -18,7 +18,7 @@ data_DATA = $(MISC)
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-AM_CPPFLAGS = @L_CPPFLAGS@ @L_MPAFLAGS@ \
+AM_CPPFLAGS = @L_CPPFLAGS@ \
               -I@top_srcdir@/include \
               -I@top_srcdir@/libdiamparser \
               -I@top_srcdir@/libodutl/include \
@@ -32,12 +32,17 @@ PANA_HDRS = include/pana_auth_script.h \
             include/pana_client.h \
             include/pana_client_fsm.h \
             include/pana_config_manager.h \
+            include/pana_cookie.h \
             include/pana_defs.h \
+            include/pana_device_id.h \
+            include/pana_dhcp_bootstrap.h \
             include/pana_egress.h \
             include/pana_exceptions.h \
             include/pana_exports.h \
             include/pana_fsm.h \
             include/pana_ingress.h \
+            include/pana_io.h \
+            include/pana_mcast_transport.h \
             include/pana_memory_manager.h \
             include/pana_message.h \
             include/pana_node.h \
@@ -45,33 +50,28 @@ PANA_HDRS = include/pana_auth_script.h \
             include/pana_paa.h \
             include/pana_paa_fsm.h \
             include/pana_paa_factory.h \
-            include/pana_pac_ep_key.h \
-	    include/pana_parser.h \
-	    include/pana_parser_avpvalue.h \
-	    include/pana_parser_dict.h \
             include/pana_pmk_bootstrap.h \
-            include/pana_prf_plus.h \
-            include/pana_psk_bootstrap.h \
+            include/pana_provider_info.h \
             include/pana_security_assoc.h \
             include/pana_serial_num.h \
-            include/pana_session.h
+            include/pana_session.h \
+            include/pana_sid_generator.h \
+            include/pana_udp_transport.h
 
-PANA_SRC  = src/pana_config_manager.cxx \
-            src/pana_client.cxx \
+PANA_SRC  = src/pana_client.cxx \
             src/pana_client_fsm.cxx \
+            src/pana_config_manager.cxx \
+            src/pana_cookie.cxx \
+            src/pana_dhcp_bootstrap.cxx \
             src/pana_egress.cxx \
             src/pana_ingress.cxx \
+            src/pana_message.cxx \
             src/pana_node.cxx \
             src/pana_paa.cxx \
             src/pana_paa_factory.cxx \
             src/pana_paa_fsm.cxx \
-            src/pana_pac_ep_key.cxx \
-            src/pana_parser.cxx \
-            src/pana_parser_avpvalue.cxx \
-            src/pana_parser_dict.cxx \
             src/pana_pmk_bootstrap.cxx \
-            src/pana_prf_plus.cxx \
-            src/pana_psk_bootstrap.cxx \
+            src/pana_provider_info.cxx \
             src/pana_security_assoc.cxx \
             src/pana_session.cxx
 
@@ -79,15 +79,17 @@ includedir = $(prefix)/include/opendiameter/pana
 include_HEADERS = $(PANA_HDRS)
 
 sysconfdir = $(prefix)/etc/opendiameter/pana
-sysconf_DATA = config/dictionary.dtd \
+sysconf_DATA = config/config.xsd \
+               config/dictionary.dtd \
                config/dictionary.xml \
                config/paa.xml \
+               config/paa6.xml \
                config/pac.xml \
-               config/config.dtd \
+               config/pac6.xml \
                config/pana_auth.bat \
                config/shared_secret.bin \
-               config/users.dtd \
-               config/users.xml
+               config/users.xml \
+               config/users.xsd
 
 lib_LTLIBRARIES = libpana.la
 libpana_la_SOURCES = $(PANA_SRC) $(PANA_HDRS) $(PLATFORM_SRC)
@@ -95,31 +97,33 @@ libpana_la_LDFLAGS = -version-info 1:0:0
 libpana_la_AR = $(AR) -qcs
 
 LDADD = @L_LIBS@ \
-        $(top_builddir)/libpana/libpana.la \
-	$(top_builddir)/libodutl/libodutl.la
+        libpana.la \
+	$(top_srcdir)/libodutl/libodutl.la
 
 noinst_PROGRAMS = pana_test1 pana_test2 pana_test3
 
 pana_test1_SOURCES = test/Test1.cxx test/user_db.cxx
-pana_test1_LDADD = $(top_builddir)/libeap/libeap.la \
-		$(top_builddir)/libeap/libeaparchie.la \
-		$(top_builddir)/libpana/libpana.la \
-                $(top_builddir)/libodutl/libodutl.la \
-                @L_LIBS@
+pana_test1_LDADD = @L_LIBS@ \
+                   libpana.la \
+	           $(top_srcdir)/libodutl/libodutl.la \
+	           $(top_srcdir)/libeap/libeap.la \
+	           $(top_srcdir)/libdiamparser/libdiamparser.la
 
 pana_test2_SOURCES = test/Test2.cxx test/user_db.cxx
-pana_test2_LDADD = $(top_builddir)/libeap/libeap.la \
-		$(top_builddir)/libeap/libeaparchie.la \
-		$(top_builddir)/libpana/libpana.la \
-                $(top_builddir)/libodutl/libodutl.la \
-                @L_LIBS@
+pana_test2_LDADD = @L_LIBS@ \
+                   libpana.la \
+	           $(top_srcdir)/libodutl/libodutl.la \
+	           $(top_srcdir)/libeap/libeap.la \
+                   $(top_srcdir)/libeap/libeaparchie.la \
+	           $(top_srcdir)/libdiamparser/libdiamparser.la
 
 pana_test3_SOURCES = test/Test3.cxx test/user_db.cxx
-pana_test3_LDADD = $(top_builddir)/libeap/libeap.la \
-		$(top_builddir)/libeap/libeaparchie.la \
-		$(top_builddir)/libpana/libpana.la \
-                $(top_builddir)/libodutl/libodutl.la \
-                @L_LIBS@
+pana_test3_LDADD = @L_LIBS@ \
+                   libpana.la \
+	           $(top_srcdir)/libodutl/libodutl.la \
+	           $(top_srcdir)/libeap/libeap.la \
+                   $(top_srcdir)/libeap/libeaparchie.la \
+	           $(top_srcdir)/libdiamparser/libdiamparser.la
 
 pkginclude_HEADERS = test/user_db.h
 

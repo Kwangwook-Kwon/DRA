@@ -3,7 +3,7 @@
 /* Open Diameter: Open-source software for the Diameter and               */
 /*                Diameter related protocols                              */
 /*                                                                        */
-/* Copyright (C) 2002-2007 Open Diameter Project                          */
+/* Copyright (C) 2002-2004 Open Diameter Project                          */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -31,7 +31,7 @@
 /*                                                                        */
 /* END_COPYRIGHT                                                          */
 
-/* $Id: diameter_nasreq_aaans_parser.cxx,v 1.7 2006/03/16 17:01:47 vfajardo Exp $ */
+/* $Id: diameter_nasreq_aaans_parser.cxx,v 1.6 2004/10/26 19:53:54 yohba Exp $ */
 /* 
    diameter_nasreq_aaans_parser.cxx
    Diameter AA Answer Parser
@@ -40,34 +40,32 @@
 */
 
 #include "diameter_nasreq_parser.hxx"
-#include "aaa_data_defs.h"
 
-template<> void 
+void 
 AA_AnswerParser::parseAppToRaw()
 {
   AA_AnswerData &data = *getAppData();
-  DiameterMsg &aaaMessage = *getRawData();
+  AAAMessage &aaaMessage = *getRawData();
 
   
-  DiameterDictionaryManager dm;
-  DiameterAvpContainerManager cm;
+  AAADictionaryManager dm;
+  AAAAvpContainerManager cm;
   AAAAvpContainer *c;
                           
   AAACommandCode code;
-  DiameterApplicationId appId;
+  AAAApplicationId appId;
 
   // Obtain Command Code and Application Identifier.
   if (!dm.getCommandCode("AA-Answer", &code, &appId))
     {
-      AAA_LOG((LM_ERROR, "Cannot find Diameter message in dictionary\n."));
-      throw (DIAMETER_DICTIONARY_ERROR);
+      AAA_LOG(LM_ERROR, "Cannot find Diameter message in dictionary\n.");
+      throw (DictionaryError);
       return;
     }
 
   // Specify the header.
-  diameter_hdr_flag flag = {0,0,0};  // Answer
-  DiameterMsgHeader hdr(1, 0, flag, code, appId, 0, 0);
-  aaaMessage.hdr = hdr;
+  hdr_flag flag = {0,0,0};  // Answer
+  aaaMessage.hdr = AAADiameterHeader(1, 0, flag, code, appId, 0, 0);
 
   if (data.AuthApplicationId.IsSet())
     {
@@ -443,11 +441,11 @@ AA_AnswerParser::parseAppToRaw()
     }
 }
 
-template<> void 
+void 
 AA_AnswerParser::parseRawToApp()
 {
   AA_AnswerData &data = *getAppData();
-  DiameterMsg &aaaMessage = *getRawData();
+  AAAMessage &aaaMessage = *getRawData();
 
   data.Clear();
 
@@ -469,7 +467,7 @@ AA_AnswerParser::parseRawToApp()
     {
       data.ResultCode.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search(DIAMETER_AVPNAME_ORIGINHOST)))
+  if ((c = aaaMessage.acl.search("Origin-Host")))
     {
       data.OriginHost.CopyFrom(*c);
     }

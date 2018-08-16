@@ -2,7 +2,7 @@
 /*                                                                        */
 /* OpenDiameter: Open-source software for the Diameter protocol           */
 /*                                                                        */
-/* Copyright (C) 2007 Open Diameter Project 				  */
+/* Copyright (C) 2004 Open Diameter Project 				  */
 /*                                                                        */
 /* This library is free software; you can redistribute it and/or modify   */
 /* it under the terms of the GNU Lesser General Public License as         */
@@ -54,13 +54,13 @@ public:
   void SendMipRegReply(diameter_unsigned32_t &amaResultCode,
 		       diameter_octetstring_t &mipRegReply )
   {
-    AAA_LOG((LM_DEBUG, "[%N]Sending MIP Registration Reply:\nResult-Code=%d Mip Reply: %s\n", 
-	    amaResultCode, mipRegReply.data()));
+    AAA_LOG(LM_DEBUG, "[%N]Sending MIP Registration Reply:\nResult-Code=%d Mip Reply: %s\n", 
+	    amaResultCode, mipRegReply.data());
   }
 
   void SendMipRegReply(diameter_unsigned32_t &amaResultCode)
   {
-    AAA_LOG((LM_DEBUG, "[%N]Sending MIP Registration Reply:\nResult-Code=%d\n", amaResultCode));
+    AAA_LOG(LM_DEBUG, "[%N]Sending MIP Registration Reply:\nResult-Code=%d\n", amaResultCode);
   }
 
   int SetUserName ( diameter_utf8string_t &UserName)
@@ -192,7 +192,7 @@ public:
   ( const diameter_unsigned32_t &mipMsaLifetime){}
 
   void EnforceMipFilterRule ( 
-   const  DiameterVectorAttribute<diameter_ipfilter_rule_t> &mipFilterRule){}
+   const  AAA_VectorAttribute<diameter_ipfilter_rule_t> &mipFilterRule){}
 
 };
 
