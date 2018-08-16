@@ -860,7 +860,11 @@ int main(int argc, char **argv)
 
   task.Start(2);
 
+#if WIN32
   #define num 100
+#else
+  int num = 100;
+#endif
 
   ACE_Semaphore semaphore(4*num);
 

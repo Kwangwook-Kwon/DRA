@@ -356,10 +356,8 @@ class AAA_PARSER_EXPORT DiameterDictionaryManager
         /*!
         * Constructor
         */
-        DiameterDictionaryManager();
-
-        // Destructor
-        ~DiameterDictionaryManager();
+        DiameterDictionaryManager() {
+        }
 
         /*!
         * This function initializes the command and AVP dictionaries based
@@ -391,8 +389,8 @@ class AAA_PARSER_EXPORT DiameterDictionaryManager
         * \param rflag Request flag
         */
         AAADictionaryHandle *getDictHandle(AAACommandCode code,
-                                           DiameterApplicationId id,
-                                           int rflag);
+                                            DiameterApplicationId id,
+                                            int rflag);
 
         /*!
         * Used for retrieving the dictionary handle for
@@ -572,7 +570,7 @@ struct diameter_hdr_flag {
  */
 class AAA_PARSER_EXPORT DiameterMsgHeader
 {
-    friend class AAAParser<AAAMessageBlock*,
+        friend class AAAParser<AAAMessageBlock*,
                                DiameterMsgHeader*,
                                DiameterParseOption>; /**< Parser friend */
 
@@ -594,22 +592,51 @@ class AAA_PARSER_EXPORT DiameterMsgHeader
                           AAACommandCode code,
                           DiameterApplicationId appId,
                           ACE_UINT32 hh,
-                          ACE_UINT32 ee);
+                          ACE_UINT32 ee) {
+            this->ver = ver;
+            this->length = length;
+            this->flags = flags;
+            this->code = code;
+            this->appId = appId;
+            this->hh = hh;
+            this->ee = ee;
+            this->dictHandle = 0;
+        }
 
         /*!
-        * constructor
+        * destructor
         */
-        DiameterMsgHeader();
+        DiameterMsgHeader() {
+            this->ver = 0;
+            this->length = 0;
+            this->code = 0;
+            this->appId = 0;
+            this->hh = 0;
+            this->ee = 0;
+            this->dictHandle = 0;
+        }
 
         /*!
         * returns the current dictionary handle
         */
-        AAADictionaryHandle *getDictHandle();
+        inline AAADictionaryHandle *getDictHandle() { 
+            return dictHandle;
+        }
 
         /*!
          * copy operator
          */
-        DiameterMsgHeader &operator=(DiameterMsgHeader &hdr);
+        DiameterMsgHeader &operator=(DiameterMsgHeader &hdr) {
+            this->ver = hdr.ver;
+            this->length = hdr.length;
+            this->flags = hdr.flags;
+            this->code = hdr.code;
+            this->appId = hdr.appId;
+            this->hh = hdr.hh;
+            this->ee = hdr.ee;
+            this->dictHandle = hdr.getDictHandle();
+            return *this;
+        }
 
         /*!
         * returns the command name
@@ -832,7 +859,9 @@ class AAA_PARSER_EXPORT DiameterAvpTypeList_S :
         /*!
         * protected consturctor
         */
-        DiameterAvpTypeList_S(void);
+        DiameterAvpTypeList_S(void) {
+            registerDefaultTypes();
+        }
 
         /*!
         * protected destructor
@@ -1048,7 +1077,7 @@ class DiameterAvpContainerWidget :
 typedef DiameterAvpWidget<diameter_identity_t,
                           AAA_AVP_DIAMID_TYPE> DiameterIdentityAvpWidget;
 typedef DiameterAvpWidget<diameter_address_t,
-                          AAA_AVP_IPADDRESS_TYPE> DiameterIPAddressAvpWidget;
+                          AAA_AVP_ADDRESS_TYPE> DiameterAddressAvpWidget;
 typedef DiameterAvpWidget<diameter_integer32_t,
                           AAA_AVP_INTEGER32_TYPE> DiameterInt32AvpWidget;
 typedef DiameterAvpWidget<diameter_unsigned32_t,
@@ -1083,7 +1112,7 @@ typedef DiameterAvpContainerWidget<diameter_identity_t,
                                    AAA_AVP_DIAMID_TYPE>
                         DiameterIdentityAvpContainerWidget;
 typedef DiameterAvpContainerWidget<diameter_address_t,
-                                   AAA_AVP_IPADDRESS_TYPE>
+                                   AAA_AVP_ADDRESS_TYPE>
                         DiameterAddressAvpContainerWidget;
 typedef DiameterAvpContainerWidget<diameter_integer32_t,
                                    AAA_AVP_INTEGER32_TYPE>
@@ -1146,12 +1175,12 @@ class DiameterMsgResultCode
         }
         diameter_unsigned32_t ResultCode() {
             DiameterUInt32AvpContainerWidget resultCode(message.acl);
-            diameter_unsigned32_t *rc = resultCode.GetAvp("ResultCode");
+            diameter_unsigned32_t *rc = resultCode.GetAvp("Result-Code");
             return (rc) ? *rc : 0;
         }
         void ResultCode(diameter_unsigned32_t c) {
             DiameterUInt32AvpContainerWidget resultCode(message.acl);
-            resultCode.AddAvp("ResultCode") = c;
+            resultCode.AddAvp("Result-Code") = c;
         }
         static RCODE InterpretedResultCode(diameter_unsigned32_t code) {
             for (int i=RCODE_INFORMATIONAL; i<=RCODE_PERMANENT_FAILURE;

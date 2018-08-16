@@ -324,7 +324,7 @@ class PANAXML_AvpElement :
                else if (! ACE_OS::strcmp(alist->getQName(i), "mandatory")) {
                    mandatory = alist->getValue(i);
                }
-               else if (! ACE_OS::strcmp(alist->getQName(i), "vendorId")) {
+               else if (! ACE_OS::strcmp(alist->getQName(i), "vendor-id")) {
                    vendorId = ACE_OS::atoi(alist->getValue(i));
                }
             }
@@ -382,7 +382,7 @@ class PANAXML_TypeElement :
         std::string tname;
         if (alist != 0) {
             for (size_t i = 0; i < alist->getLength (); ++i) {
-               if (! ACE_OS::strcmp(alist->getQName(i), "name")) {
+               if (! ACE_OS::strcmp(alist->getQName(i), "type-name")) {
                    tname = alist->getValue(i);
                    break;
                }
@@ -570,7 +570,7 @@ class PANAXML_AvpRuleElement :
 {
   public:
      PANAXML_AvpRuleElement(PANAXML_ElementStack &stack) :
-        PANAXML_Element("rule", stack) {
+        PANAXML_Element("avprule", stack) {
      }
      virtual bool startElement (ACEXML_Attributes *alist) {
         if (! PANAXML_Element::startElement(alist)) {
@@ -594,13 +594,13 @@ class PANAXML_AvpRuleElement :
                if (! ACE_OS::strcmp(alist->getQName(i), "name")) {
                    avpName = alist->getValue(i);
                }
-               else if (! ACE_OS::strcmp(alist->getQName(i), "vendorId")) {
+               else if (! ACE_OS::strcmp(alist->getQName(i), "vendor-id")) {
                    vendorId = ACE_OS::atoi(alist->getValue(i));
                }
-               else if (! ACE_OS::strcmp(alist->getQName(i), "min")) {
+               else if (! ACE_OS::strcmp(alist->getQName(i), "minimum")) {
                    sMin = alist->getValue(i);
                }
-               else if (! ACE_OS::strcmp(alist->getQName(i), "max")) {
+               else if (! ACE_OS::strcmp(alist->getQName(i), "maximum")) {
                    sMax = alist->getValue(i);
                }
             }

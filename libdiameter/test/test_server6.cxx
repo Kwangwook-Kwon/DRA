@@ -176,7 +176,7 @@ class AAA_SampleBackEndApplicationCall :
             // Let this thread sleep to simulate a really lengthy
             // backend call to some other application
             std::cout <<  "Calling backend application for username " << username << std::endl;
-            ACE_OS::sleep(5);
+            sleep(5);
             std::cout <<  "Backend call completed" << std::endl;
 
             // once the call is done we can answer the client
@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
    // Application core is responsible for providing
    // peer connectivity between AAA entities
    DiameterApplication appCore(task, "config/isp.local.xml");
-   AAA_SampleServerSessionAllocator allocator(task, 167772153);
+   AAA_SampleServerSessionAllocator allocator(task, 10000);
    appCore.RegisterServerSessionFactory(allocator);
 
    while (true) {
@@ -402,3 +402,9 @@ int main(int argc, char *argv[])
    task.Stop();
    return (0);
 }
+
+
+
+
+
+

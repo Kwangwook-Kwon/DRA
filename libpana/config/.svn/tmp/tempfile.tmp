@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pana_configuration SYSTEM "config.dtd">
+<pana_configuration>
+
+    <general>
+
+        <!-- UDP port that the PAA will listen to
+             for Pac messages. Note that this
+             does not bind to any address or interface
+             so it will receive Pac messages on any
+             interface -->
+        <listen_port>30001</listen_port>
+
+        <!-- Filename of the parser dictionary -->
+        <dictionary_filename>config/dictionary.xml</dictionary_filename>
+
+        <!-- Session resumption flag -->
+        <mobility>0</mobility>
+
+        <!-- Controls wether EAP payload will be sent
+             in the PSR/PSA message during stateful
+             discovery. Note that this is only
+             valid if use_cookie is 0. Also, if this
+             is set and used, then the separate flag
+             will be ingnored -->
+        <eap_piggyback>0</eap_piggyback>
+
+        <!-- Configurable retransmission parameters
+             as specified in the PANA draft. See
+             Sec 10 of the draft for rules govering
+             message retranmission -->
+        <retransmission_param>
+            <!-- Initial retransmission timeout -->
+            <initial_rt_timeout>10</initial_rt_timeout>
+
+            <!-- Maximum retransmission count -->
+            <max_rt_count>3</max_rt_count>
+
+            <!-- Maximum retransmission timeout -->
+            <max_rt_timeout>120</max_rt_timeout>
+
+            <!-- Maximum retransmission duration -->
+            <max_rt_duration>120</max_rt_duration>
+        </retransmission_param>
+
+        <!-- Re-Auth timer (interval) -->
+        <keep_alive_interval>10</keep_alive_interval>
+
+        <!-- WPA (802.11i) bootstrap support 
+             A 256-bit PMK key will be generated during the
+             Authorize method (and passed to authorization
+             script) when this option is enabled. 
+             -->
+        <wpa_bootstrap>1</wpa_bootstrap>
+
+        <!-- Session lifetime enforces when this PANA
+             session will end. Note that this can controls
+             the deletion of the PANA session whether
+             the session was auth successfully or not -->
+        <session_lifetime>10</session_lifetime>
+
+    </general>
+
+    <agent>
+
+        <!-- When this options is enabled, the PAA will
+             attempt to carry the first EAP request in
+             the PANA-Start-Request message -->
+        <optimized_handshake>0</optimized_handshake>
+
+        <!-- This tells the PAA whether the session lifetime
+             AVP will be carried in the PANA-Bind-Rquest
+             message. If enabled, the session lifetime
+             defined previously will be sent to the PaC -->
+        <carry_lifetime>1</carry_lifetime>
+
+        <!-- This tells the PAA whether the PANA-Start-Request
+             will be retransmitted. This aids in keeping
+             a more stateless PAA if disabled -->
+        <retry_psr>0</retry_psr>
+
+    </agent>
+
+</pana_configuration>

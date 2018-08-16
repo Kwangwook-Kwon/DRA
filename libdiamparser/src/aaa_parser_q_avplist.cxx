@@ -33,13 +33,10 @@
 /* $Id: parser_q_avplist.cxx,v 1.28 2006/03/16 17:01:50 vfajardo Exp $ */
 #include <sys/types.h>
 #include <list>
-#include <iostream>
 #include "aaa_parser_avp.h"
 #include "aaa_parser_q_avplist.h"
 #include "aaa_q_avplist.h"
 #include "resultcodes.h"    
-
-using namespace std;
 
 static 
 void parseRawToAppWithoutDict(DiameterAvpHeaderList *ahl,
@@ -111,8 +108,8 @@ parseRawToAppWithoutDict(DiameterAvpHeaderList *ahl,
       c = *i;
       c->ParseType() = AAA_PARSE_TYPE_OPTIONAL;
       name = c->getAvpName();
-#if defined(DS_DEBUG)
-      AAA_LOG((LM_DEBUG, "%s: Container %s matches.\n", __FUNCTION__, name));
+#ifdef DEBUG
+      cout << __FUNCTION__ << ": Container "<< name << "matches\n";
 #endif
 
       AAADictionaryEntry* avp;
@@ -148,7 +145,7 @@ parseRawToAppWithoutDict(DiameterAvpHeaderList *ahl,
 	      else
 		{
 		  // Parse error 
-		  AAA_LOG((LM_ERROR, "Error in AVP %s\n", name));
+		  AAA_LOG((LM_ERROR, "Error in AVP %s.\n", name));
 		  throw;
 		}
 	    }
@@ -184,9 +181,10 @@ parseRawToAppWithDict(DiameterAvpHeaderList *ahl,
 	  max = qavp->qual.max;
 	  name = qavp->avp->avpName.c_str();
 	  type = qavp->avp->avpType;
-#if defined(DS_DEBUG)
-      AAA_LOG((LM_DEBUG, "%s: Try to match %s\n", __FUNCTION__, name));
+#ifdef DEBUG
+	  cout << __FUNCTION__ << ": Container "<< name << "matches\n";
 #endif
+
 	  c = cm.acquire(name);
 	  c->ParseType() = pt;
 
@@ -224,7 +222,7 @@ parseRawToAppWithDict(DiameterAvpHeaderList *ahl,
 		  else
 		    {
 		      // Parse error 
-		      AAA_LOG((LM_ERROR, "Error in AVP %s\n", name));
+		      AAA_LOG((LM_ERROR, "Error in AVP %s.\n", name));
 		      cm.release(c);
 		      throw st;
 		    }
@@ -249,16 +247,6 @@ parseRawToAppWithDict(DiameterAvpHeaderList *ahl,
 	        acl->add(c);
 	    } while (0);
 	  }
-    }
-  // in normal case, ahl(DiameterAvpHeaderList) will be empty,
-  // if not matched in dictionary, ahl is not empty
-  if (!(ahl->empty()))
-    {
-      DiameterAvpHeaderList::iterator it;
-      for (it = ahl->begin(); it != ahl->end(); ++it) {
-        AAA_LOG((LM_ERROR, "Avp (code %d, vendorId %d) not defined\n",
-          it->code, it->vendor));
-      }
     }
 }
 
@@ -303,7 +291,7 @@ parseAppToRawWithoutDict(AAAMessageBlock *msg, AAAAvpContainerList *acl)
       }
       catch (DiameterErrorCode &st)
 	{
-	  AAA_LOG((LM_ERROR, "Error in AVP %s\n", name));
+	  AAA_LOG((LM_ERROR, "Error in AVP %s.\n", name));
 	  throw;
 	}
     }
@@ -358,14 +346,14 @@ parseAppToRawWithDict(AAAMessageBlock *msg,
 	    }
 	  if (c->size() < min)
 	    {
-	      AAA_LOG((LM_ERROR, "%s(%d) less than min(%d) entries for the AVP.\n", name, c->size(), min));
+	      AAA_LOG((LM_ERROR, "less than min entries for the AVP.\n"));
               st.set(AAA_PARSE_ERROR_TYPE_BUG,
                      AAA_PARSE_ERROR_TOO_LESS_AVP_ENTRIES);
 	      throw st;
 	    }
 	  if (c->size() > max)
 	    {
-	      AAA_LOG((LM_ERROR, "%s(%d) more than max(%d) entries for the AVP.\n", name, c->size(), max));
+	      AAA_LOG((LM_ERROR, "more than max entries for the AVP.\n"));
 	      st.set(AAA_PARSE_ERROR_TYPE_BUG,
                      AAA_PARSE_ERROR_TOO_MUCH_AVP_ENTRIES);
 	      throw st;
@@ -375,8 +363,9 @@ parseAppToRawWithDict(AAAMessageBlock *msg,
 	      AAA_LOG((LM_INFO, "container is empty.\n"));
 	      continue;
 	    }
-#if defined(DS_DEBUG)
-      AAA_LOG((LM_DEBUG, "%s: Container %s matches.\n", __FUNCTION__, name));
+
+#ifdef DEBUG
+	  cout << __FUNCTION__ << ": Container "<< name << "matches.\n";
 #endif
 	  c->ParseType() = pt;
 	  DiameterAvpParser ap;
@@ -391,7 +380,7 @@ parseAppToRawWithDict(AAAMessageBlock *msg,
 	  }
 	  catch (DiameterErrorCode &st)
 	    {
-	      AAA_LOG((LM_ERROR, "Error in AVP %s\n", name));
+	      AAA_LOG((LM_ERROR, "Error in AVP %s.\n", name));
 	      throw;
 	    }
 	}

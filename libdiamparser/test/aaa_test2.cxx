@@ -50,22 +50,22 @@ unsigned char rbuf[] =
   0x01, 0x00, 0x00, 0x74, 0x90, 0x00, 0x01, 0x01, /* header(CER, T-bit set) */
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, /* (length = 156-byte) */
   0x00, 0x00, 0x00, 0x0a,     
-                          0x00, 0x00, 0x01, 0x08, /* OriginHost */
+                          0x00, 0x00, 0x01, 0x08, /* Origin-Host */
 #ifdef ERROR_CASE
   0x00, 0x00, 0x00, 0x13, 'a', 'a', 'a', '.', /* M-flag is off for err test */
 #else
   0x40, 0x00, 0x00, 0x13, 'a', 'a', 'a', '.', 
 #endif
   'b', 'b', 'b', '.', 'c', 'o', 'm', 0x00, 
-  0x00, 0x00, 0x01, 0x28, 0x40, 0x00, 0x00, 0x0f, /* OriginRealm */
+  0x00, 0x00, 0x01, 0x28, 0x40, 0x00, 0x00, 0x0f, /* Origin-Realm */
   'a', 'a', 'a', '.', 'c', 'o', 'm',  0x00, 
-  0x00, 0x00, 0x01, 0x01, 0x40, 0x00, 0x00, 0x0c, /* HostIPAddress */
-  0x0a, 0x01, 0x01, 0x01, 0x00, 0x00, 0x01, 0x0a, /* VendorId */
+  0x00, 0x00, 0x01, 0x01, 0x40, 0x00, 0x00, 0x0c, /* Host-IP-Address */
+  0x0a, 0x01, 0x01, 0x01, 0x00, 0x00, 0x01, 0x0a, /* Vendor-Id */
   0x40, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00, 0x01,
-  0x00, 0x00, 0x01, 0x0d, 0x00, 0x00, 0x00, 0x18, /* ProductName */
+  0x00, 0x00, 0x01, 0x0d, 0x00, 0x00, 0x00, 0x18, /* Product-Name */
   't', 'o', 's', 'h', 'i', 'b', 'a', '-',
   'd', 'i', 'a', 'm', 'e', 't', 'e', 'r',
-  0x00, 0x00, 0x01, 0x16, 0x40, 0x00, 0x00, 0x0c, /* OriginStateId */
+  0x00, 0x00, 0x01, 0x16, 0x40, 0x00, 0x00, 0x0c, /* Origin-State-Id */
   0x00, 0x00, 0x2b, 0x67
 };
 
@@ -148,133 +148,133 @@ rtest(unsigned char *buf, int size)
   std::cout << "Disassemble " << msg.hdr.getCommandName() << " success." 
 	    << std::endl;
 
-  if ((c = msg.acl.search("OriginHost")))
+  if ((c = msg.acl.search("Origin-Host")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_identity_t, orhost, (*c)[i]);
-	  std::cout << "OriginHost = " << orhost.c_str() << std::endl;
+	  std::cout << "Origin-Host = " << orhost.c_str() << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("OriginRealm")))
+  if ((c = msg.acl.search("Origin-Realm")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_utf8string_t, orrealm, (*c)[i]);
-	  std::cout << "OriginRealm = " << orrealm.c_str() << std::endl;
+	  std::cout << "Origin-Realm = " << orrealm.c_str() << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("HostIPAddress")))
+  if ((c = msg.acl.search("Host-IP-Address")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_address_t, hostip, (*c)[i]);
 	  ACE_INET_Addr addr;
 	  inet_convert(addr, hostip);
-	  std::cout << "HostIPAddress = " 
+	  std::cout << "Host-IP-Address = " 
 		    << addr.get_host_addr()
 		    << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("VendorId")))
+  if ((c = msg.acl.search("Vendor-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_unsigned32_t, vid, (*c)[i]);
-	  std::cout << "VendorId = " << vid << std::endl;
+	  std::cout << "Vendor-Id = " << vid << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("ProductName")))
+  if ((c = msg.acl.search("Product-Name")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_utf8string_t, product, (*c)[i]);
-	  std::cout << "ProductName = " << product.c_str() << std::endl;
+	  std::cout << "Product-Name = " << product.c_str() << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("OriginStateId")))
+  if ((c = msg.acl.search("Origin-State-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_unsigned32_t, orstatid, (*c)[i]);
-	  std::cout << "OriginStateId = " << orstatid << std::endl;
+	  std::cout << "Origin-State-Id = " << orstatid << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("SupportedVendorId")))
+  if ((c = msg.acl.search("Supported-Vendor-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_unsigned32_t, sup_vid, (*c)[i]);
-	  std::cout << "SupportedVendorId = " << sup_vid << std::endl;
+	  std::cout << "Supported-Vendor-Id = " << sup_vid << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("AuthApplicationId")))
+  if ((c = msg.acl.search("Auth-Application-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_integer32_t, auth_appid, (*c)[i]);
-	  std::cout << "AuthApplicationId = " << auth_appid << std::endl;
+	  std::cout << "Auth-Application-Id = " << auth_appid << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("AcctApplicationId")))
+  if ((c = msg.acl.search("Acct-Application-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_integer32_t, acct_appid, (*c)[i]);
-	  std::cout << "AcctApplicationId = " << acct_appid << std::endl;
+	  std::cout << "Acct-Application-Id = " << acct_appid << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("VendorSpecificApplicationId")))
+  if ((c = msg.acl.search("Vendor-Specific-Application-Id")))
     {
       AAAAvpContainer* cc;
-      std::cout << "VendorSpecificApplicationId = ";
+      std::cout << "Vendor-Specific-Application-Id = ";
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(AAAAvpContainerList, acl, (*c)[i]);
-	  if ((cc = acl.search("ProxyHost")))
+	  if ((cc = acl.search("Proxy-Host")))
 	    {
 	      for (j=0; j<cc->size(); j++)
 		{
 		  GET_DATA_REF(diameter_unsigned32_t, sup_vid, (*cc)[j]);
-		  std::cout << "\t" << "ProxyHost = " << sup_vid << std::endl;
+		  std::cout << "\t" << "Proxy-Host = " << sup_vid << std::endl;
 		}
 	    }
-	  if ((cc = acl.search("AuthApplicationId")))
+	  if ((cc = acl.search("Auth-Application-Id")))
 	    {
 	      for (j=0; j<cc->size(); j++)
 		{
 		  GET_DATA_REF(diameter_integer32_t, auth_appid, (*cc)[j]);
-		  std::cout << "\t" << "AuthApplicationId = " << auth_appid 
+		  std::cout << "\t" << "Auth-Application-Id = " << auth_appid 
 			    << std::endl;
 		}
 	    }
-	  if ((cc = acl.search("AcctApplicationId")))
+	  if ((cc = acl.search("Acct-Application-Id")))
 	    {
 	      for (j=0; j<cc->size(); j++)
 		{
 		  GET_DATA_REF(diameter_integer32_t, acct_appid, (*cc)[j]);
-		  std::cout << "\t" << "AcctApplicationId = " << acct_appid 
+		  std::cout << "\t" << "Acct-Application-Id = " << acct_appid 
 			    << std::endl;
 		}
 	    }
 	}
     }
 
-  if ((c = msg.acl.search("FirmwareRevision")))
+  if ((c = msg.acl.search("Firmware-Revision")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_unsigned32_t, firm_rev, (*c)[i]);
-	  std::cout << "FirmwareRevision = " << firm_rev << std::endl;
+	  std::cout << "Firmware-Revision = " << firm_rev << std::endl;
 	}
     }
 
@@ -293,12 +293,12 @@ stest(unsigned char *buf, int size)
 {
   DiameterAvpContainerManager cm;
   DiameterAvpContainerEntryManager em;
-  AAAAvpContainer *c_orhost = cm.acquire("OriginHost");
-  AAAAvpContainer *c_orrealm = cm.acquire("OriginRealm");
-  AAAAvpContainer *c_hostip = cm.acquire("HostIPAddress");
-  AAAAvpContainer *c_vid = cm.acquire("VendorId");
-  AAAAvpContainer *c_product = cm.acquire("ProductName");
-  AAAAvpContainer *c_orstatid = cm.acquire("OriginStateId");
+  AAAAvpContainer *c_orhost = cm.acquire("Origin-Host");
+  AAAAvpContainer *c_orrealm = cm.acquire("Origin-Realm");
+  AAAAvpContainer *c_hostip = cm.acquire("Host-IP-Address");
+  AAAAvpContainer *c_vid = cm.acquire("Vendor-Id");
+  AAAAvpContainer *c_product = cm.acquire("Product-Name");
+  AAAAvpContainer *c_orstatid = cm.acquire("Origin-State-Id");
   AAAAvpContainerEntry *e;
 
   diameter_hdr_flag flag = {1,0,0,1};
@@ -332,7 +332,7 @@ stest(unsigned char *buf, int size)
   GET_DATA_REF(diameter_utf8string_t, orrealm, e);
   c_orrealm->add(e);
 
-  e = em.acquire(AAA_AVP_IPADDRESS_TYPE);
+  e = em.acquire(AAA_AVP_ADDRESS_TYPE);
   GET_DATA_REF(diameter_address_t, hostip, e);
   c_hostip->add(e);
 
@@ -356,23 +356,23 @@ stest(unsigned char *buf, int size)
   msg.acl.add(c_orstatid);
 
   /* set values */
-  /* OriginHost */
+  /* Origin-Host */
   orhost.assign(orhost_str);
 
-  /* OriginRealm */
+  /* Origin-Realm */
   orrealm.assign("aaa.com");
 
-  /* HostIPAddress */
+  /* Host-IP-Address */
   hostip.type = AAA_ADDRESS_IP;
   hostip.value.assign(addr, sizeof(addr));
 
-  /* VendorId */
+  /* Vendor-Id */
   vid = 1;
 
-  /* ProductName */
+  /* Product-Name */
   product.assign("toshiba-diameter");
 
-  /* OriginStateId */
+  /* Origin-State-Id */
   orstatid = 1111;
 
   DiameterMsgPayloadParser pp;
@@ -419,10 +419,10 @@ mstest(unsigned char *buf, int size)
 {
   DiameterAvpContainerManager cm;
   DiameterAvpContainerEntryManager em;
-  AAAAvpContainer *c_dhost = cm.acquire("DestinationHost");
-  AAAAvpContainer *c_acctId = cm.acquire("AcctApplicationId");
-  AAAAvpContainer *c_proxyInfo = cm.acquire("ProxyInfo");
-  AAAAvpContainer *c_rrec = cm.acquire("RouteRecord");
+  AAAAvpContainer *c_dhost = cm.acquire("Destination-Host");
+  AAAAvpContainer *c_acctId = cm.acquire("Acct-Application-Id");
+  AAAAvpContainer *c_proxyInfo = cm.acquire("Proxy-Info");
+  AAAAvpContainer *c_rrec = cm.acquire("Route-Record");
   AAAAvpContainerEntry *e;
 
   diameter_hdr_flag flag = {1,0,0,1};
@@ -494,15 +494,15 @@ mstest(unsigned char *buf, int size)
 
       if (i==0)
 	{
-	  proxyHost = "proxyhost1";
-	  proxyState = "proxystate1";
+	  proxyHost = "proxy-host1";
+	  proxyState = "proxy-state1";
 	  proxyInfo1.add(c_proxyHost);
 	  proxyInfo1.add(c_proxyState);      
 	}
       else
 	{
-	  proxyHost = "proxyhost2";
-	  proxyState = "proxystate2";
+	  proxyHost = "proxy-host2";
+	  proxyState = "proxy-state2";
 	  proxyInfo2.add(c_proxyHost);
 	  proxyInfo2.add(c_proxyState);      
 	}
@@ -598,30 +598,30 @@ mrtest(unsigned char *buf, int size)
   std::cout << "Disassemble [length = " << msg.hdr.length << "] " << msg.hdr.getCommandName() << " success." 
 	    << std::endl;
 
-  if ((c = msg.acl.search("DestinationHost")))
+  if ((c = msg.acl.search("Destination-Host")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_identity_t, dhost, (*c)[i]);
-	  std::cout << "DestinationHost = " << dhost.c_str() << std::endl;
+	  std::cout << "Destination-Host = " << dhost.c_str() << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("AcctApplicationId")))
+  if ((c = msg.acl.search("Acct-Application-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_unsigned32_t, id, (*c)[i]);
-	  std::cout << "AcctApplicationId = " << id << std::endl;
+	  std::cout << "Acct-Application-Id = " << id << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("RouteRecord")))
+  if ((c = msg.acl.search("Route-Record")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_identity_t, rrec, (*c)[i]);
-	  std::cout << "RouteRecord = " << rrec.c_str() << std::endl;
+	  std::cout << "Route-Record = " << rrec.c_str() << std::endl;
 	}
     }
 
@@ -630,25 +630,25 @@ mrtest(unsigned char *buf, int size)
     {
       AAAAvpContainer* cntr = (*y);
 
-      if (ACE_OS::strcmp(cntr->getAvpName(), "ProxyInfo") == 0) 
+      if (ACE_OS::strcmp(cntr->getAvpName(), "Proxy-Info") == 0) 
        {
-	 std::cout << "ProxyInfo AVP" << std::endl;
+	 std::cout << "Proxy-Info AVP" << std::endl;
          GET_DATA_REF(diameter_grouped_t, pInfo, (*cntr)[0]);
 
-         if ((c = pInfo.search("ProxyHost")))
+         if ((c = pInfo.search("Proxy-Host")))
           {
             for (i=0; i<c->size(); i++)
 	     {
 	       GET_DATA_REF(diameter_identity_t, phost, (*c)[i]);
-	       std::cout << "ProxyHost = " << phost.c_str() << std::endl;
+	       std::cout << "Proxy-Host = " << phost.c_str() << std::endl;
 	     }
           }          
-         if ((c = pInfo.search("ProxyState")))
+         if ((c = pInfo.search("Proxy-State")))
           {
             for (i=0; i<c->size(); i++)
 	     {
 	       GET_DATA_REF(diameter_octetstring_t, pstate, (*c)[i]);
-	       std::cout << "ProxyState = " << pstate.c_str() << std::endl;
+	       std::cout << "Proxy-State = " << pstate.c_str() << std::endl;
 	     }
           }          
        }

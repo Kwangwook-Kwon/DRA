@@ -21583,13 +21583,14 @@ done
 
 
 # Substitutions
+
 case $host in
   *-*-freebsd*)
-     L_CPPFLAGS="-Wall -I$ACE_ROOT/include -I$BOOST_ROOT/include -pthread -fno-strict-aliasing"
+     L_CPPFLAGS="-Wall -I$ACE_ROOT -I$BOOST_ROOT -pthread -fno-strict-aliasing"
 
-     L_CXXFLAGS="-Wall -I$ACE_ROOT/include -I$BOOST_ROOT/include -pthread -fno-strict-aliasing"
+     L_CXXFLAGS="-Wall -I$ACE_ROOT -I$BOOST_ROOT -pthread -fno-strict-aliasing"
 
-     L_LDFLAGS="-L$ACE_ROOT/include/ace -pthread"
+     L_LDFLAGS="-L$ACE_ROOT/ace -pthread"
 
      L_LIBS="-lc_r -lssl -lcrypto -lACE_SSL -lACE -lACEXML -lACEXML_Parser"
 
@@ -21597,29 +21598,16 @@ case $host in
 
   ;;
   *-*-linux*)
-     L_CPPFLAGS="-Wall -I$OPENSSL_ROOT/include -I$ACE_ROOT/include -I$BOOST_ROOT/include -g -fno-strict-aliasing"
+     L_CPPFLAGS="-Wall -I$ACE_ROOT -I$BOOST_ROOT -g -fno-strict-aliasing"
 
-     L_CXXFLAGS="-Wall -I$ACE_ROOT/include -I$BOOST_ROOT/include -g -fno-strict-aliasing"
+     L_CXXFLAGS="-Wall -I$ACE_ROOT -I$BOOST_ROOT -g -fno-strict-aliasing"
 
-     L_LDFLAGS="-Wl,-rpath-link,$BOOST_ROOT/lib -L$BOOST_ROOT/lib -L$ACE_ROOT/lib -L$OPENSSL_ROOT/lib"
+     L_LDFLAGS="-L$ACE_ROOT/ace"
 
-     L_LIBS="-lboost_filesystem -lssl -lcrypto -lACE_SSL -lACE -lACEXML -lACEXML_Parser"
+     L_LIBS="-lssl -lcrypto -lACE_SSL -lACE -lACEXML -lACEXML_Parser"
 
      HOST_OS=OS_LINUX
 
-  ;;
- *sun*)
-     L_CPPFLAGS="-Wall -Wno-sign-compare -I$OPENSSL_ROOT/include -I$ACE_ROOT/include -I$BOOST_ROOT/include"
-     L_LDFLAGS="-L$ACE_ROOT/lib"
-     L_LIBS="-lssl -lcrypto -lACE_SSL -lACE -lACEXML -lACEXML_Parser -lrt -lsocket -lnsl -ldl "
-     HOST_OS=OS_SUNOS
-  ;;
- *-apple-*)
-     L_CPPFLAGS="-Wall -I$ACE_ROOT/include -I$BOOST_ROOT/include -I$OPENSSL_ROOT/include -g -fno-strict-aliasing"
-     L_CXXFLAGS="-Wall -I$ACE_ROOT/include -I$BOOST_ROOT/include -I$OPENSSL_ROOT/include -g -fno-strict-aliasing"
-     L_LDFLAGS="-L$ACE_ROOT/lib"
-     L_LIBS="-lssl -lcrypto -lACE_SSL -lACE -lACEXML -lACEXML_Parser"
-     HOST_OS=OS_MAC
   ;;
   *)
      { { echo "$as_me:$LINENO: error: Unsupported OS" >&5

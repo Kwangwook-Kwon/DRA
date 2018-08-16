@@ -53,7 +53,7 @@ AMR_Parser::parseAppToRaw()
   DiameterApplicationId appId;
 
   // Obtain Command Code and Application Identifier.
-  if (!dm.getCommandCode("AAMobileNodeRequest", &code, &appId)) 
+  if (!dm.getCommandCode("AA-Mobile-Node-Request", &code, &appId)) 
   {
       AAA_LOG((LM_ERROR, "[%N] Cannot find message in dictionary\n."));
       throw (DIAMETER_DICTIONARY_ERROR);
@@ -67,140 +67,140 @@ AMR_Parser::parseAppToRaw()
 
   if (data.AuthApplicationId.IsSet())
     {
-      c = cm.acquire("AuthApplicationId");
+      c = cm.acquire("Auth-Application-Id");
       data.AuthApplicationId.CopyTo(*c, AAA_AVP_INTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.UserName.IsSet())
     { 
-      c = cm.acquire("UserName");
+      c = cm.acquire("User-Name");
       data.UserName.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
 if (data.DestinationRealm.IsSet())
     {
-      c = cm.acquire("DestinationRealm");
+      c = cm.acquire("Destination-Realm");
       data.DestinationRealm.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
 	}
   if (data.OriginHost.IsSet())
     {
-      c = cm.acquire("OriginHost");
+      c = cm.acquire("Origin-Host");
       data.OriginHost.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
 
   if (data.OriginRealm.IsSet())
     {
-      c = cm.acquire("OriginRealm");
+      c = cm.acquire("Origin-Realm");
       data.OriginRealm.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.MipRegRequest.IsSet())			
     {
-      c = cm.acquire("MIPRegRequest");
+      c = cm.acquire("MIP-Reg-Request");
       data.MipRegRequest.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
    if (data.MipMnAaaAuth.IsSet())			
     {
-      c = cm.acquire("MIPMNAAAAuth");
+      c = cm.acquire("MIP-MN-AAA-Auth");
       data.MipMnAaaAuth.CopyTo(*c);
       aaaMessage.acl.add(c);
     }
 
  if (data.AcctMultiSessionId.IsSet())			
     { 
-      c = cm.acquire("AcctMultiSessionId");
+      c = cm.acquire("Acct-Multi-Session-Id");
       data.AcctMultiSessionId.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.DestinationHost.IsSet())
     { 
-      c = cm.acquire("DestinationHost");
+      c = cm.acquire("Destination-Host");
       data.DestinationHost.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
  
   if (data.OriginStateId.IsSet())
     { 
-      c = cm.acquire("OriginStateId");
+      c = cm.acquire("Origin-State-Id");
       data.OriginStateId.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
 
  if (data.MipMobileNodeAddress.IsSet())				       
     {
-      c = cm.acquire("MIPMobileNodeAddress");
-      data.MipMobileNodeAddress.CopyTo(*c, AAA_AVP_IPADDRESS_TYPE);
+      c = cm.acquire("MIP-Mobile-Node-Address");
+      data.MipMobileNodeAddress.CopyTo(*c, AAA_AVP_ADDRESS_TYPE);
       aaaMessage.acl.add(c);
     }
    if (data.MipHomeAgentAddress.IsSet())				       
     {
-      c = cm.acquire("MIPHomeAgentAddress");
-      data.MipHomeAgentAddress.CopyTo(*c, AAA_AVP_IPADDRESS_TYPE);
+      c = cm.acquire("MIP-Home-Agent-Address");
+      data.MipHomeAgentAddress.CopyTo(*c, AAA_AVP_ADDRESS_TYPE);
       aaaMessage.acl.add(c);
     } 
    if (data.MipFeatureVector.IsSet())
     { 
-      c = cm.acquire("MIPFeatureVector");
+      c = cm.acquire("MIP-Feature-Vector");
       data.MipFeatureVector.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
    if (data.MipOriginatingForeignAaa.IsSet())				      
     {
-      c = cm.acquire("MIPOriginatingForeignAAA");
+      c = cm.acquire("MIP-Originating-Foreign-AAA");
       data.MipOriginatingForeignAaa.CopyTo(*c) ; 
       aaaMessage.acl.add(c);
     }
 
   if (data.AuthorizationLifetime.IsSet())
     { 
-      c = cm.acquire("AuthorizationLifetime");
+      c = cm.acquire("Authorization-Lifetime");
       data.AuthorizationLifetime.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
 
   if (data.AuthSessionState.IsSet())
     { 
-      c = cm.acquire("AuthSessionState");
+      c = cm.acquire("Auth-Session-State");
       data.AuthSessionState.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
 
    if (data.MipFaChallenge.IsSet())				
     {
-      c = cm.acquire("MIPFAChallenge");
+      c = cm.acquire("MIP-FA-Challenge");
       data.MipFaChallenge.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     } 
   if (data.MipCandidateHomeAgentHost.IsSet())	
     { 
-      c = cm.acquire("MIPCandidateHomeAgentHost");
+      c = cm.acquire("MIP-Candidate-Home-Agent-Host");
       data.MipCandidateHomeAgentHost.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
    if (data.MipHomeAgentHost.IsSet())		
     { 
-      c = cm.acquire("MIPHomeAgentHost");
+      c = cm.acquire("MIP-Home-Agent-Host");
       data.MipHomeAgentHost.CopyTo(*c); 
       aaaMessage.acl.add(c);
     }
    if (data.MipHaToFaSpi.IsSet())		
     { 
-      c = cm.acquire("MIPHAtoFASPI");
+      c = cm.acquire("MIP-HA-to-FA-SPI");
       data.MipHaToFaSpi.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ProxyInfo.IsSet())
     {
-      c = cm.acquire("ProxyInfo");
+      c = cm.acquire("Proxy-Info");
       data.ProxyInfo.CopyTo(*c);
       aaaMessage.acl.add(c);
     }
   if (data.RouteRecord.IsSet())
     {
-      c = cm.acquire("RouteRecord");
+      c = cm.acquire("Route-Record");
       data.RouteRecord.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
@@ -221,11 +221,11 @@ AMR_Parser::parseRawToApp()
   data.Clear();
 
   AAAAvpContainer *c;
-  if ((c = aaaMessage.acl.search("SessionId")))
+  if ((c = aaaMessage.acl.search("Session-Id")))
     {
       data.SessionId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthApplicationId")))
+  if ((c = aaaMessage.acl.search("Auth-Application-Id")))
     {
       if (Mip4ApplicationId
 	  != (*c)[0]->dataRef(Type2Type<diameter_unsigned32_t>()))
@@ -234,97 +234,97 @@ AMR_Parser::parseRawToApp()
 	  throw (DIAMETER_PAYLOAD_ERROR);
 	  }
     }
-  if ((c = aaaMessage.acl.search("UserName")))
+  if ((c = aaaMessage.acl.search("User-Name")))
     {
       data.UserName.CopyFrom(*c);
     }
 
-  if ((c = aaaMessage.acl.search("DestinationRealm")))
+  if ((c = aaaMessage.acl.search("Destination-Realm")))
     {
       data.DestinationRealm.CopyFrom(*c);
     }
 
-  if ((c = aaaMessage.acl.search("OriginHost")))
+  if ((c = aaaMessage.acl.search("Origin-Host")))
     {
       data.OriginHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("OriginRealm")))
+  if ((c = aaaMessage.acl.search("Origin-Realm")))
     {
       data.OriginRealm.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("MIPRegRequest")))
+  if ((c = aaaMessage.acl.search("MIP-Reg-Request")))
     {
       data.MipRegRequest.CopyFrom(*c);
     }
 
-  if ((c = aaaMessage.acl.search("MIPMNAAAAuth")))
+  if ((c = aaaMessage.acl.search("MIP-MN-AAA-Auth")))
     {
       data.MipMnAaaAuth.CopyFrom(*c);
     } 
   
-  if ((c = aaaMessage.acl.search("AcctMultiSessionId")))
+  if ((c = aaaMessage.acl.search("Acct-Multi-Session-Id")))
     {
       data.AcctMultiSessionId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("DestinationHost")))
+  if ((c = aaaMessage.acl.search("Destination-Host")))
     {
       data.DestinationHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("OriginStateId")))
+  if ((c = aaaMessage.acl.search("Origin-State-Id")))
     {
       data.OriginStateId.CopyFrom(*c);
     }
  
-  if ((c = aaaMessage.acl.search("MIPMobileNodeAddress")))
+  if ((c = aaaMessage.acl.search("MIP-Mobile-Node-Address")))
     {
       data.MipMobileNodeAddress.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("MIPHomeAgentAddress")))
+  if ((c = aaaMessage.acl.search("MIP-Home-Agent-Address")))
     {
       data.MipHomeAgentAddress.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("MIPFeatureVector")))
+  if ((c = aaaMessage.acl.search("MIP-Feature-Vector")))
     {
       data.MipFeatureVector.CopyFrom(*c);
     }
 
-  if ((c = aaaMessage.acl.search("MIPOriginatingForeignAAA")))
+  if ((c = aaaMessage.acl.search("MIP-Originating-Foreign-AAA")))
     {
       data.MipOriginatingForeignAaa.CopyFrom(*c);
     }
 
-  if ((c = aaaMessage.acl.search("AuthorizationLifetime")))
+  if ((c = aaaMessage.acl.search("Authorization-Lifetime")))
     {
       data.AuthorizationLifetime.CopyFrom(*c);
     }
  
-  if ((c = aaaMessage.acl.search("AuthSessionState")))
+  if ((c = aaaMessage.acl.search("Auth-Session-State")))
     {
       data.AuthSessionState.CopyFrom(*c);
     }
 
-  if ((c = aaaMessage.acl.search("MIPFAChallenge")))
+  if ((c = aaaMessage.acl.search("MIP-FA-Challenge")))
     {
       data.MipFaChallenge.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("MIPCandidateHomeAgentHost")))
+  if ((c = aaaMessage.acl.search("MIP-Candidate-Home-Agent-Host")))
     {
       data.MipCandidateHomeAgentHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("MIPHomeAgentHost")))
+  if ((c = aaaMessage.acl.search("MIP-Home-Agent-Host")))
     {
       data.MipHomeAgentHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("MIPHAtoFASPI")))
+  if ((c = aaaMessage.acl.search("MIP-HA-to-FA-SPI")))
     {
       data.MipHaToFaSpi.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ProxyInfo")))
+  if ((c = aaaMessage.acl.search("Proxy-Info")))
     {
       data.ProxyInfo.CopyFrom(*c);
     }
  
-  if ((c = aaaMessage.acl.search("RouteRecord")))
+  if ((c = aaaMessage.acl.search("Route-Record")))
     {
       data.RouteRecord.CopyFrom(*c);
     }

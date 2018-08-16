@@ -66,7 +66,7 @@ class OD_UTL_EXPORT OD_Utl_XML_SaxException
       }
       void Print() {
          std::cout << "SAX Parsing exception: " 
-                   << m_description.c_str()
+                   << m_description 
                    << std::endl;
       }
 
@@ -114,7 +114,7 @@ class OD_UTL_EXPORT OD_Utl_XML_Element
      }
      virtual bool characters(const ACEXML_Char *ch,
                              int start,
-                             int length) {
+                             int length ACEXML_ENV_ARG_DECL) {
         if (! m_inProcess) {
         	    std::string err = "Error: element ";
         	    err += m_name;
@@ -172,16 +172,16 @@ class OD_UTL_EXPORT OD_Utl_XML_SaxParser
 
       virtual void characters(const ACEXML_Char *ch,
                               int start,
-                              int length);
-      virtual void startDocument();
-      virtual void endDocument();
+                              int length ACEXML_ENV_ARG_DECL);
+      virtual void startDocument(ACEXML_ENV_SINGLE_ARG_DECL);
+      virtual void endDocument(ACEXML_ENV_SINGLE_ARG_DECL);
       virtual void startElement(const ACEXML_Char *namespaceURI,
                                 const ACEXML_Char *localName,
                                 const ACEXML_Char *qName,
-                                ACEXML_Attributes *atts);
+                                ACEXML_Attributes *atts ACEXML_ENV_ARG_DECL);
       virtual void endElement(const ACEXML_Char *namespaceURI,
                               const ACEXML_Char *localName,
-                              const ACEXML_Char *qName);
+                              const ACEXML_Char *qName ACEXML_ENV_ARG_DECL);
     
    private:
       ACE_UINT32 m_numPasses;
@@ -209,7 +209,7 @@ class OD_UTL_EXPORT OD_Utl_XML_RegisteredElement :
   protected:
      virtual bool characters(const ACEXML_Char *ch,
                              int start,
-                             int length) {
+                             int length ACEXML_ENV_ARG_DECL) {
         if (! OD_Utl_XML_Element::characters(ch, start, length)) {
         	    return false;
         }

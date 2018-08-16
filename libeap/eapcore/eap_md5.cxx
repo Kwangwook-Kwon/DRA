@@ -37,7 +37,7 @@
 
 #include <string>
 #include <ace/Singleton.h>
-#include <ace/String_Base.h>
+#include <ace/OS_String.h>
 #include <ace/Message_Block.h>
 #include <ace/Thread.h>
 #include <openssl/rand.h>

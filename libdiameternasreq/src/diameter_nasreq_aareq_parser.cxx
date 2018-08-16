@@ -68,106 +68,106 @@ AA_RequestParser::parseAppToRaw()
 
   if (data.AuthApplicationId.IsSet())
     {
-      c = cm.acquire("AuthApplicationId");
+      c = cm.acquire("Auth-Application-Id");
       data.AuthApplicationId.CopyTo(*c, AAA_AVP_INTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.OriginHost.IsSet())
     {
-      c = cm.acquire("OriginHost");
+      c = cm.acquire("Origin-Host");
       data.OriginHost.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
 
   if (data.OriginRealm.IsSet())
     {
-      c = cm.acquire("OriginRealm");
+      c = cm.acquire("Origin-Realm");
       data.OriginRealm.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
 
   if (data.DestinationRealm.IsSet())
     {
-      c = cm.acquire("DestinationRealm");
+      c = cm.acquire("Destination-Realm");
       data.DestinationRealm.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
 
   if (data.AuthRequestType.IsSet())
     {
-      c = cm.acquire("AuthRequestType");
+      c = cm.acquire("Auth-Request-Type");
       data.AuthRequestType.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.DestinationHost.IsSet())
     { 
-      c = cm.acquire("DestinationHost");
+      c = cm.acquire("Destination-Host");
       data.DestinationHost.CopyTo(*c, AAA_AVP_DIAMID_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.NasIdentifier.IsSet())
     { 
-      c = cm.acquire("NasIdentifier");
+      c = cm.acquire("Nas-Identifier");
       data.NasIdentifier.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.NasIpAddress.IsSet())
     { 
-      c = cm.acquire("NasIPAddress");
+      c = cm.acquire("Nas-IP-Address");
       data.NasIpAddress.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.NasIpv6Address.IsSet())
     { 
-      c = cm.acquire("NasIPv6Address");
+      c = cm.acquire("Nas-IPv6-Address");
       data.NasIpv6Address.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.NasPort.IsSet())
     { 
-      c = cm.acquire("NasPort");
+      c = cm.acquire("Nas-Port");
       data.NasPort.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.NasPortId.IsSet())
     { 
-      c = cm.acquire("NasPortId");
+      c = cm.acquire("Nas-Port-Id");
       data.NasPortId.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.NasPortType.IsSet())
     { 
-      c = cm.acquire("NasPortType");
+      c = cm.acquire("Nas-Port-Type");
       data.NasPortType.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.OriginStateId.IsSet())
     { 
-      c = cm.acquire("OriginStateId");
+      c = cm.acquire("Origin-State-Id");
       data.OriginStateId.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.PortLimit.IsSet())
     { 
-      c = cm.acquire("PortLimit");
+      c = cm.acquire("Port-Limit");
       data.PortLimit.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.UserName.IsSet())
     { 
-      c = cm.acquire("UserName");
+      c = cm.acquire("User-Name");
       data.UserName.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.UserPassword.IsSet())
     { 
-      c = cm.acquire("UserPassword");
+      c = cm.acquire("User-Password");
       data.UserPassword.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ServiceType.IsSet())
     { 
-      c = cm.acquire("ServiceType");
+      c = cm.acquire("Service-Type");
       data.ServiceType.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
@@ -179,163 +179,163 @@ AA_RequestParser::parseAppToRaw()
     }
   if (data.AuthorizationLifetime.IsSet())
     { 
-      c = cm.acquire("AuthorizationLifetime");
+      c = cm.acquire("Authorization-Lifetime");
       data.AuthorizationLifetime.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.AuthGracePeriod.IsSet())
     { 
-      c = cm.acquire("AuthGracePeriod");
+      c = cm.acquire("Auth-Grace-Period");
       data.AuthGracePeriod.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.AuthSessionState.IsSet())
     { 
-      c = cm.acquire("AuthSessionState");
+      c = cm.acquire("Auth-Session-State");
       data.AuthSessionState.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.CallbackNumber.IsSet())
     { 
-      c = cm.acquire("CallbackNumber");
+      c = cm.acquire("Callback-Number");
       data.CallbackNumber.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.CalledStationId.IsSet())
     { 
-      c = cm.acquire("CalledStationId");
+      c = cm.acquire("Called-Station-Id");
       data.CalledStationId.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.CallingStationId.IsSet())
     { 
-      c = cm.acquire("CallingStationId");
+      c = cm.acquire("Calling-Station-Id");
       data.CallingStationId.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.OriginatingLineInfo.IsSet())
     { 
-      c = cm.acquire("OriginatingLineInfo");
+      c = cm.acquire("Originating-Line-Info");
       data.OriginatingLineInfo.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ConnectInfo.IsSet())
     { 
-      c = cm.acquire("ConnectInfo");
+      c = cm.acquire("Connect-Info");
       data.ConnectInfo.CopyTo(*c, AAA_AVP_UTF8_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ChapAuth.IsSet())
     {
-      c = cm.acquire("CHAPAuth");
+      c = cm.acquire("CHAP-Auth");
       data.ChapAuth.CopyTo(*c);
       aaaMessage.acl.add(c);
     }
   if (data.ChapChallenge.IsSet())
     { 
-      c = cm.acquire("CHAPChallenge");
+      c = cm.acquire("CHAP-Challenge");
       data.ChapChallenge.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedCompression.IsSet())
     { 
-      c = cm.acquire("FramedCompression");
+      c = cm.acquire("Framed-Compression");
       data.FramedCompression.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedInterfaceId.IsSet())
     { 
-      c = cm.acquire("FramedInterfaceId");
+      c = cm.acquire("Framed-Interface-Id");
       data.FramedInterfaceId.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedIpAddress.IsSet())
     { 
-      c = cm.acquire("FramedIPAddress");
+      c = cm.acquire("Framed-IP-Address");
       data.FramedIpAddress.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedIpv6Prefix.IsSet())
     {
-      c = cm.acquire("FramedIPv6Prefix");
+      c = cm.acquire("Framed-IPv6-Prefix");
       data.FramedIpv6Prefix.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedIpNetmask.IsSet())
     { 
-      c = cm.acquire("FramedIPNetmask");
+      c = cm.acquire("Framed-IP-Netmask");
       data.FramedIpNetmask.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedMtu.IsSet())
     { 
-      c = cm.acquire("FramedMTU");
+      c = cm.acquire("Framed-MTU");
       data.FramedMtu.CopyTo(*c, AAA_AVP_UINTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.FramedProtocol.IsSet())
     { 
-      c = cm.acquire("FramedProtocol");
+      c = cm.acquire("Framed-Protocol");
       data.FramedProtocol.CopyTo(*c, AAA_AVP_ENUM_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ArapPassword.IsSet())
     { 
-      c = cm.acquire("ARAPPassword");
+      c = cm.acquire("ARAP-Password");
       data.ArapPassword.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ArapChallengeResponse.IsSet())
     { 
-      c = cm.acquire("ARAPChallengeResponse");
+      c = cm.acquire("ARAP-Challenge-Response");
       data.ArapChallengeResponse.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ArapSecurity.IsSet())
     { 
-      c = cm.acquire("ARAPSecurity");
+      c = cm.acquire("ARAP-Security");
       data.ArapSecurity.CopyTo(*c, AAA_AVP_INTEGER32_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.ArapSecurityData.IsSet())
     { 
-      c = cm.acquire("ARAPSecurityData");
+      c = cm.acquire("ARAP-Security-Data");
       data.ArapSecurityData.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.LoginIpHost.IsSet())
     { 
-      c = cm.acquire("LoginIPHost");
+      c = cm.acquire("Login-IP-Host");
       data.LoginIpHost.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.LoginIpv6Host.IsSet())
     { 
-      c = cm.acquire("LoginIPv6Host");
+      c = cm.acquire("Login-IPv6-Host");
       data.LoginIpv6Host.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.LoginLatGroup.IsSet())
     { 
-      c = cm.acquire("LoginLATGroup");
+      c = cm.acquire("Login-LAT-Group");
       data.LoginLatGroup.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.LoginLatNode.IsSet())
     { 
-      c = cm.acquire("LoginLATNode");
+      c = cm.acquire("Login-LAT-Node");
       data.LoginLatNode.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.LoginLatPort.IsSet())
     { 
-      c = cm.acquire("LoginLATPort");
+      c = cm.acquire("Login-LAT-Port");
       data.LoginLatPort.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
   if (data.LoginLatService.IsSet())
     { 
-      c = cm.acquire("LoginLATService");
+      c = cm.acquire("Login-LAT-Service");
       data.LoginLatService.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
@@ -347,13 +347,13 @@ AA_RequestParser::parseAppToRaw()
     }
   if (data.ProxyInfo.size()>0)
     {
-      c = cm.acquire("ProxyInfo");
+      c = cm.acquire("Proxy-Info");
       data.ProxyInfo.CopyTo(*c);
       aaaMessage.acl.add(c);
     }
   if (data.RouteRecord.IsSet())
     {
-      c = cm.acquire("RouteRecord");
+      c = cm.acquire("Route-Record");
       data.RouteRecord.CopyTo(*c, AAA_AVP_STRING_TYPE);
       aaaMessage.acl.add(c);
     }
@@ -375,11 +375,11 @@ AA_RequestParser::parseRawToApp()
 
   //  AAAAvpContainerEntry *e;
   AAAAvpContainer *c;
-  if ((c = aaaMessage.acl.search("SessionId")))
+  if ((c = aaaMessage.acl.search("Session-Id")))
     {
       data.SessionId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthApplicationId")))
+  if ((c = aaaMessage.acl.search("Auth-Application-Id")))
     {
       if (NasreqApplicationId
 	  != (*c)[0]->dataRef(Type2Type<diameter_unsigned32_t>()))
@@ -388,67 +388,67 @@ AA_RequestParser::parseRawToApp()
 	  throw (DIAMETER_PAYLOAD_ERROR);
 	}
     }
-  if ((c = aaaMessage.acl.search("OriginHost")))
+  if ((c = aaaMessage.acl.search("Origin-Host")))
     {
       data.OriginHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("OriginRealm")))
+  if ((c = aaaMessage.acl.search("Origin-Realm")))
     {
       data.OriginRealm.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("DestinationRealm")))
+  if ((c = aaaMessage.acl.search("Destination-Realm")))
     {
       data.DestinationRealm.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthRequestType")))
+  if ((c = aaaMessage.acl.search("Auth-Request-Type")))
     {
       data.AuthRequestType.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("DestinationHost")))
+  if ((c = aaaMessage.acl.search("Destination-Host")))
     {
       data.DestinationHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("NasIdentifier")))
+  if ((c = aaaMessage.acl.search("Nas-Identifier")))
     {
       data.NasIdentifier.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("NasIPAddress")))
+  if ((c = aaaMessage.acl.search("Nas-IP-Address")))
     {
       data.NasIpAddress.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("NasIPv6Address")))
+  if ((c = aaaMessage.acl.search("Nas-IPv6-Address")))
     {
       data.NasIpv6Address.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("NasPort")))
+  if ((c = aaaMessage.acl.search("Nas-Port")))
     {
       data.NasPort.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("NasPortId")))
+  if ((c = aaaMessage.acl.search("Nas-Port-Id")))
     {
       data.NasPortId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("NasPortType")))
+  if ((c = aaaMessage.acl.search("Nas-Port-Type")))
     {
       data.NasPortType.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("OriginStateId")))
+  if ((c = aaaMessage.acl.search("Origin-State-Id")))
     {
       data.OriginStateId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("PortLimit")))
+  if ((c = aaaMessage.acl.search("Port-Limit")))
     {
       data.PortLimit.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("UserName")))
+  if ((c = aaaMessage.acl.search("User-Name")))
     {
       data.UserName.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("UserPassword")))
+  if ((c = aaaMessage.acl.search("User-Password")))
     {
       data.UserPassword.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ServiceType")))
+  if ((c = aaaMessage.acl.search("Service-Type")))
     {
       data.ServiceType.CopyFrom(*c);
     }
@@ -456,111 +456,111 @@ AA_RequestParser::parseRawToApp()
     {
       data.State.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthorizationLifetime")))
+  if ((c = aaaMessage.acl.search("Authorization-Lifetime")))
     {
       data.AuthorizationLifetime.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthGracePeriod")))
+  if ((c = aaaMessage.acl.search("Auth-Grace-Period")))
     {
       data.AuthGracePeriod.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("AuthSessionState")))
+  if ((c = aaaMessage.acl.search("Auth-Session-State")))
     {
       data.AuthSessionState.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("CallbackNumber")))
+  if ((c = aaaMessage.acl.search("Callback-Number")))
     {
       data.CallbackNumber.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("CalledStationId")))
+  if ((c = aaaMessage.acl.search("Called-Station-Id")))
     {
       data.CalledStationId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("CallingStationId")))
+  if ((c = aaaMessage.acl.search("Calling-Station-Id")))
     {
       data.CallingStationId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("OriginatingLineInfo")))
+  if ((c = aaaMessage.acl.search("Originating-Line-Info")))
     {
       data.OriginatingLineInfo.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ConnectInfo")))
+  if ((c = aaaMessage.acl.search("Connect-Info")))
     {
       data.ConnectInfo.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("CHAPAuth")))
+  if ((c = aaaMessage.acl.search("CHAP-Auth")))
     {
       data.ChapAuth.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("CHAPChallenge")))
+  if ((c = aaaMessage.acl.search("CHAP-Challenge")))
     {
       data.ChapChallenge.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedCompression")))
+  if ((c = aaaMessage.acl.search("Framed-Compression")))
     {
       data.FramedCompression.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedInterfaceId")))
+  if ((c = aaaMessage.acl.search("Framed-Interface-Id")))
     {
       data.FramedInterfaceId.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedIPAddress")))
+  if ((c = aaaMessage.acl.search("Framed-IP-Address")))
     {
       data.FramedIpAddress.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedIPv6Prefix")))
+  if ((c = aaaMessage.acl.search("Framed-IPv6-Prefix")))
     {
       data.FramedIpv6Prefix.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedIPNetmask")))
+  if ((c = aaaMessage.acl.search("Framed-IP-Netmask")))
     {
       data.FramedIpAddress.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("FramedMTU")))
+  if ((c = aaaMessage.acl.search("Framed-MTU")))
     {
       data.FramedMtu = (*c)[0]->dataRef(Type2Type<diameter_unsigned32_t>());
     }
-  if ((c = aaaMessage.acl.search("FramedProtocol")))
+  if ((c = aaaMessage.acl.search("Framed-Protocol")))
     {
       data.FramedProtocol.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ARAPPassword")))
+  if ((c = aaaMessage.acl.search("ARAP-Password")))
     {
       data.ArapPassword.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ARAPChallengeResponse")))
+  if ((c = aaaMessage.acl.search("ARAP-Challenge-Response")))
     {
       data.ArapChallengeResponse.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ARAPSecurity")))
+  if ((c = aaaMessage.acl.search("ARAP-Security")))
     {
       data.ArapSecurity.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ARAPSecurityData")))
+  if ((c = aaaMessage.acl.search("ARAP-Security-Data")))
     {
       data.ArapSecurityData.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("LoginIPHost")))
+  if ((c = aaaMessage.acl.search("Login-IP-Host")))
     {
       data.LoginIpHost.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("LoginIPv6Host")))
+  if ((c = aaaMessage.acl.search("Login-IPv6-Host")))
     {
       data.LoginIpv6Host.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("LoginLATGroup")))
+  if ((c = aaaMessage.acl.search("Login-LAT-Group")))
     {
       data.LoginLatGroup.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("LoginLATNode")))
+  if ((c = aaaMessage.acl.search("Login-LAT-Node")))
     {
       data.LoginLatNode.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("LoginLATPort")))
+  if ((c = aaaMessage.acl.search("Login-LAT-Port")))
     {
       data.LoginLatPort.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("LoginLATService")))
+  if ((c = aaaMessage.acl.search("Login-LAT-Service")))
     {
       data.LoginLatService.CopyFrom(*c);
     }
@@ -568,11 +568,11 @@ AA_RequestParser::parseRawToApp()
     {
       data.Tunneling.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("ProxyInfo")))
+  if ((c = aaaMessage.acl.search("Proxy-Info")))
     {
       data.ProxyInfo.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search("RouteRecord")))
+  if ((c = aaaMessage.acl.search("Route-Record")))
     {
       data.RouteRecord.CopyFrom(*c);
     }

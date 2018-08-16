@@ -409,7 +409,7 @@ class PANA_AddressParser :
             PANA_AvpContainerEntryManager em;
             PANA_AddressAvpContainerEntry *e;
             getAppData(e);
-            if (e->dataType() != AAA_AVP_IPADDRESS_TYPE) {
+            if (e->dataType() != AAA_AVP_ADDRESS_TYPE) {
                 AAAErrorCode st;
                 AAA_LOG((LM_ERROR, "Invalid AVP type."));
                 st.set(AAA_PARSE_ERROR_TYPE_BUG, 
@@ -443,7 +443,7 @@ class PANA_AddressParser :
             PANA_AvpContainerEntryManager em;
             PANA_AddressAvpContainerEntry *e;
             getAppData(e);
-            if (e->dataType() != AAA_AVP_IPADDRESS_TYPE) {
+            if (e->dataType() != AAA_AVP_ADDRESS_TYPE) {
                 AAAErrorCode st;
                 AAA_LOG((LM_ERROR, "Invalid AVP type."));
                 st.set(AAA_PARSE_ERROR_TYPE_BUG,
@@ -498,8 +498,8 @@ class PANA_GroupedParser :
             AAAErrorCode st;
 
             /* find grouped avp structure */
-#if defined(DS_DEBUG)
-            AAA_LOG((LM_DEBUG, "Getting Grouped AVP %s .\n", avp->avpName.c_str()));
+#ifdef DEBUG
+            cout << "Getting Grouped AVP" << avp->avpName << "\n";
 #endif
 
             if ((gavp = PANA_GroupedAvpList::instance()

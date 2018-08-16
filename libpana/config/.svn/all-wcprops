@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svnroot/diameter/!svn/ver/252/cplusplus/libpana/config
+END
+config.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svnroot/diameter/!svn/ver/229/cplusplus/libpana/config/config.dtd
+END
+dictionary.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svnroot/diameter/!svn/ver/139/cplusplus/libpana/config/dictionary.dtd
+END
+paa.xml
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svnroot/diameter/!svn/ver/252/cplusplus/libpana/config/paa.xml
+END
+users.xml
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svnroot/diameter/!svn/ver/3/cplusplus/libpana/config/users.xml
+END
+pac.xml
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svnroot/diameter/!svn/ver/229/cplusplus/libpana/config/pac.xml
+END
+shared_secret.bin
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svnroot/diameter/!svn/ver/3/cplusplus/libpana/config/shared_secret.bin
+END
+dictionary.xml
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svnroot/diameter/!svn/ver/222/cplusplus/libpana/config/dictionary.xml
+END
+pana_auth.bat
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svnroot/diameter/!svn/ver/3/cplusplus/libpana/config/pana_auth.bat
+END
+users.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svnroot/diameter/!svn/ver/3/cplusplus/libpana/config/users.dtd
+END

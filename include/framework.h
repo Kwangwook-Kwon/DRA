@@ -54,7 +54,6 @@
 #include <ace/Token.h>
 #include <ace/Log_Msg.h>
 #include <ace/Atomic_Op_T.h>
-#include <ace/Condition_T.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/shared_array.hpp>

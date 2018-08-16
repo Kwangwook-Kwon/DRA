@@ -172,7 +172,7 @@ AAAReturnCode AAAXmlWriter::Walk(AAAAvpContainerList &avplist,
       for (y = 0; y < c->size(); y++) {
   	 entry = (*c)[y];
          switch (entry->dataType()) {
-	    case AAA_AVP_IPADDRESS_TYPE:
+	    case AAA_AVP_ADDRESS_TYPE:
 	       {
 	           diameter_address_t &val = entry->dataRef
                          (Type2Type<diameter_address_t>());

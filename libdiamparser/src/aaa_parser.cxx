@@ -79,15 +79,11 @@ DiameterMsgHeaderParser::parseRawToApp()// throw(DiameterErrorCode)
       return;
     }
 
-#if defined(DS_DEBUG)
-    AAA_LOG((LM_DEBUG, "\nh.code = %d, h.appId = %d, h.flags.r = %d\n",
-        h.code, h.appId, h.flags.r));
-#endif
   if ((com = DiameterCommandList::instance()
        ->search(h.code, h.appId, h.flags.r)) == NULL)
   {
-    AAA_LOG((LM_ERROR, "command (code=%d,appId=%d,r-flag=%1d) not found\n", 
-	       h.code, h.appId, h.flags.r));
+    AAA_LOG((LM_ERROR, "command (%d,r-flag=%1d) not found\n", 
+	       h.code, h.flags.r));
     st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_COMMAND_UNSUPPORTED);
     throw st;
   }
@@ -97,8 +93,8 @@ DiameterMsgHeaderParser::parseRawToApp()// throw(DiameterErrorCode)
       AAA_LOG((LM_ERROR, 
 		      "command (%d) e flag cannot be set for request\n", 
 		      h.code));
-//      st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_INVALID_BIT_IN_HEADER);
-//      throw st;
+      st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_INVALID_BIT_IN_HEADER);
+      throw st;
     }
 
   if (com->flags.p == 0 && h.flags.p == 1)
@@ -110,12 +106,7 @@ DiameterMsgHeaderParser::parseRawToApp()// throw(DiameterErrorCode)
       throw st;
     }
 
-#if defined(DS_DEBUG)
-    AAA_LOG((LM_DEBUG, "\ncom->flags.r = %d, h.flags.p = %d, h.flags.e = %d, h.flags.t = %d\n",
-        com->flags.r, h.flags.p, h.flags.e, h.flags.t));
-#endif
   /* special handling for answer message with error flag set */
-    /*
   if (! com->flags.r && h.flags.e)
     {
       if (h.flags.p)
@@ -136,7 +127,6 @@ DiameterMsgHeaderParser::parseRawToApp()// throw(DiameterErrorCode)
 	  throw st;
 	}
     }
-    */
   h.dictHandle = com;
 }
 
@@ -152,11 +142,6 @@ DiameterMsgHeaderParser::parseAppToRaw()// throw(DiameterErrorCode)
   DiameterCommand *com=0;
 
   aBuffer->wr_ptr(aBuffer->base());
-
-#if defined(DS_DEBUG)
-    AAA_LOG((LM_DEBUG, "\nh.code = %d, h.appId = %d, h.flags.r = %d\n",
-        h.code, h.appId, h.flags.r));
-#endif
 
   if (opt != DIAMETER_PARSE_LOOSE)
     {
@@ -184,17 +169,11 @@ DiameterMsgHeaderParser::parseAppToRaw()// throw(DiameterErrorCode)
 	  AAA_LOG((LM_ERROR, 
 			  "command (%d) contains mismatch in p flag\n", 
 			  h.code));
-//	  st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_INVALID_HDR_BITS);
-//	  throw st;
+	  st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_INVALID_HDR_BITS);
+	  throw st;
 	}
 
-#if defined(DS_DEBUG)
-    AAA_LOG((LM_DEBUG, "\ncom->flags.r = %d, h.flags.e = %d, h.flags.r = %d\n",
-        com->flags.r, h.flags.e, h.flags.r));
-#endif
-
       /* special handling for answer message with error flag set */
-    /*
       if (! com->flags.r && h.flags.e)
 	{
 	  if (h.flags.p)
@@ -213,8 +192,6 @@ DiameterMsgHeaderParser::parseAppToRaw()// throw(DiameterErrorCode)
 	      throw st;
 	    }
 	}
-*/
-
     }
 
   *((ACE_UINT32*)(p)) = ntohl(h.length);
@@ -288,49 +265,3 @@ const char* DiameterMsgHeader::getCommandName()
   return dictHandle ? ((DiameterCommand*)dictHandle)->name.c_str() : NULL;
 }
 
-DiameterMsgHeader::DiameterMsgHeader(AAAUInt8 ver,
-                                     ACE_UINT32 length,
-                                     struct diameter_hdr_flag flags,
-                                     AAACommandCode code,
-                                     DiameterApplicationId appId,
-                                     ACE_UINT32 hh,
-                                     ACE_UINT32 ee)
-{
-    this->ver = ver;
-    this->length = length;
-    this->flags = flags;
-    this->code = code;
-    this->appId = appId;
-    this->hh = hh;
-    this->ee = ee;
-    this->dictHandle = 0;
-}
-
-DiameterMsgHeader::DiameterMsgHeader()
-{
-    this->ver = 0;
-    this->length = 0;
-    this->code = 0;
-    this->appId = 0;
-    this->hh = 0;
-    this->ee = 0;
-    this->dictHandle = 0;
-}
-
-AAADictionaryHandle *DiameterMsgHeader::getDictHandle()
-{ 
-    return dictHandle;
-}
-
-DiameterMsgHeader &DiameterMsgHeader::operator=(DiameterMsgHeader &hdr)
-{
-    this->ver = hdr.ver;
-    this->length = hdr.length;
-    this->flags = hdr.flags;
-    this->code = hdr.code;
-    this->appId = hdr.appId;
-    this->hh = hdr.hh;
-    this->ee = hdr.ee;
-    this->dictHandle = hdr.getDictHandle();
-    return *this;
-}

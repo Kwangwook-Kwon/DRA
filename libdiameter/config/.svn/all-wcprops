@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svnroot/diameter/!svn/ver/278/cplusplus/libdiameter/config
+END
+dictionary.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svnroot/diameter/!svn/ver/103/cplusplus/libdiameter/config/dictionary.dtd
+END
+configuration.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svnroot/diameter/!svn/ver/278/cplusplus/libdiameter/config/configuration.dtd
+END
+isp.local.xml
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svnroot/diameter/!svn/ver/278/cplusplus/libdiameter/config/isp.local.xml
+END
+dictionary.xml
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svnroot/diameter/!svn/ver/263/cplusplus/libdiameter/config/dictionary.xml
+END
+agent.local.xml
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svnroot/diameter/!svn/ver/278/cplusplus/libdiameter/config/agent.local.xml
+END
+configuration.xml
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svnroot/diameter/!svn/ver/278/cplusplus/libdiameter/config/configuration.xml
+END
+nas1.local.xml
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svnroot/diameter/!svn/ver/278/cplusplus/libdiameter/config/nas1.local.xml
+END
+nas2.local.xml
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svnroot/diameter/!svn/ver/278/cplusplus/libdiameter/config/nas2.local.xml
+END
+nas3.local.xml
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svnroot/diameter/!svn/ver/278/cplusplus/libdiameter/config/nas3.local.xml
+END

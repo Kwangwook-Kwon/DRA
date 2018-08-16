@@ -83,11 +83,6 @@ ACE_UINT32 getMinSize(AAADictionaryEntry *avp)
 
 DiameterAvpList_S::DiameterAvpList_S()
 {
-#if defined(DS_DEBUG)
-    AAA_LOG((LM_DEBUG, "%s: Add default AVP, thread Id %d\n",
-        __FUNCTION__,
-        ACE_OS::getpid()));
-#endif
     this->add(&Any);
 }
 
@@ -95,3 +90,4 @@ DiameterAvpList_S::~DiameterAvpList_S()
 {
     pop_front(); // remove ANY AVP
 }
+

@@ -473,7 +473,16 @@ main(int argc, char *argv[])
   AAAApplicationCore applicationCore;
   MyInitializer initializer(task, applicationCore);
 
+#if defined(WIN32)
   #define num 100
+  char c;
+  std::cout << "Input any characer and return after peer connection has established: ";
+  std::cin >> c;
+#else
+  int num;
+  std::cout << "Input number of sessions and return after peer connection has established: ";
+  std::cin >> num;
+#endif
 
   ACE_Semaphore semaphore(num);
 

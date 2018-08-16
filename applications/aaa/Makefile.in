@@ -239,7 +239,7 @@ aaad_SOURCES = $(SRC) $(HDR)
 aaad_LDADD = $(top_builddir)/libeap/libeap.la \
 	$(top_builddir)/libeap/libeaparchie.la $(top_builddir)/libdiametereap/libdiametereap.la \
 	$(top_builddir)/libdiameter/libdiameter.la $(top_builddir)/libdiamparser/libdiamparser.la \
-	$(top_builddir)/libodutl/libodutl.la -lACEXML_Parser -lACEXML -lACE -lACE_SSL -lssl -lboost_system
+	$(top_builddir)/libodutl/libodutl.la -lACEXML_Parser -lACEXML -lACE -lACE_SSL -lssl
 
 EXTRA_DIST = config
 all: all-am

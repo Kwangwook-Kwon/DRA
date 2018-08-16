@@ -76,8 +76,8 @@ class AAAXML_Element
         return true;
      }
      virtual bool characters(const ACEXML_Char *ch,
-                             size_t start,
-                             size_t length) {
+                             int start,
+                             int length ACEXML_ENV_ARG_DECL) {
         if (! m_inProcess) {
             AAA_LOG ((LM_ERROR, "Error: element %s not in process\n",
                         m_name.data()));
@@ -201,8 +201,8 @@ class AAAXML_ApplicationElement :
                }
             }
         }
-#if defined(DS_DEBUG)
-        AAA_LOG((LM_DEBUG, " App [ name = %s, id = %d, uri = %s\n", 
+#if AAAXML_DEBUG
+        AAA_LOG((LM_DEBUG, " App    [ name = %s, id = %d, uri = %s\n", 
 	           m_name.c_str(), m_appId, m_uri.c_str()));
 #endif
         return true;
@@ -260,7 +260,7 @@ class AAAXML_CommandElement :
                    m_eBit = ACE_OS::atoi(alist->getValue(i));
                }
             }
-#if defined(DS_DEBUG)
+#if AAAXML_DEBUG
             AAA_LOG((LM_DEBUG, " Command [ name = %s, code = %d\n", 
 	           m_name.c_str(), m_code));
 #endif
@@ -344,7 +344,8 @@ class AAAXML_RequestRulesElement :
         m_command->flags.e = cmdElm->eBit();
         m_command->flags.r = 1;
         DiameterCommandList::instance()->add(m_command);
-#if defined(DS_DEBUG)
+
+#if AAAXML_DEBUG
         AAA_LOG((LM_DEBUG, " Request [name = %s, code = %d, applid = %d]\n", 
 	           m_command->name.c_str(), m_command->code, m_command->appId));
 #endif
@@ -391,7 +392,7 @@ class AAAXML_AnswerRulesElement :
         m_command->flags.r = 0;
         DiameterCommandList::instance()->add(m_command);
 
-#if defined(DS_DEBUG)
+#if AAAXML_DEBUG
         AAA_LOG((LM_DEBUG, " Answer [name = %s, code = %d, applid = %d]\n", 
 	           m_command->name.c_str(), m_command->code, m_command->appId));
 #endif
@@ -420,7 +421,7 @@ class AAAXML_TypedefElement :
         if (! AAAXML_Element::startElement(alist)) {
             return false;
         }
-#if defined(DS_DEBUG)
+#if AAAXML_DEBUG
         if (alist != 0) {
             for (size_t i = 0; i < alist->getLength (); ++i) {
                AAA_LOG ((LM_INFO,
@@ -462,10 +463,10 @@ class AAAXML_AvpElement :
                else if (! ACE_OS::strcmp(alist->getQName(i), "mandatory")) {
                    mandatory = alist->getValue(i);
                }
-               else if (! ACE_OS::strcmp(alist->getQName(i), "protect")) {
+               else if (! ACE_OS::strcmp(alist->getQName(i), "protected")) {
                    protect = alist->getValue(i);
                }
-               else if (! ACE_OS::strcmp(alist->getQName(i), "vendorId")) {
+               else if (! ACE_OS::strcmp(alist->getQName(i), "vendor-id")) {
                    vendorId = ACE_OS::atoi(alist->getValue(i));
                }
             }
@@ -480,34 +481,24 @@ class AAAXML_AvpElement :
                 ((encrypt == std::string("yes")) ? DIAMETER_AVP_FLAG_ENCRYPT : 0);
             m_avp->flags |= 
                 (((mandatory == std::string("may")) || 
-                  (mandatory == std::string("must")) ||
-                  (mandatory == std::string(""))) ? 
+                  (mandatory == std::string("must"))) ? 
                   DIAMETER_AVP_FLAG_MANDATORY : 0);
             m_avp->flags |= 
                 (((protect == std::string("may")) || 
-                  (protect == std::string("must")) ||
-                  (protect == std::string(""))) ?
+                  (protect == std::string("must"))) ?
                    DIAMETER_AVP_FLAG_END_TO_END_ENCRYPT : 0);
             m_avp->flags |= 
                 ((vendorId == 0) ? 0 : DIAMETER_AVP_FLAG_VENDOR_SPECIFIC);
-            if (m_avp->avpName != "AVP" )  { // Do not add "AVP" AVP
+            if (m_avp->avpCode != 0)  { // Do not add "AVP" AVP
                 DiameterAvpList::instance()->add(m_avp);
-            } else {
+            }
+            else {
                 delete m_avp;
                 m_avp = NULL;
             }
-#if defined(DS_DEBUG)
-           AAA_LOG((LM_DEBUG, " Avp [name = %s, code = %d, encrypt = %s, "
-                      "mandatory= %s, protect = %s ,vendorId = %d ], "
-                      "AVP list size = %d, thread id = %d\n", 
-                      name.c_str(),
-                      code,
-                      encrypt.c_str(),
-                      mandatory.c_str(),
-                      protect.c_str(),
-                      vendorId,
-                      DiameterAvpList::instance()->size(),
-                      ACE_OS::getpid()));
+#if AAAXML_DEBUG
+           AAA_LOG((LM_DEBUG, " Avp [name = %s, code = %d]\n", 
+                      name.c_str(), code));
 #endif
         }
         return true;
@@ -539,7 +530,7 @@ class AAAXML_TypeElement :
         std::string tname;
         if (alist != 0) {         
             for (size_t i = 0; i < alist->getLength (); ++i) {
-               if (! ACE_OS::strcmp(alist->getQName(i), "name")) {
+               if (! ACE_OS::strcmp(alist->getQName(i), "type-name")) {
                    tname = alist->getValue(i);
                    break;
                }
@@ -594,7 +585,7 @@ class AAAXML_GroupedElement :
 						       // after parsing
                                                        // all avps.
         avpElm->Avp()->avpType = AAA_AVP_GROUPED_TYPE;
-#if defined(DS_DEBUG)
+#if AAAXML_DEBUG
         AAA_LOG((LM_DEBUG, " Grouped [code = %d]\n", 
                    m_grpAvp->code));
 #endif
@@ -629,7 +620,7 @@ class AAAXML_PositionElement :
             AAAXML_RequestRulesElement *reqElm = 
                 (AAAXML_RequestRulesElement*)(Parent());
             m_qAvpList = ResolveAvpList(reqElm->Cmd(), Name());
-#if defined(DS_DEBUG)
+#if AAAXML_DEBUG
             AAA_LOG((LM_DEBUG, " Request [%s] definition\n", 
                        Name().c_str()));
 #endif
@@ -638,7 +629,7 @@ class AAAXML_PositionElement :
             AAAXML_AnswerRulesElement *ansrElm = 
                 (AAAXML_AnswerRulesElement*)(Parent());
             m_qAvpList = ResolveAvpList(ansrElm->Cmd(), Name());
-#if defined(DS_DEBUG)
+#if AAAXML_DEBUG
             AAA_LOG((LM_DEBUG, " Answer [%s] definition\n", 
                        Name().c_str()));
 #endif
@@ -646,14 +637,14 @@ class AAAXML_PositionElement :
         else if (Parent()->Name() == std::string("grouped")) {
             AAAXML_GroupedElement *grpElm = (AAAXML_GroupedElement*)Parent();
             m_qAvpList = ResolveAvpList(grpElm->Avp(), Name());
-#if defined(DS_DEBUG)
+#if AAAXML_DEBUG
             AAA_LOG((LM_DEBUG, " Grouped [%s] definition\n", 
                        Name().c_str()));
 #endif
         }
         else {
             IsSkipped() = true;
-#if defined(DS_DEBUG)
+#if AAAXML_DEBUG
             AAA_LOG((LM_DEBUG, " Skipped [%s] definition\n", 
                        Name().c_str()));
 #endif
@@ -725,7 +716,7 @@ class AAAXML_AvpRuleElement :
 {
   public:
      AAAXML_AvpRuleElement(AAAXML_ElementStack &stack) :
-        AAAXML_Element("rule", stack) {
+        AAAXML_Element("avprule", stack) {
      }
      virtual bool startElement (ACEXML_Attributes *alist) {
         if (! AAAXML_Element::startElement(alist)) {
@@ -747,13 +738,13 @@ class AAAXML_AvpRuleElement :
                if (! ACE_OS::strcmp(alist->getQName(i), "name")) {
                    avpName = alist->getValue(i);
                }
-               else if (! ACE_OS::strcmp(alist->getQName(i), "vendorId")) {
+               else if (! ACE_OS::strcmp(alist->getQName(i), "vendor-id")) {
                    vendorId = ACE_OS::atoi(alist->getValue(i));
                }
-               else if (! ACE_OS::strcmp(alist->getQName(i), "min")) {
+               else if (! ACE_OS::strcmp(alist->getQName(i), "minimum")) {
                    sMin = alist->getValue(i);
                }
-               else if (! ACE_OS::strcmp(alist->getQName(i), "max")) {
+               else if (! ACE_OS::strcmp(alist->getQName(i), "maximum")) {
                    sMax = alist->getValue(i);
                }
             }
@@ -785,13 +776,9 @@ class AAAXML_AvpRuleElement :
         qavp->qual.min = min; 
         qavp->qual.max = max; 
         posElm->AvpList()->add(qavp);
-#if defined(DS_DEBUG)
-        AAA_LOG((LM_DEBUG, " Avp Rule [name = %s, min = %d, max = %d], AVP list size = %d, thread id = %d\n", 
-                  avpName.c_str(),
-                  min,
-                  max,
-                  DiameterAvpList::instance()->size(),
-                  ACE_OS::getpid()));
+#if AAAXML_DEBUG
+        AAA_LOG((LM_DEBUG, " Avp Rule [name = %s]\n", 
+                  avpName.c_str()));
 #endif
         return true;
      }
@@ -895,9 +882,6 @@ class AAAXML_ParsingTables
      // Interface to SAX handlers
      virtual void startDocument() {
      	m_passNum ++;
-#if defined(DS_DEBUG)
-        AAA_LOG((LM_DEBUG, "passNum = %d\n", m_passNum));
-#endif
      }
      virtual void startElement(const ACEXML_Char *namespaceURI,
                                const ACEXML_Char *localName,
@@ -910,8 +894,8 @@ class AAAXML_ParsingTables
          }
      }
      virtual void characters (const ACEXML_Char *ch,
-                              size_t start,
-                              size_t length) {
+                              int start,
+                              int length) {
          if (m_currentElement) {
              m_currentElement->characters(ch, start, length);
          }
@@ -950,64 +934,78 @@ class AAAXML_SAXHandler : public ACEXML_DefaultHandler
 
      // Methods inherit from ACEXML_ContentHandler.
      virtual void characters (const ACEXML_Char *ch,
-                              size_t start,
-                              size_t length) {
+                              int start,
+                              int length ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          m_parsingTables.characters(ch, start, length);
      }
-     virtual void endDocument () {
+     virtual void endDocument (ACEXML_ENV_SINGLE_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          m_parsingTables.endDocument();
      }
      virtual void endElement (const ACEXML_Char *namespaceURI,
                               const ACEXML_Char *localName,
-                              const ACEXML_Char *qName) {
+                              const ACEXML_Char *qName ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          m_parsingTables.endElement(namespaceURI, localName, qName);
      }
-     virtual void endPrefixMapping (const ACEXML_Char *prefix) {
+     virtual void endPrefixMapping (const ACEXML_Char *prefix ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }  
      virtual void ignorableWhitespace (const ACEXML_Char *ch,
                                        int start,
-                                       int length) {
+                                       int length ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
      virtual void processingInstruction (const ACEXML_Char *target,
-         const ACEXML_Char *data) {
+                                         const ACEXML_Char *data ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
      virtual void setDocumentLocator (ACEXML_Locator *locator) {
          m_locator = locator;
      }
-     virtual void skippedEntity (const ACEXML_Char *name) {
+     virtual void skippedEntity (const ACEXML_Char *name ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
-     virtual void startDocument () {
+     virtual void startDocument (ACEXML_ENV_SINGLE_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          m_parsingTables.startDocument();
      }
      virtual void startElement (const ACEXML_Char *namespaceURI,
                                 const ACEXML_Char *localName,
                                 const ACEXML_Char *qName,
-                                ACEXML_Attributes *atts) {
+                                ACEXML_Attributes *atts ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) { 
          m_parsingTables.startElement(namespaceURI, localName, qName, atts);
      }
      virtual void startPrefixMapping (const ACEXML_Char *prefix,
-                                      const ACEXML_Char *uri) {
+                                      const ACEXML_Char *uri ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
 
      // *** Methods inherit from ACEXML_DTDHandler.
      virtual void notationDecl (const ACEXML_Char *name,
                                 const ACEXML_Char *publicId,
-                                const ACEXML_Char *systemId) {
+                                const ACEXML_Char *systemId ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
      virtual void unparsedEntityDecl (const ACEXML_Char *name,
                                       const ACEXML_Char *publicId,
                                       const ACEXML_Char *systemId,
-                                      const ACEXML_Char *notationName) {
+                                      const ACEXML_Char *notationName ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
 
      // Methods inherit from ACEXML_EnitityResolver.
      virtual ACEXML_InputSource *resolveEntity (const ACEXML_Char *publicId,
-                                                const ACEXML_Char *systemId) {
+                                                const ACEXML_Char *systemId ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          return (NULL);
      }
 
      // Methods inherit from ACEXML_ErrorHandler.
-     virtual void error (ACEXML_SAXParseException &exception) {
+     virtual void error (ACEXML_SAXParseException &exception ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          AAA_LOG ((LM_INFO, "Error %s: line: %d col: %d \n",
                     (m_locator->getSystemId() == 0 ? m_fileName : m_locator->getSystemId()),
                      m_locator->getLineNumber(),
@@ -1015,7 +1013,8 @@ class AAAXML_SAXHandler : public ACEXML_DefaultHandler
          exception.print();
          m_errorCount ++;
      }
-     virtual void fatalError (ACEXML_SAXParseException &exception) {
+     virtual void fatalError (ACEXML_SAXParseException &exception ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          AAA_LOG ((LM_INFO, "Fatal error %s: line: %d col: %d \n",
                     (m_locator->getSystemId() == 0 ? m_fileName : m_locator->getSystemId()),
                      m_locator->getLineNumber(),
@@ -1023,7 +1022,8 @@ class AAAXML_SAXHandler : public ACEXML_DefaultHandler
          exception.print();
          m_fatalError = true;
      }
-     virtual void warning (ACEXML_SAXParseException &exception) {
+     virtual void warning (ACEXML_SAXParseException &exception ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          AAA_LOG ((LM_INFO, "Warning %s: line: %d col: %d \n",
                     (m_locator->getSystemId() == 0 ? m_fileName : m_locator->getSystemId()),
                      m_locator->getLineNumber(),
@@ -1085,14 +1085,12 @@ parseXMLDictionary(char* xmlFile)
       parser.setDTDHandler (handler.get());
       parser.setErrorHandler (handler.get());
       parser.setEntityResolver (handler.get());
-      // disable DTD validation
-      parser.setFeature(ACE_TEXT ("http://xml.org/sax/features/validation"), 0);
     
       try {
           for (int passes = 0; 
               passes < AAAXML_ParsingTables::NUM_PARSING_PASSES; 
               passes ++) {
-              parser.parse (&input);
+              parser.parse (&input ACEXML_ENV_ARG_NOT_USED);
           }
       }
       catch (ACEXML_SAXException &ex) {

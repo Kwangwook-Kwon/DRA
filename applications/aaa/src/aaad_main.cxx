@@ -37,12 +37,7 @@
 /// application headers
 #include "aaad_diameter_eap.h"
 
-#ifdef WIN32
-#define AAAD_DEFAULT_CFG_FILE  "aaad.xml"
-#else
 #define AAAD_DEFAULT_CFG_FILE  "/etc/opendiameter/aaa/config/aaad.xml"
-#endif
-
 #define AAAD_USAGE "\nUsage: aaad [cfg_file]\n\
              cfg_file - AAAD XML configuration file\n"
 

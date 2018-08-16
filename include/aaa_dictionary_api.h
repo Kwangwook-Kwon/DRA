@@ -128,9 +128,6 @@ class AAAAvpList :
 
     protected:
         AAAAvpList() {
-            AAA_LOG((LM_DEBUG, "%s: thread Id %d\n",
-                __FUNCTION__,
-                ACE_OS::getpid()));
         }
         virtual ~AAAAvpList() {
             std::list<AAADictionaryEntry*>::iterator i;

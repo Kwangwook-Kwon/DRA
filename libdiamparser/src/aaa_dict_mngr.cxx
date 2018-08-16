@@ -37,20 +37,6 @@
 #include "aaa_xml_parsing.h"
 #include "aaa_parser_avpvalue.h"
 
-DiameterDictionaryManager::DiameterDictionaryManager()
-{
-#if defined(DS_DEBUG)
-    AAA_LOG((LM_DEBUG, "%s\n", __FUNCTION__));
-#endif
-}
-
-DiameterDictionaryManager::~DiameterDictionaryManager()
-{
-#if defined(DS_DEBUG)
-    AAA_LOG((LM_DEBUG, "%s\n", __FUNCTION__));
-#endif
-}
-
 bool DiameterDictionaryManager::getCommandCode(char *commandName,
                                                AAACommandCode *commandCode,
                                                DiameterApplicationId *appId)

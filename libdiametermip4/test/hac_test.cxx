@@ -232,8 +232,8 @@ int main(int argc, char *argv[])
 
 #ifdef MULTIPLE_SESSIONS
 
-    DiameterMip4Session *_diameterMip4SessionPtr[100];
-    
+   DiameterMip4Session *_diameterMip4SessionPtr[howManySessions];
+
    for (int i=0; i<howManySessions; i++)
    {
      (_diameterMip4SessionPtr[i]) = new DiameterMip4Session( appCoreRef);   

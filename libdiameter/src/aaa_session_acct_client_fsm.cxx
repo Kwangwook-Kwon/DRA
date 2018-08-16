@@ -285,7 +285,7 @@ void DiameterAcctSessionClientStateMachine::RxACA(DiameterMsg &msg)
         AAA_LOG((LM_INFO, "(%P|%t) From User   : %s\n", uname->c_str()));
     }
     if (subSessId) {
-        AAA_LOG((LM_INFO, "(%P|%t) SubSession : %d\n", *subSessId));
+        AAA_LOG((LM_INFO, "(%P|%t) Sub-Session : %d\n", *subSessId));
     }
     if (recType) {
         AAA_LOG((LM_INFO, "(%P|%t) Rec Type    : %d\n", *recType));

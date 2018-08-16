@@ -333,7 +333,7 @@ void DiameterAuthSessionClientStateMachine::RxSTA(DiameterMsg &msg)
         AAA_LOG((LM_INFO, "(%P|%t) From User: %s\n", uname->c_str()));
     }
     if (rcode) {
-        AAA_LOG((LM_INFO, "(%P|%t) ResultCode: %d\n", *rcode));
+        AAA_LOG((LM_INFO, "(%P|%t) Result-Code: %d\n", *rcode));
     }
     if (errMsg) {
         if (errHost) {
@@ -476,7 +476,7 @@ void DiameterAuthSessionClientStateMachine::RxRAR(DiameterMsg &msg)
         AAA_LOG((LM_INFO, "(%P|%t) Application Id: %d\n", *appId));
     }
     if (reAuthType) {
-        AAA_LOG((LM_INFO, "(%P|%t) ReAuth Type: %d\n", *reAuthType));
+        AAA_LOG((LM_INFO, "(%P|%t) Re-Auth Type: %d\n", *reAuthType));
     }
 }
 

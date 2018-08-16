@@ -426,7 +426,7 @@ class PANA_AvpContainerWidget :
  *  use this class for manipulating AVP containers.
  */
 typedef PANA_AvpWidget<pana_address_t,
-                       AAA_AVP_IPADDRESS_TYPE> PANA_AddressAvpWidget;
+                       AAA_AVP_ADDRESS_TYPE> PANA_AddressAvpWidget;
 typedef PANA_AvpWidget<pana_integer32_t,
                        AAA_AVP_INTEGER32_TYPE> PANA_Int32AvpWidget;
 typedef PANA_AvpWidget<pana_unsigned32_t,
@@ -456,7 +456,7 @@ typedef PANA_AvpWidget<pana_time_t,
  *  use this class for manipulating AVP containers.
  */
 typedef PANA_AvpContainerWidget<pana_address_t,
-                                AAA_AVP_IPADDRESS_TYPE>
+                                AAA_AVP_ADDRESS_TYPE>
                         PANA_AddressAvpContainerWidget;
 typedef PANA_AvpContainerWidget<pana_integer32_t,
                                 AAA_AVP_INTEGER32_TYPE>

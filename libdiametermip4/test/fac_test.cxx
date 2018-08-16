@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
    int newMipRegReq = 1;
    DiameterMip4Session *nextSession = 0;
 
-   DiameterMip4Session *_diameterMip4SessionPtr[100];
+   DiameterMip4Session *_diameterMip4SessionPtr[howManySessions];
 
 
    for (int i=0; i<howManySessions; i++)

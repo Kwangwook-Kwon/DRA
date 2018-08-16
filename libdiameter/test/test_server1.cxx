@@ -196,22 +196,16 @@ class AAA_SampleServer : public DiameterServerAuthSession {
         AAAReturnCode TxAuthenticationAnswer() {
             std::cout << "Sending answer message" << std::endl;
 
-            DiameterMsgWidget msg(271, false, 167772153);
+            DiameterMsgWidget msg(300, false, 10000);
 
             DiameterUInt32AvpWidget authIdAvp(DIAMETER_AVPNAME_AUTHAPPID);
             DiameterUtf8AvpWidget unameAvp(DIAMETER_AVPNAME_USERNAME);
-            DiameterEnumAvpWidget acctRecType(DIAMETER_AVPNAME_ACCTREC_TYPE);
-            DiameterUInt32AvpWidget acctRecNum(DIAMETER_AVPNAME_ACCTREC_NUM);
 
-            authIdAvp.Get() = 167772153; // my application id
-            unameAvp.Get() = "username@alcatel-lucent.com";
-            acctRecType.Get() = 2;
-            acctRecNum.Get() = 2;
+            authIdAvp.Get() = 10000; // my application id
+            unameAvp.Get() = "username@domain.com";
 
             msg()->acl.add(authIdAvp());
             msg()->acl.add(unameAvp());
-            msg()->acl.add(acctRecType());
-            msg()->acl.add(acctRecNum());
 
             DiameterMsgResultCode rcode(*msg());
             rcode.ResultCode(AAA_SUCCESS);
@@ -238,7 +232,7 @@ int main(int argc, char *argv[])
    // Application core is responsible for providing
    // peer connectivity between AAA entities
    DiameterApplication appCore(task, "config/isp.local.xml");
-   SampleServerAllocator allocator(task, 167772153);
+   SampleServerAllocator allocator(task, 10000);
    appCore.RegisterServerSessionFactory(allocator);
 
    while (true) {

@@ -38,7 +38,7 @@
 #include "ace/SOCK_Acceptor.h"
 #include "ace/SOCK_SEQPACK_Acceptor.h"
 #include "ace/SOCK_SEQPACK_Connector.h"
-#include "ace/Sig_Handler.h"
+#include "ace/Signal.h"
 #include "ace/Handle_Set.h"
 #include "aaa_transport_interface.h"
 

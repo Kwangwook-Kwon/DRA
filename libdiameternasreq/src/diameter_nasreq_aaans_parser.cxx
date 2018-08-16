@@ -40,7 +40,6 @@
 */
 
 #include "diameter_nasreq_parser.hxx"
-#include "aaa_data_defs.h"
 
 template<> void 
 AA_AnswerParser::parseAppToRaw()
@@ -469,7 +468,7 @@ AA_AnswerParser::parseRawToApp()
     {
       data.ResultCode.CopyFrom(*c);
     }
-  if ((c = aaaMessage.acl.search(DIAMETER_AVPNAME_ORIGINHOST)))
+  if ((c = aaaMessage.acl.search("Origin-Host")))
     {
       data.OriginHost.CopyFrom(*c);
     }

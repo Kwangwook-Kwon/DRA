@@ -695,7 +695,13 @@ main(int argc, char *argv[])
   AAAApplicationCore applicationCore;
   MyInitializer initializer(task, applicationCore);
 
+#if defined(WIN32)
   #define num 100
+#else
+  int num;
+  std::cout << "Input number of sessions: ";
+  std::cin >> num;
+#endif
   ACE_Semaphore semaphore(2*num);
 
   TotalSuccess=0;

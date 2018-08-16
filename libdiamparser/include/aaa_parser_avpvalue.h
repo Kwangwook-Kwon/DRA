@@ -37,7 +37,6 @@
 
 // #define BOOST_SPIRIT_THREADSAFE
 
-#include <iostream>
 #include <ace/Synch.h>
 #include <ace/Singleton.h>
 #include <ace/CDR_Base.h>
@@ -47,14 +46,11 @@
 #include "aaa_parser_q_avplist.h"
 #include "aaa_q_avplist.h"
 #include "aaa_g_avplist.h"
-#include <boost/spirit/include/classic_grammar.hpp>
-#include <boost/spirit/include/classic_core.hpp>
-#include <boost/spirit/include/classic_loops.hpp>
-#include <boost/spirit/include/classic_for.hpp>
+#include <boost/spirit/core.hpp>
+#include <boost/spirit/utility/loops.hpp>
+#include <boost/spirit/dynamic/for.hpp>
 #include <boost/pool/detail/mutex.hpp>
-
-using namespace boost::spirit::classic;
-using namespace std;
+using namespace boost::spirit;
 
 /// Container entry type definitions.
 typedef AAATypeSpecificAvpContainerEntry<diameter_integer32_t>
@@ -76,7 +72,7 @@ typedef AAATypeSpecificAvpContainerEntry<diameter_uri_t>
 typedef AAATypeSpecificAvpContainerEntry<diameter_ipfilter_rule_t>
     DiameterIPFilterRuleAvpContainerEntry;
 typedef AAATypeSpecificAvpContainerEntry<diameter_address_t>
-    DiameterIPAddressAvpContainerEntry;
+    DiameterAddressAvpContainerEntry;
 
 #ifndef BOOST_SPIRIT_THREADSAFE
 extern ACE_Mutex AvpGrammarMutex_S;
@@ -93,8 +89,7 @@ class AnyParser : public DiameterAvpValueParser
       if (e->dataType() != AAA_AVP_DATA_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_DATA_TYPE).\n",
-	    e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -110,8 +105,7 @@ class AnyParser : public DiameterAvpValueParser
       if (e->dataType() != AAA_AVP_DATA_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_DATA_TYPE).\n",
-	    e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -140,12 +134,12 @@ class Integer32Parser : public DiameterAvpValueParser
       DiameterInteger32AvpContainerEntry *e;
       getAppData(e);
       if (e->dataType() != AAA_AVP_INTEGER32_TYPE && 
-	    e->dataType() != AAA_AVP_UINTEGER32_TYPE &&
-	    e->dataType() != AAA_AVP_ENUM_TYPE &&
-        e->dataType() != AAA_AVP_TIME_TYPE)
+	  e->dataType() != AAA_AVP_UINTEGER32_TYPE &&
+	  e->dataType() != AAA_AVP_ENUM_TYPE &&
+          e->dataType() != AAA_AVP_TIME_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_INTEGER32_TYPE, AAA_AVP_UINTEGER32_TYPE, AAA_AVP_ENUM_TYPE or AAA_AVP_TIME_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -164,7 +158,7 @@ class Integer32Parser : public DiameterAvpValueParser
           e->dataType() != AAA_AVP_TIME_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_INTEGER32_TYPE, AAA_AVP_UINTEGER32_TYPE, AAA_AVP_ENUM_TYPE or AAA_AVP_TIME_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -184,6 +178,7 @@ class Integer32Parser : public DiameterAvpValueParser
     }
 };
 
+
 class Integer64Parser : public DiameterAvpValueParser
 {
   friend class ACE_Singleton<Integer64Parser, ACE_Recursive_Thread_Mutex>;
@@ -197,8 +192,7 @@ class Integer64Parser : public DiameterAvpValueParser
 	  e->dataType() != AAA_AVP_UINTEGER64_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_INTEGER64_TYPE or AAA_AVP_UINTEGER64_TYPE).\n",
-	    e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -215,7 +209,7 @@ class Integer64Parser : public DiameterAvpValueParser
 	  e->dataType() != AAA_AVP_UINTEGER64_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_INTEGER64_TYPE or AAA_AVP_UINTEGER64_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -230,14 +224,6 @@ class Integer64Parser : public DiameterAvpValueParser
                  AAA_OUT_OF_SPACE);
 	  throw st;
 	}
-      if (e->dataPtr() == NULL)
-    {
-      DiameterErrorCode st;
-      AAA_LOG((LM_ERROR, "Data is NULL, type: %d \n", e->dataType()));
-      st.set(AAA_PARSE_ERROR_TYPE_BUG,
-        AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
-      throw st;
-    }
       *((diameter_integer64_t*)(aBuffer->wr_ptr())) = AAA_HTON_64(e->dataRef());
       aBuffer->wr_ptr(sizeof(diameter_integer64_t));
     }
@@ -255,7 +241,7 @@ class OctetstringParser : public DiameterAvpValueParser
       if (e->dataType() != AAA_AVP_STRING_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_STRING_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -271,7 +257,7 @@ class OctetstringParser : public DiameterAvpValueParser
       if (e->dataType() != AAA_AVP_STRING_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_STRING_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -382,7 +368,7 @@ class Utf8stringParser : public OctetstringParser
       if (e->dataType() != AAA_AVP_UTF8_STRING_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_UTF8_STRING_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -400,7 +386,7 @@ class Utf8stringParser : public OctetstringParser
       }
       e->dataType() = AAA_AVP_UTF8_STRING_TYPE;
       UTF8Checker check;
-      if (check.check(str.data(), str.size()) != 0)
+      if (check(str.data(), str.size()) != 0)
         {
             AAA_LOG((LM_ERROR, "Invalid UTF8 string"));
             st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_INVALID_AVP_VALUE, avp);
@@ -415,8 +401,7 @@ class Utf8stringParser : public OctetstringParser
       if (e->dataType() != AAA_AVP_UTF8_STRING_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_UTF8_STRING_TYPE).\n",
-	    e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -425,7 +410,7 @@ class Utf8stringParser : public OctetstringParser
 
       DiameterErrorCode st;
       UTF8Checker check;
-      if (check.check(str.data(), str.size()) != 0)
+      if (check(str.data(), str.size()) != 0)
 	{
 	  AAA_LOG((LM_ERROR, "Invalid UTF8 string"));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG, 
@@ -444,18 +429,18 @@ class Utf8stringParser : public OctetstringParser
     }
 };
 
-class IPAddressParser : public OctetstringParser
+class AddressParser : public OctetstringParser
 {
  public:
   void parseRawToApp() throw(DiameterErrorCode)
     {
       DiameterAvpContainerEntryManager em;
-      DiameterIPAddressAvpContainerEntry *e;
+      DiameterAddressAvpContainerEntry *e;
       getAppData(e);
-      if (e->dataType() != AAA_AVP_IPADDRESS_TYPE)
+      if (e->dataType() != AAA_AVP_ADDRESS_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_IPADDRESS_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG, 
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -487,12 +472,12 @@ class IPAddressParser : public OctetstringParser
   void parseAppToRaw() throw(DiameterErrorCode)
     {
       DiameterAvpContainerEntryManager em;
-      DiameterIPAddressAvpContainerEntry *e;
+      DiameterAddressAvpContainerEntry *e;
       getAppData(e);
-      if (e->dataType() != AAA_AVP_IPADDRESS_TYPE)
+      if (e->dataType() != AAA_AVP_ADDRESS_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_IPADDRESS_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -534,8 +519,8 @@ struct DiamidentGrammar : public grammar<DiamidentGrammar>
       diameterIdentity = realm;
       realm = label >> *('.' >> label);  // No recursive rule allowed.
       label = diameterName | diameterDname;
-      diameterName = alpha_p >> *(alnum_p | '-' | '_');
-      diameterDname = digit_p >> +(alnum_p | '-' | '_');
+      diameterName = alpha_p >> *(alnum_p | '-');
+      diameterDname = digit_p >> +(alnum_p | '-');
     }
     rule<ScannerT> diameterIdentity, realm, label, diameterName, diameterDname;
     rule<ScannerT> const& start() const { return diameterIdentity; }
@@ -552,11 +537,10 @@ class DiamidentParser : public Utf8stringParser
       DiameterErrorCode st;
       AAADictionaryEntry *avp = getDictData();
       getAppData(e);
-      if (e->dataType() != AAA_AVP_DIAMID_TYPE &&
-        e->dataType() != AAA_AVP_UTF8_STRING_TYPE)
+      if (e->dataType() != AAA_AVP_DIAMID_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_DIAMID_TYPE or AAA_AVP_UTF8_STRING_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -570,6 +554,7 @@ class DiamidentParser : public Utf8stringParser
 	throw st;
       }
       e->dataType() = AAA_AVP_DIAMID_TYPE;
+
       std::string& str = e->dataRef();
 #ifndef BOOST_SPIRIT_THREADSAFE
       AAA_MutexScopeLock lock(AvpGrammarMutex_S);
@@ -577,7 +562,7 @@ class DiamidentParser : public Utf8stringParser
       struct DiamidentGrammar grammar;
       if (!parse(str.begin(), str.end(), grammar, space_p).full)
 	{
-	  AAA_LOG((LM_ERROR, "Diamident parse failure, dataRef: %s .", str.c_str()));
+	  AAA_LOG((LM_ERROR, "Diamident parse failure."));
 	  st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_INVALID_AVP_VALUE, avp);
 	  throw st;
 	}
@@ -587,11 +572,10 @@ class DiamidentParser : public Utf8stringParser
     {
       DiameterStringAvpContainerEntry *e;
       getAppData(e);
-      if (e->dataType() != AAA_AVP_DIAMID_TYPE &&
-        e->dataType() != AAA_AVP_UTF8_STRING_TYPE)
+      if (e->dataType() != AAA_AVP_DIAMID_TYPE)
       {
          DiameterErrorCode st;
-         AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_DIAMID_TYPE or AAA_AVP_UTF8_STRING_TYPE).\n", e->dataType()));
+         AAA_LOG((LM_ERROR, "Invalid AVP type."));
          st.set(AAA_PARSE_ERROR_TYPE_BUG,
                 AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
          throw st;
@@ -599,6 +583,7 @@ class DiamidentParser : public Utf8stringParser
 
       DiameterErrorCode st;
       AAADictionaryEntry *avp = getDictData();
+
       std::string& str = e->dataRef();
       do {
 #ifndef BOOST_SPIRIT_THREADSAFE
@@ -607,7 +592,7 @@ class DiamidentParser : public Utf8stringParser
          struct DiamidentGrammar grammar;
          if (!parse(str.begin(), str.end(), grammar, space_p).full)
          {
-            AAA_LOG((LM_ERROR, "Diamident parse failure, dataRef: %s .", str.c_str()));
+            AAA_LOG((LM_ERROR, "Diamident parse failure."));
             st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_INVALID_AVP_VALUE, avp);
             throw st;
          }
@@ -732,7 +717,7 @@ class DiamuriParser : public Utf8stringParser
       if (e->dataType() != AAA_AVP_DIAMURI_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_DIAMURI_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -786,7 +771,7 @@ class DiamuriParser : public Utf8stringParser
       if (e->dataType() != AAA_AVP_DIAMURI_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_DIAMURI_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -852,18 +837,14 @@ struct KeywordFunctor
       ref = DIAMETER_IPFILTER_RULE_SRCDST_KEYWORD_ANY;
     else if (str == "assigned")
       ref = DIAMETER_IPFILTER_RULE_SRCDST_KEYWORD_ASSIGNED;
-#if defined(DS_DEBUG)
     AAA_LOG((LM_DEBUG, "IPFilterRule parser: keyword = %s\n", str.c_str()));
-#endif
   }
   template <typename IteratorT>
   void operator()(IteratorT val) const
   {
     if (val == '/')
       ref = DIAMETER_IPFILTER_RULE_SRCDST_MASK;
-#if defined(DS_DEBUG)
     AAA_LOG((LM_DEBUG, "IPFilterRule parser: keyword = /\n"));
-#endif
   }
   AAAUInt8 &ref;
 };
@@ -1200,7 +1181,7 @@ class IPFilterRuleParser : public Utf8stringParser
       if (e->dataType() != AAA_AVP_IPFILTER_RULE_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_IPFILTER_RULE_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -1259,7 +1240,7 @@ class IPFilterRuleParser : public Utf8stringParser
       if (e->dataType() != AAA_AVP_IPFILTER_RULE_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_IPFILTER_RULE_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -1468,9 +1449,7 @@ class IPFilterRuleParser : public Utf8stringParser
 	    str.append(",");
 	}
 
-#if defined(DS_DEBUG)
       AAA_LOG((LM_DEBUG, "Set IPFilterRule = \"%s\"\n", str.c_str()));
-#endif
 
       do {
 #ifndef BOOST_SPIRIT_THREADSAFE
@@ -1517,7 +1496,7 @@ class GroupedParser : public DiameterAvpValueParser
       if (e->dataType() != AAA_AVP_GROUPED_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_GROUPED_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -1529,8 +1508,8 @@ class GroupedParser : public DiameterAvpValueParser
       DiameterErrorCode st;
 
       /* find grouped avp structure */
-#if defined(DS_DEBUG)
-      AAA_LOG((LM_DEBUG, "Getting Grouped AVP %s .\n", avp->avpName.c_str()));
+#ifdef DEBUG
+      cout << "Getting Grouped AVP" << avp->avpName << "\n";
 #endif
 
       if ((gavp = DiameterGroupedAvpList::instance()
@@ -1551,7 +1530,7 @@ class GroupedParser : public DiameterAvpValueParser
 	  qc.parseRawToApp();
 	}
 	catch (DiameterErrorCode &st) {
-	  AAA_LOG((LM_ERROR, "Grouped AVP failure.\n"));
+	  AAA_LOG((LM_ERROR, "Grouped AVP failure"));
 	  throw;
 	}
       } while (0);
@@ -1565,7 +1544,7 @@ class GroupedParser : public DiameterAvpValueParser
       if (e->dataType() != AAA_AVP_GROUPED_TYPE)
 	{
 	  DiameterErrorCode st;
-	  AAA_LOG((LM_ERROR, "Invalid AVP type %d (AAA_AVP_GROUPED_TYPE).\n", e->dataType()));
+	  AAA_LOG((LM_ERROR, "Invalid AVP type."));
 	  st.set(AAA_PARSE_ERROR_TYPE_BUG,
                  AAA_PARSE_ERROR_PROHIBITED_CONTAINER);
 	  throw st;
@@ -1584,20 +1563,21 @@ class GroupedParser : public DiameterAvpValueParser
 	  throw st;
 	}
 
-    do {
-	  QualifiedAvpListParser qc;
-	  qc.setRawData(aBuffer);
-	  qc.setAppData(acl);
-	  qc.setDictData(gavp);
+      do {
+	QualifiedAvpListParser qc;
+	qc.setRawData(aBuffer);
+	qc.setAppData(acl);
+	qc.setDictData(gavp);
 
-	  try {
-	      qc.parseAppToRaw();
-	  } catch (DiameterErrorCode &st) {
-	      AAA_LOG((LM_ERROR, "Grouped AVP failure.\n"));
-	      throw;
-	  }
-    } while (0);
-  }
+	try {
+	  qc.parseAppToRaw();
+	}
+	catch (DiameterErrorCode &st) {
+	  AAA_LOG((LM_ERROR, "Grouped AVP failure"));
+	  throw;
+	}
+      } while (0);
+    }
 };
 
 /* In RFC3588:

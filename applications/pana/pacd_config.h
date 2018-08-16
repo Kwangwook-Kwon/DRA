@@ -36,7 +36,6 @@
 
 #include <map>
 #include <string>
-#include "ace/Null_Mutex.h"
 #include "ace/OS.h"
 #include "ace/Singleton.h"
 

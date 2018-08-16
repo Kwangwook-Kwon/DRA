@@ -55,36 +55,6 @@
 #include "framework.h"
 #include "resultcodes.h"
 
-// Sun CC doesn't support macro __FUNCTION__
-#if !defined(__FUNCTION__)
-#define __FUNCTION__ ""
-#endif
-
-// below definition copy from ACE-5.7.5
-// ACE-6.0.5 has no macro ACE_THROW_SPEC
-//FUZZ: disable check_for_exception_sepc
-#if !defined (ACE_LACKS_DEPRECATED_MACROS)
-  #if defined (ACE_HAS_NO_THROW_SPEC)
-  #  define ACE_THROW_SPEC(X)
-  #else
-  #  if defined (ACE_HAS_EXCEPTIONS)
-  #    if defined (ACE_WIN32) && defined (_MSC_VER) && \
-          (_MSC_VER >= 1400) && (_MSC_VER <= 1500)
-  #      define ACE_THROW_SPEC(X) throw(...)
-  #    else
-  #      define ACE_THROW_SPEC(X) throw X
-  #    endif /* ACE_WIN32 && VC8 */
-  #  else  /* ! ACE_HAS_EXCEPTIONS */
-  #    define ACE_THROW_SPEC(X)
-  #  endif /* ! ACE_HAS_EXCEPTIONS */
-  #endif /*ACE_HAS_NO_THROW_SPEC*/
-#endif /* ACE_LACKS_DEPRECATED_MACROS */
-//FUZZ: enable check_for_exception_sepc
-
-#define ACEXML_ENV_ARG_DECL
-#define ACEXML_ENV_SINGLE_ARG_DECL
-#define ACEXML_ENV_ARG_NOT_USED
-
 /*!
  *==================================================
  * Windows specific export declarations
@@ -136,7 +106,7 @@ static inline ACE_UINT64 AAA_SWAP_64(ACE_UINT64 b) {
     return r.ll;
 }
 
-#if ACE_BYTE_ORDER == ACE_BIG_ENDIAN
+#if __BYTE_ORDER == __BIG_ENDIAN
     #define AAA_NTOH_32(x) (x)
     #define AAA_NTOH_64(x) (x)
     #define AAA_HTON_32(x) (x)
@@ -326,7 +296,7 @@ typedef enum {
 typedef enum {
     AAA_AVP_DATA_TYPE,
     AAA_AVP_STRING_TYPE,
-    AAA_AVP_IPADDRESS_TYPE,
+    AAA_AVP_ADDRESS_TYPE,
     AAA_AVP_INTEGER32_TYPE,
     AAA_AVP_INTEGER64_TYPE,
     AAA_AVP_UINTEGER32_TYPE,
@@ -613,124 +583,6 @@ class UTF8Checker
             }
             return 0;
         }
-        
-/*
- * UTF-8 definition in RFC 2279 UTF-8, a transformation format of ISO 10646
-
- 2.  UTF-8 definition
-
-   In UTF-8, characters are encoded using sequences of 1 to 6 octets.
-   The only octet of a "sequence" of one has the higher-order bit set to
-   0, the remaining 7 bits being used to encode the character value. In
-   a sequence of n octets, n>1, the initial octet has the n higher-order
-   bits set to 1, followed by a bit set to 0.  The remaining bit(s) of
-   that octet contain bits from the value of the character to be
-   encoded.  The following octet(s) all have the higher-order bit set to
-   1 and the following bit set to 0, leaving 6 bits in each to contain
-   bits from the character to be encoded.
-
-   The table below summarizes the format of these different octet types.
-   The letter x indicates bits available for encoding bits of the UCS-4
-   character value.
-
-   UCS-4 range (hex.)           UTF-8 octet sequence (binary)
-   0000 0000-0000 007F   0xxxxxxx
-   0000 0080-0000 07FF   110xxxxx 10xxxxxx
-   0000 0800-0000 FFFF   1110xxxx 10xxxxxx 10xxxxxx
-   0001 0000-001F FFFF   11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-   0020 0000-03FF FFFF   111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-   0400 0000-7FFF FFFF   1111110x 10xxxxxx ... 10xxxxxx
-
-   Encoding from UCS-4 to UTF-8 proceeds as follows:
-
-   1) Determine the number of octets required from the character value
-      and the first column of the table above.  It is important to note
-      that the rows of the table are mutually exclusive, i.e. there is
-      only one valid way to encode a given UCS-4 character.
-
-   2) Prepare the high-order bits of the octets as per the second column
-      of the table.
-
-   3) Fill in the bits marked x from the bits of the character value,
-      starting from the lower-order bits of the character value and
-      putting them first in the last octet of the sequence, then the
-      next to last, etc. until all x bits are filled in.
-
-      The algorithm for encoding UCS-2 (or Unicode) to UTF-8 can be
-      obtained from the above, in principle, by simply extending each
-      UCS-2 character with two zero-valued octets.  However, pairs of
-      UCS-2 values between D800 and DFFF (surrogate pairs in Unicode
-      parlance), being actually UCS-4 characters transformed through
-      UTF-16, need special treatment: the UTF-16 transformation must be
-      undone, yielding a UCS-4 character that is then transformed as
-      above.
-
-      Decoding from UTF-8 to UCS-4 proceeds as follows:
-
-   1) Initialize the 4 octets of the UCS-4 character with all bits set
-      to 0.
-
-   2) Determine which bits encode the character value from the number of
-      octets in the sequence and the second column of the table above
-      (the bits marked x).
-
-   3) Distribute the bits from the sequence to the UCS-4 character,
-      first the lower-order bits from the last octet of the sequence and
-      proceeding to the left until no x bits are left.
-
-      If the UTF-8 sequence is no more than three octets long, decoding
-      can proceed directly to UCS-2.
-
-        NOTE -- actual implementations of the decoding algorithm above
-        should protect against decoding invalid sequences.  For
-        instance, a naive implementation may (wrongly) decode the
-        invalid UTF-8 sequence C0 80 into the character U+0000, which
-        may have security consequences and/or cause other problems.  See
-        the Security Considerations section below.
-
-   A more detailed algorithm and formulae can be found in [FSS_UTF],
-   [UNICODE] or Annex R to [ISO-10646].
-
-*/
-    int check(const char *data, unsigned length) {
-        unsigned i = 0;
-        while (i < length) {
-            unsigned char b = data[i++];
-
-            // Count the number of leading consecutive 1 bits of the first octet
-            int count = 0;
-            while (count < 7) {
-                if ((b & 0x80) == 0x00) {
-                    break;
-                }
-                count++;
-                b <<= 1;
-            }
-
-            if (count == 0) { // The first bit is 0
-                continue;
-            } // 7-bit ASCII character.
-
-            // The count value must be 0, 2-6
-            if (count > 6 || count == 1) {
-                return -1;
-            } // Out of UTF8 character range.
-
-            // Check remaining octet(s)
-            for (int j=0; j < count-1; j++) {
-                if (i >= length) {
-                    return -1;
-                }
-
-                b = data[i++];
-                if ((b >>= 6) != 0x02) {
-                    return -1;
-                }
-            }
-        }
-
-        return 0;
-    }
 };
 
 /*!

@@ -160,7 +160,7 @@ class DiameterPeerTable : private DiameterPeerList
               // Deprecated:
               //  if ((*i)->Data().m_Identity == peername) {
               //
-              if (! ACE_OS::strcasecmp((*i)->Data().m_Identity.c_str(), peername.c_str())) {
+              if (! strcasecmp((*i)->Data().m_Identity.c_str(), peername.c_str())) {
                   return (*i);
               }
           }
@@ -178,7 +178,7 @@ class DiameterPeerTable : private DiameterPeerList
               // Deprecated:
               //  if ((*i)->Data().m_Identity == peername) {
               //
-              if (! ACE_OS::strcasecmp((*i)->Data().m_Identity.c_str(), peername.c_str())) {
+              if (! strcasecmp((*i)->Data().m_Identity.c_str(), peername.c_str())) {
                   erase(i);
                   return (*i);
               }

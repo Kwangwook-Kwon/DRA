@@ -149,7 +149,7 @@ AAA_ROUTE_RESULT DiameterMsgRouter::RcLocal::Lookup(std::auto_ptr<DiameterMsg> &
         // Deprecated:
         // if (*DestHost == DIAMETER_CFG_TRANSPORT()->identity) {
         //
-        if (! ACE_OS::strcasecmp((*DestHost).c_str(),
+        if (! strcasecmp((*DestHost).c_str(),
                       DIAMETER_CFG_TRANSPORT()->identity.c_str())) {
             return (AAA_ROUTE_RESULT_SUCCESS);
         }
@@ -167,7 +167,7 @@ AAA_ROUTE_RESULT DiameterMsgRouter::RcLocal::Lookup(std::auto_ptr<DiameterMsg> &
         // Deprecated:
         // if (*DestRealm == DIAMETER_CFG_TRANSPORT()->realm) {
         //
-        if (! ACE_OS::strcasecmp((*DestRealm).c_str(),
+        if (! strcasecmp((*DestRealm).c_str(),
                       DIAMETER_CFG_TRANSPORT()->realm.c_str())) {
             DiameterApplicationIdLst *idList[] = {
                 &DIAMETER_CFG_GENERAL()->authAppIdLst,
@@ -311,7 +311,7 @@ AAA_ROUTE_RESULT DiameterMsgRouter::RcRouted::Lookup(std::auto_ptr<DiameterMsg> 
                     DiameterUInt32AvpContainerWidget gVendorId(*grouped);
                     diameter_unsigned32_t *vid = gVendorId.GetAvp(DIAMETER_AVPNAME_VENDORID);
                     if (vid == NULL) {
-                        AAA_LOG((LM_INFO, "(%P|%t) VendorSpecificApplicationId has no vendor ID AVP\n",
+                        AAA_LOG((LM_INFO, "(%P|%t) Vendor-Specific-Application-Id has no vendor ID AVP\n",
                                  DestRealm.c_str()));
                         return (AAA_ROUTE_RESULT_NEXT_CHAIN);
                     }
@@ -873,7 +873,7 @@ int DiameterMsgRouter::RedirectAgent::Request(std::auto_ptr<DiameterMsg> &msg,
                 DiameterUInt32AvpContainerWidget gVendorId(*grouped);
                 diameter_unsigned32_t *vid = gVendorId.GetAvp(DIAMETER_AVPNAME_VENDORID);
                 if (vid == NULL) {
-                    AAA_LOG((LM_INFO, "(%P|%t) VendorSpecificApplicationId has no vendor ID AVP\n"));
+                    AAA_LOG((LM_INFO, "(%P|%t) Vendor-Specific-Application-Id has no vendor ID AVP\n"));
                     return (-1);
                 }
 

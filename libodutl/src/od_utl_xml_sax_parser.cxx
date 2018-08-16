@@ -53,64 +53,78 @@ class OD_UTL_XML_SAXHandler :
 
      // Methods inherit from ACEXML_ContentHandler.
      virtual void characters (const ACEXML_Char *ch,
-                              size_t start,
-                              size_t length) {
+                              int start,
+                              int length ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          m_parser.characters(ch, start, length);
      }
-     virtual void endDocument () {
+     virtual void endDocument (ACEXML_ENV_SINGLE_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          m_parser.endDocument();
      }
      virtual void endElement (const ACEXML_Char *namespaceURI,
                               const ACEXML_Char *localName,
-                              const ACEXML_Char *qName) {
+                              const ACEXML_Char *qName ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          m_parser.endElement(namespaceURI, localName, qName);
      }
-     virtual void endPrefixMapping (const ACEXML_Char *prefix ) {
+     virtual void endPrefixMapping (const ACEXML_Char *prefix ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }  
      virtual void ignorableWhitespace (const ACEXML_Char *ch,
                                        int start,
-                                       int length) {
+                                       int length ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
      virtual void processingInstruction (const ACEXML_Char *target,
-                                         const ACEXML_Char *data) {
+                                         const ACEXML_Char *data ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
      virtual void setDocumentLocator (ACEXML_Locator *locator) {
          m_locator = locator;
      }
-     virtual void skippedEntity (const ACEXML_Char *name) {
+     virtual void skippedEntity (const ACEXML_Char *name ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
-     virtual void startDocument () {
+     virtual void startDocument (ACEXML_ENV_SINGLE_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          m_parser.startDocument();
      }
      virtual void startElement (const ACEXML_Char *namespaceURI,
                                 const ACEXML_Char *localName,
                                 const ACEXML_Char *qName,
-                                ACEXML_Attributes *atts) {
+                                ACEXML_Attributes *atts ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) { 
          m_parser.startElement(namespaceURI, localName, qName, atts);
      }
      virtual void startPrefixMapping (const ACEXML_Char *prefix,
-                                      const ACEXML_Char *uri) {
+                                      const ACEXML_Char *uri ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
 
      // *** Methods inherit from ACEXML_DTDHandler.
      virtual void notationDecl (const ACEXML_Char *name,
                                 const ACEXML_Char *publicId,
-                                const ACEXML_Char *systemId) {
+                                const ACEXML_Char *systemId ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
      virtual void unparsedEntityDecl (const ACEXML_Char *name,
                                       const ACEXML_Char *publicId,
                                       const ACEXML_Char *systemId,
-                                      const ACEXML_Char *notationName) {
+                                      const ACEXML_Char *notationName ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
      }
 
      // Methods inherit from ACEXML_EnitityResolver.
      virtual ACEXML_InputSource *resolveEntity (const ACEXML_Char *publicId,
-                                                const ACEXML_Char *systemId) {
+                                                const ACEXML_Char *systemId ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          return (NULL);
      }
 
      // Methods inherit from ACEXML_ErrorHandler.
-     virtual void error (ACEXML_SAXParseException &exception) {
+     virtual void error (ACEXML_SAXParseException &exception ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          AAA_LOG ((LM_INFO, "Error %s: line: %d col: %d \n",
                     (m_locator->getSystemId() == 0 ? m_fileName : m_locator->getSystemId()),
                      m_locator->getLineNumber(),
@@ -118,7 +132,8 @@ class OD_UTL_XML_SAXHandler :
          exception.print();
          m_errorCount ++;
      }
-     virtual void fatalError (ACEXML_SAXParseException &exception) {
+     virtual void fatalError (ACEXML_SAXParseException &exception ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          AAA_LOG ((LM_INFO, "Fatal error %s: line: %d col: %d \n",
                     (m_locator->getSystemId() == 0 ? m_fileName : m_locator->getSystemId()),
                      m_locator->getLineNumber(),
@@ -126,7 +141,8 @@ class OD_UTL_XML_SAXHandler :
          exception.print();
          m_fatalError = true;
      }
-     virtual void warning (ACEXML_SAXParseException &exception) {
+     virtual void warning (ACEXML_SAXParseException &exception ACEXML_ENV_ARG_DECL)
+         ACE_THROW_SPEC ((ACEXML_SAXException)) {
          AAA_LOG ((LM_INFO, "Warning %s: line: %d col: %d \n",
                     (m_locator->getSystemId() == 0 ? m_fileName : m_locator->getSystemId()),
                      m_locator->getLineNumber(),
@@ -149,18 +165,18 @@ class OD_UTL_XML_SAXHandler :
      OD_Utl_XML_SaxParser &m_parser;
 };
 
-void OD_Utl_XML_SaxParser::startDocument()
+void OD_Utl_XML_SaxParser::startDocument(ACEXML_ENV_SINGLE_ARG_DECL)
 {
 }
 
-void OD_Utl_XML_SaxParser::endDocument()
+void OD_Utl_XML_SaxParser::endDocument(ACEXML_ENV_SINGLE_ARG_DECL)
 {
 }
 
  void OD_Utl_XML_SaxParser::startElement(const ACEXML_Char *namespaceURI,
                                          const ACEXML_Char *localName,
                                          const ACEXML_Char *qName,
-                                         ACEXML_Attributes *atts)
+                                         ACEXML_Attributes *atts ACEXML_ENV_ARG_DECL)
 {
    OD_Utl_XML_ElementMap::iterator i = 
        m_elementMap.find(std::string(qName));
@@ -172,7 +188,7 @@ void OD_Utl_XML_SaxParser::endDocument()
 
 void OD_Utl_XML_SaxParser::characters(const ACEXML_Char *ch,
                                       int start,
-                                      int length)
+                                      int length ACEXML_ENV_ARG_DECL)
 {
    if (m_currentElement) {
        m_currentElement->characters(ch, start, length);
@@ -181,7 +197,7 @@ void OD_Utl_XML_SaxParser::characters(const ACEXML_Char *ch,
                                       
 void OD_Utl_XML_SaxParser::endElement(const ACEXML_Char *namespaceURI,
                                        const ACEXML_Char *localName,
-                                       const ACEXML_Char *qName)
+                                       const ACEXML_Char *qName ACEXML_ENV_ARG_DECL)
 {
    OD_Utl_XML_ElementMap::iterator i = 
        m_elementMap.find(std::string(qName));
@@ -225,7 +241,7 @@ void OD_Utl_XML_SaxParser::Load(char* xmlFile)
     
    try {
       for (unsigned int passes = 0; passes < m_numPasses; passes ++) {
-          parser.parse(&input);
+          parser.parse(&input ACEXML_ENV_ARG_NOT_USED);
       }
    }
    catch (ACEXML_SAXException &ex) {

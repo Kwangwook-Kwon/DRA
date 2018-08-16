@@ -153,7 +153,7 @@ rtest(unsigned char *buf, int size)
   std::cout << "Disassemble " << msg.hdr.getCommandName() << " success." 
 	    << std::endl;
 
-  if ((c = msg.acl.search("OriginHost")))
+  if ((c = msg.acl.search("Origin-Host")))
     {
       for (i=0; i<c->size(); i++)
 	{
@@ -162,29 +162,29 @@ rtest(unsigned char *buf, int size)
 	}
     }
 
-  if ((c = msg.acl.search("OriginRealm")))
+  if ((c = msg.acl.search("Origin-Realm")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_utf8string_t, orrealm, (*c)[i]);
-	  std::cout << "OriginRealm = " << orrealm.c_str() << std::endl;
+	  std::cout << "Origin-Realm = " << orrealm.c_str() << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("HostIPAddress")))
+  if ((c = msg.acl.search("Host-IP-Address")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_address_t, hostip, (*c)[i]);
 	  ACE_INET_Addr addr;
 	  inet_convert(addr, hostip);
-	  std::cout << "HostIPAddress = " 
+	  std::cout << "Host-IP-Address = " 
 		    << addr.get_host_addr()
 		    << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("VendorId")))
+  if ((c = msg.acl.search("Vendor-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
@@ -193,93 +193,93 @@ rtest(unsigned char *buf, int size)
 	}
     }
 
-  if ((c = msg.acl.search("ProductName")))
+  if ((c = msg.acl.search("Product-Name")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_utf8string_t, product, (*c)[i]);
-	  std::cout << "ProductName = " << product.c_str() << std::endl;
+	  std::cout << "Product-Name = " << product.c_str() << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("OriginStateId")))
+  if ((c = msg.acl.search("Origin-State-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_unsigned32_t, orstatid, (*c)[i]);
-	  std::cout << "OriginStateId = " << orstatid << std::endl;
+	  std::cout << "Origin-State-Id = " << orstatid << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("SupportedVendorId")))
+  if ((c = msg.acl.search("Supported-Vendor-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_unsigned32_t, sup_vid, (*c)[i]);
-	  std::cout << "SupportedVendorId = " << sup_vid << std::endl;
+	  std::cout << "Supported-Vendor-Id = " << sup_vid << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("AuthApplicationId")))
+  if ((c = msg.acl.search("Auth-Application-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_integer32_t, auth_appid, (*c)[i]);
-	  std::cout << "AuthApplicationId = " << auth_appid << std::endl;
+	  std::cout << "Auth-Application-Id = " << auth_appid << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("AcctApplicationId")))
+  if ((c = msg.acl.search("Acct-Application-Id")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_integer32_t, acct_appid, (*c)[i]);
-	  std::cout << "AcctApplicationId = " << acct_appid << std::endl;
+	  std::cout << "Acct-Application-Id = " << acct_appid << std::endl;
 	}
     }
 
-  if ((c = msg.acl.search("VendorSpecificApplicationId")))
+  if ((c = msg.acl.search("Vendor-Specific-Application-Id")))
     {
       AAAAvpContainer* cc;
-      std::cout << "VendorSpecificApplicationId = ";
+      std::cout << "Vendor-Specific-Application-Id = ";
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(AAAAvpContainerList, acl, (*c)[i]);
-	  if ((cc = acl.search("ProxyHost")))
+	  if ((cc = acl.search("Proxy-Host")))
 	    {
 	      for (j=0; j<cc->size(); j++)
 		{
 		  GET_DATA_REF(diameter_unsigned32_t, sup_vid, (*cc)[j]);
-		  std::cout << "\t" << "ProxyHost = " << sup_vid << std::endl;
+		  std::cout << "\t" << "Proxy-Host = " << sup_vid << std::endl;
 		}
 	    }
-	  if ((cc = acl.search("AuthApplicationId")))
+	  if ((cc = acl.search("Auth-Application-Id")))
 	    {
 	      for (j=0; j<cc->size(); j++)
 		{
 		  GET_DATA_REF(diameter_integer32_t, auth_appid, (*cc)[j]);
-		  std::cout << "\t" << "AuthApplicationId = " << auth_appid 
+		  std::cout << "\t" << "Auth-Application-Id = " << auth_appid 
 			    << std::endl;
 		}
 	    }
-	  if ((cc = acl.search("AcctApplicationId")))
+	  if ((cc = acl.search("Acct-Application-Id")))
 	    {
 	      for (j=0; j<cc->size(); j++)
 		{
 		  GET_DATA_REF(diameter_integer32_t, acct_appid, (*cc)[j]);
-		  std::cout << "\t" << "AcctApplicationId = " << acct_appid 
+		  std::cout << "\t" << "Acct-Application-Id = " << acct_appid 
 			    << std::endl;
 		}
 	    }
 	}
     }
 
-  if ((c = msg.acl.search("FirmwareRevision")))
+  if ((c = msg.acl.search("Firmware-Revision")))
     {
       for (i=0; i<c->size(); i++)
 	{
 	  GET_DATA_REF(diameter_unsigned32_t, firm_rev, (*c)[i]);
-	  std::cout << "FirmwareRevision = " << firm_rev << std::endl;
+	  std::cout << "Firmware-Revision = " << firm_rev << std::endl;
 	}
     }
 
@@ -298,12 +298,12 @@ stest(unsigned char *buf, int size)
 {
   DiameterAvpContainerManager cm;
   DiameterAvpContainerEntryManager em;
-  AAAAvpContainer *c_orhost = cm.acquire("OriginHost");
-  AAAAvpContainer *c_orrealm = cm.acquire("OriginRealm");
-  AAAAvpContainer *c_hostip = cm.acquire("HostIPAddress");
-  AAAAvpContainer *c_vid = cm.acquire("VendorId");
-  AAAAvpContainer *c_product = cm.acquire("ProductName");
-  AAAAvpContainer *c_orstatid = cm.acquire("OriginStateId");
+  AAAAvpContainer *c_orhost = cm.acquire("Origin-Host");
+  AAAAvpContainer *c_orrealm = cm.acquire("Origin-Realm");
+  AAAAvpContainer *c_hostip = cm.acquire("Host-IP-Address");
+  AAAAvpContainer *c_vid = cm.acquire("Vendor-Id");
+  AAAAvpContainer *c_product = cm.acquire("Product-Name");
+  AAAAvpContainer *c_orstatid = cm.acquire("Origin-State-Id");
   AAAAvpContainerEntry *e;
 
   diameter_hdr_flag flag = {1,0,0,1};
@@ -337,7 +337,7 @@ stest(unsigned char *buf, int size)
   GET_DATA_REF(diameter_utf8string_t, orrealm, e);
   c_orrealm->add(e);
 
-  e = em.acquire(AAA_AVP_IPADDRESS_TYPE);
+  e = em.acquire(AAA_AVP_ADDRESS_TYPE);
   GET_DATA_REF(diameter_address_t, hostip, e);
   c_hostip->add(e);
 
@@ -361,23 +361,23 @@ stest(unsigned char *buf, int size)
   msg.acl.add(c_orstatid);
 
   /* set values */
-  /* OriginHost */
+  /* Origin-Host */
   orhost.assign(orhost_str);
 
-  /* OriginRealm */
+  /* Origin-Realm */
   orrealm.assign("aaa.com");
 
-  /* HostIPAddress */
+  /* Host-IP-Address */
   hostip.type = AAA_ADDRESS_IP;
   hostip.value.assign(addr, sizeof(addr));
 
-  /* VendorId */
+  /* Vendor-Id */
   vid = 1;
 
-  /* ProductName */
+  /* Product-Name */
   product.assign("toshiba-diameter");
 
-  /* OriginStateId */
+  /* Origin-State-Id */
   orstatid = 1111;
 
   DiameterMsgPayloadParser pp;

@@ -55,7 +55,7 @@ static DiameterAvpValueParserCreator<DiamidentParser>     diamidentParserCreator
 static DiameterAvpValueParserCreator<DiamuriParser>       diamuriParserCreator;
 static DiameterAvpValueParserCreator<IPFilterRuleParser>  ipfilterRuleParserCreator;
 static DiameterAvpValueParserCreator<GroupedParser>       groupedParserCreator;
-static DiameterAvpValueParserCreator<IPAddressParser>       ipaddressParserCreator;
+static DiameterAvpValueParserCreator<AddressParser>       addressParserCreator;
 
 /// Container entry creators.
 static AAAAvpContainerEntryCreator<DiameterStringAvpContainerEntry>
@@ -74,8 +74,8 @@ static AAAAvpContainerEntryCreator<DiameterIPFilterRuleAvpContainerEntry>
     ipfilterRuleContainerEntryCreator;
 static AAAAvpContainerEntryCreator<DiameterGroupedAvpContainerEntry>
     groupedContainerEntryCreator;
-static AAAAvpContainerEntryCreator<DiameterIPAddressAvpContainerEntry>
-    ipaddressContainerEntryCreator;
+static AAAAvpContainerEntryCreator<DiameterAddressAvpContainerEntry>
+    addressContainerEntryCreator;
 static AAAAvpContainerEntryCreator<DiameterTimeAvpContainerEntry>
     timeContainerEntryCreator;
 
@@ -126,13 +126,8 @@ DiameterAvpTypeList_S::registerDefaultTypes()
   add(new DiameterAvpType("Grouped", AAA_AVP_GROUPED_TYPE, 0,
                     groupedParserCreator, groupedContainerEntryCreator));
 
-  add(new DiameterAvpType("IPAddress", AAA_AVP_IPADDRESS_TYPE, 0,
-                    ipaddressParserCreator, ipaddressContainerEntryCreator));
-}
-
-DiameterAvpTypeList_S::DiameterAvpTypeList_S(void)
-{
-    registerDefaultTypes();
+  add(new DiameterAvpType("Address", AAA_AVP_ADDRESS_TYPE, 0,
+                    addressParserCreator, addressContainerEntryCreator));
 }
 
 DiameterAvpTypeList_S::~DiameterAvpTypeList_S(void) 

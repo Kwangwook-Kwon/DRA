@@ -73,9 +73,6 @@ createAvpValueParser(AAAAvpDataType type)// throw(DiameterErrorCode)
 static int
 checkFlags(struct diameter_avp_flag flag, AAAAVPFlag flags)
 {
-  AAA_LOG((LM_DEBUG, "AVP flag in msg, M-flag: %d, V-flag %d, P-flag %d \n",
-    flag.m, flag.v, flag.p));
-
   if (flag.m == 0 && (flags & DIAMETER_AVP_FLAG_MANDATORY))
     {
       AAA_LOG((LM_ERROR, "M-flag must be set\n"));
@@ -116,19 +113,13 @@ DiameterAvpHeaderParser::parseRawToApp()// throw(DiameterErrorCode)
   DiameterErrorCode st;
   AAAAvpParseType parseType = h->ParseType();
 
-  if (!avp)
+  if (! avp)
   {
 	AAA_LOG((LM_ERROR, "AVP dictionary cannot be null."));
 	st.set(AAA_PARSE_ERROR_TYPE_BUG,
                AAA_PARSE_ERROR_MISSING_AVP_DICTIONARY_ENTRY);
 	throw st;
   }
-
-  AAA_LOG((LM_DEBUG, "  AVP code %d, vendorId %d, AVP name %s\n",
-    avp->avpCode,
-    avp->vendorId,
-    avp->avpName.c_str()));
-
   if (ahl->empty())
     {
       st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_MISSING_AVP, avp);
@@ -156,9 +147,9 @@ DiameterAvpHeaderParser::parseRawToApp()// throw(DiameterErrorCode)
     {
       for (i=ahl->begin(); i!=ahl->end(); i++) {
 	// Wildcard AVPs match any AVPs.
-	if (avp->avpCode != 0 || avp->avpName != "AVP")
+	if (avp->avpCode != 0)
 	  {
-	    // For non-wildcard AVPs, strict checking on v-flag, Vendor-Id
+	    // For non-wildcard AVPs, strict checking on v-flag, Vencor-Id
 	    // and AVP code is performed.
 	    if ((*i).flag.v != 
 		((avp->flags & DIAMETER_AVP_FLAG_VENDOR_SPECIFIC) ? 1 : 0))
@@ -172,13 +163,8 @@ DiameterAvpHeaderParser::parseRawToApp()// throw(DiameterErrorCode)
 	*h = *i; ahl->erase(i);
 	if (avp->avpCode > 0 && checkFlags(h->flag, avp->flags) != 0)
 	  {
-	    // st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_INVALID_AVP_BITS, avp);
-	    // throw st;
-        // modified, continue to run when flag is not matched.
-        AAA_LOG((LM_ERROR, "  AVP code %d, vendorId %d, AVP name %s\n",
-            avp->avpCode,
-            avp->vendorId,
-            avp->avpName.c_str()));
+	    st.set(AAA_PARSE_ERROR_TYPE_NORMAL, AAA_INVALID_AVP_BITS, avp);
+	    throw st;
 	  }
 	h->value_p += DIAMETER_AVP_HEADER_LEN(avp);  // restore original value_p
 	return;
@@ -263,45 +249,49 @@ DiameterAvpParser::parseRawToApp()// throw(DiameterErrorCode)
       hp.setAppData(&h);
       hp.setDictData(avp);
       try {
-	    hp.parseRawToApp();
-      } catch (DiameterErrorCode &st)
-        {
-	      AAA_PARSE_ERROR_TYPE type;
+	hp.parseRawToApp();
+      }
+      catch (DiameterErrorCode &st)
+	{
+	  AAA_PARSE_ERROR_TYPE type;
           int code;
-	      st.get(type, code);
+	  st.get(type, code);
 
-	      if (i>0 && type == AAA_PARSE_ERROR_TYPE_NORMAL && code == AAA_MISSING_AVP)
-	        {
-	          // return if no more entry is found once after getting 
-	          // at lease one entry received.
-	          return;
-	        }
-	      throw st;
+	  if (i>0 && type == AAA_PARSE_ERROR_TYPE_NORMAL && code == AAA_MISSING_AVP)
+	    {
+	      // return if no more entry is found once after getting 
+	      // at lease one entry received.
+	      return;
 	    }
+	  throw st;
+	}
 
       /* payload check */
       e = em.acquire(avp->avpType);
       c->add(e);
 
       try {
-	    vp = createAvpValueParser(avp->avpType);
-      } catch (DiameterErrorCode &st)
-      {
-	    throw st;
+	vp = createAvpValueParser(avp->avpType);
+      }
+      catch (DiameterErrorCode &st) {
+	throw st;
       }
 	
-      aBuffer = AAAMessageBlock::Acquire(h.value_p, h.length-DIAMETER_AVP_HEADER_LEN(avp));
+      aBuffer = 
+	AAAMessageBlock::Acquire(h.value_p, h.length-DIAMETER_AVP_HEADER_LEN(avp));
       vp->setRawData(aBuffer);
       vp->setAppData(e);
       vp->setDictData(avp);
 
       try {
-	    vp->parseRawToApp();
-      } catch (DiameterErrorCode &st) {
-	    aBuffer->Release();
-	    delete vp;
-	    throw st;
-	  }
+	vp->parseRawToApp();
+      }
+      catch (DiameterErrorCode &st)
+	{
+	  aBuffer->Release();
+	  delete vp;
+	  throw st;
+	}	
       delete vp;
       aBuffer->Release();
     }
@@ -397,3 +387,4 @@ DiameterAvpParser::parseAppToRaw()// throw(DiameterErrorCode)
       aBuffer->wr_ptr(saved_p);
     }
 }
+

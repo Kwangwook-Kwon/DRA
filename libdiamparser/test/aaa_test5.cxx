@@ -55,22 +55,22 @@ unsigned char rbuf[] =
   0x01, 0x00, 0x00, 0x74, 0x90, 0x00, 0x01, 0x01, /* header(CER, T-bit set) */
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, /* (length = 156-byte) */
   0x00, 0x00, 0x00, 0x0a,     
-                          0x00, 0x00, 0x01, 0x08, /* OriginHost */
+                          0x00, 0x00, 0x01, 0x08, /* Origin-Host */
 #ifdef ERROR_CASE
   0x00, 0x00, 0x00, 0x13, 'a', 'a', 'a', '.', /* M-flag is off for err test */
 #else
   0x40, 0x00, 0x00, 0x13, 'a', 'a', 'a', '.', 
 #endif
   'b', 'b', 'b', '.', 'c', 'o', 'm', 0x00, 
-  0x00, 0x00, 0x01, 0x28, 0x40, 0x00, 0x00, 0x0f, /* OriginRealm */
+  0x00, 0x00, 0x01, 0x28, 0x40, 0x00, 0x00, 0x0f, /* Origin-Realm */
   'a', 'a', 'a', '.', 'c', 'o', 'm',  0x00, 
-  0x00, 0x00, 0x01, 0x01, 0x40, 0x00, 0x00, 0x0c, /* HostIPAddress */
-  0x0a, 0x01, 0x01, 0x01, 0x00, 0x00, 0x01, 0x0a, /* VendorId */
+  0x00, 0x00, 0x01, 0x01, 0x40, 0x00, 0x00, 0x0c, /* Host-IP-Address */
+  0x0a, 0x01, 0x01, 0x01, 0x00, 0x00, 0x01, 0x0a, /* Vendor-Id */
   0x40, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00, 0x01,
-  0x00, 0x00, 0x01, 0x0d, 0x00, 0x00, 0x00, 0x18, /* ProductName */
+  0x00, 0x00, 0x01, 0x0d, 0x00, 0x00, 0x00, 0x18, /* Product-Name */
   't', 'o', 's', 'h', 'i', 'b', 'a', '-',
   'd', 'i', 'a', 'm', 'e', 't', 'e', 'r',
-  0x00, 0x00, 0x01, 0x16, 0x40, 0x00, 0x00, 0x0c, /* OriginStateId */
+  0x00, 0x00, 0x01, 0x16, 0x40, 0x00, 0x00, 0x0c, /* Origin-State-Id */
   0x00, 0x00, 0x2b, 0x67
 };
 
@@ -123,88 +123,88 @@ DiameterMsgParserWidgetChecked   parser;
 
   diameter_identity_t *host = originHost.GetAvp("Origin-Host");
   if (host) {
-      std::cout << "OriginHost = " << *host << std::endl;
+      std::cout << "Origin-Host = " << *host << std::endl;
   }
 
-  diameter_identity_t *realm = originRealm.GetAvp("OriginRealm");
+  diameter_identity_t *realm = originRealm.GetAvp("Origin-Realm");
   if (realm) {
-      std::cout << "OriginHost = " << *realm << std::endl;
+      std::cout << "Origin-Host = " << *realm << std::endl;
   }
 
-  diameter_address_t *address = hostIp.GetAvp("HostIPAddress", 0);
+  diameter_address_t *address = hostIp.GetAvp("Host-IP-Address", 0);
   for (int ndx=1; address; ndx++) {
 	  ACE_INET_Addr addr;
 	  inet_convert(addr, *address);
-	  std::cout << "HostIPAddress = " 
+	  std::cout << "Host-IP-Address = " 
 		        << addr.get_host_addr()
 		        << std::endl;
-      address = hostIp.GetAvp("HostIPAddress", ndx);
+      address = hostIp.GetAvp("Host-IP-Address", ndx);
   }
 
-  diameter_unsigned32_t *vid = vendorId.GetAvp("VendorId");
+  diameter_unsigned32_t *vid = vendorId.GetAvp("Vendor-Id");
   if (vid) {
-      std::cout << "VendorId = " << *vid << std::endl;
+      std::cout << "Vendor-Id = " << *vid << std::endl;
   }
 
-  diameter_utf8string_t *prod = product.GetAvp("ProductName");
+  diameter_utf8string_t *prod = product.GetAvp("Product-Name");
   if (prod) {
-      std::cout << "ProductName = " << *prod << std::endl;
+      std::cout << "Product-Name = " << *prod << std::endl;
   }
 
-  diameter_unsigned32_t *oState = originState.GetAvp("OriginStateId");
+  diameter_unsigned32_t *oState = originState.GetAvp("Origin-State-Id");
   if (oState) {
-      std::cout << "OriginStateId = " << *oState << std::endl;
+      std::cout << "Origin-State-Id = " << *oState << std::endl;
   }
 
   diameter_unsigned32_t *svid = supportedVendorId.GetAvp
-      ("SupportedVendorId", 0);
+      ("Supported-Vendor-Id", 0);
   for (int ndx=1; svid; ndx++) {
-      std::cout << "SupportedVendorId = " << *svid << std::endl;
-      svid = supportedVendorId.GetAvp("SupportedVendorId", ndx);
+      std::cout << "Supported-Vendor-Id = " << *svid << std::endl;
+      svid = supportedVendorId.GetAvp("Supported-Vendor-Id", ndx);
   }
 
-  diameter_unsigned32_t *fware = firmware.GetAvp("FirmwareRevision");
+  diameter_unsigned32_t *fware = firmware.GetAvp("Firmware-Revision");
   if (fware) {
-      std::cout << "FirmwareRevision = " << *fware << std::endl;
+      std::cout << "Firmware-Revision = " << *fware << std::endl;
   }
 
   diameter_unsigned32_t *authId = authAppId.GetAvp
-      ("AuthApplicationId", 0);
+      ("Auth-Application-Id", 0);
   for (int ndx=1; authId; ndx++) {
-      std::cout << "AuthApplicationId = " << *authId << std::endl;
-      authId = authAppId.GetAvp("AuthApplicationId", ndx);
+      std::cout << "Auth-Application-Id = " << *authId << std::endl;
+      authId = authAppId.GetAvp("Auth-Application-Id", ndx);
   }
 
   diameter_unsigned32_t *acctId = acctAppId.GetAvp
-      ("AuthApplicationId", 0);
+      ("Auth-Application-Id", 0);
   for (int ndx=1; acctId; ndx++) {
-      std::cout << "AcctApplicationId = " << *acctId << std::endl;
-      acctId = acctAppId.GetAvp("AcctApplicationId", ndx);
+      std::cout << "Acct-Application-Id = " << *acctId << std::endl;
+      acctId = acctAppId.GetAvp("Acct-Application-Id", ndx);
   }
 
   diameter_grouped_t *grouped = vendorSpecificId.GetAvp
-      ("VendorSpecificApplicationId", 0);
+      ("Vendor-Specific-Application-Id", 0);
   for (int ndx=1; grouped; ndx++) {
       DiameterUInt32AvpContainerWidget gAuthId(*grouped);
       DiameterUInt32AvpContainerWidget gAcctId(*grouped);
       DiameterUInt32AvpContainerWidget gVendorId(*grouped);
 
-      diameter_unsigned32_t *uint32 = gVendorId.GetAvp("VendorId", 0);
+      diameter_unsigned32_t *uint32 = gVendorId.GetAvp("Vendor-Id", 0);
       for (int p=1; uint32; p++) {
-          uint32 = gVendorId.GetAvp("VendorId", p);
+          uint32 = gVendorId.GetAvp("Vendor-Id", p);
           if (uint32) {
-              std::cout << "VendorId = " << *uint32 << std::endl;
+              std::cout << "Vendor-Id = " << *uint32 << std::endl;
           }
       }
         
-      uint32 = gAuthId.GetAvp("AuthApplicationId");
+      uint32 = gAuthId.GetAvp("Auth-Application-Id");
       if (uint32) {
-          std::cout << "AuthApplicationId = " << *uint32 << std::endl;
+          std::cout << "Auth-Application-Id = " << *uint32 << std::endl;
       }
 
-      uint32 = gAcctId.GetAvp("AcctApplicationId");
+      uint32 = gAcctId.GetAvp("Acct-Application-Id");
       if (uint32) {
-          std::cout << "AcctApplicationId = " << *uint32 << std::endl;
+          std::cout << "Acct-Application-Id = " << *uint32 << std::endl;
       }
   }
 }
@@ -220,12 +220,12 @@ stest(unsigned char *buf, int size)
   DiameterMsgWidget msg(257);
 
   // the following widgets allocates AVP containers
-  DiameterIdentityAvpWidget originHost("OriginHost");
-  DiameterIdentityAvpWidget originRealm("OriginRealm");
-  DiameterIPAddressAvpWidget hostIp("HostIPAddress");
-  DiameterUInt32AvpWidget   vendorId("VendorId");
-  DiameterUtf8AvpWidget     product("ProductName");
-  DiameterUInt32AvpWidget   originStateId("OriginStateId");
+  DiameterIdentityAvpWidget originHost("Origin-Host");
+  DiameterIdentityAvpWidget originRealm("Origin-Realm");
+  DiameterAddressAvpWidget  hostIp("Host-IP-Address");
+  DiameterUInt32AvpWidget   vendorId("Vendor-Id");
+  DiameterUtf8AvpWidget     product("Product-Name");
+  DiameterUInt32AvpWidget   originStateId("Origin-State-Id");
 
   // the following actions allocates and assigns a
   // value to the AVP container

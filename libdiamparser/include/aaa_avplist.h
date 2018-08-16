@@ -36,7 +36,7 @@
 
 #include "diameter_parser.h"
 
-class AAA_PARSER_EXPORT_ONLY DiameterAvpList_S :
+class DiameterAvpList_S :
     public AAAAvpList
 {
     friend class ACE_Singleton<DiameterAvpList_S, ACE_Recursive_Thread_Mutex>;
@@ -47,10 +47,9 @@ class AAA_PARSER_EXPORT_ONLY DiameterAvpList_S :
 };
 
 typedef ACE_Singleton<DiameterAvpList_S, ACE_Recursive_Thread_Mutex> DiameterAvpList;
-AAA_PARSER_SINGLETON_DECLARE(ACE_Singleton, DiameterAvpList_S, ACE_Recursive_Thread_Mutex);
 
 #define DIAMETER_AVP_HEADER_LEN(avp) \
-  ((avp->avpCode == 0 && avp->avpName == "AVP") ? 0 : \
+  (avp->avpCode == 0 ? 0 : \
   (avp->flags & DIAMETER_AVP_FLAG_VENDOR_SPECIFIC ? 12 : 8))
 
 ACE_UINT32 getMinSize(AAADictionaryEntry*) throw (DiameterErrorCode);

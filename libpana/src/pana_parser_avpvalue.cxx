@@ -103,7 +103,7 @@ void PANA_AvpTypeList_S::DefaultTypes()
   add(new PANA_AvpType("Grouped", AAA_AVP_GROUPED_TYPE, 0,
                     groupedParserCreator, groupedContainerEntryCreator));
 
-  add(new PANA_AvpType("Address", AAA_AVP_IPADDRESS_TYPE, 0,
+  add(new PANA_AvpType("Address", AAA_AVP_ADDRESS_TYPE, 0,
                     addressParserCreator, addressContainerEntryCreator));
 }
 

@@ -510,7 +510,7 @@ void DiameterPeerStateMachine::AssembleCE(DiameterMsg &msg,
 
    DiameterIdentityAvpWidget originHost(DIAMETER_AVPNAME_ORIGINHOST);
    DiameterIdentityAvpWidget originRealm(DIAMETER_AVPNAME_ORIGINREALM);
-   DiameterIPAddressAvpWidget hostIp(DIAMETER_AVPNAME_HOSTIP);
+   DiameterAddressAvpWidget  hostIp(DIAMETER_AVPNAME_HOSTIP);
    DiameterUInt32AvpWidget   vendorId(DIAMETER_AVPNAME_VENDORID);
    DiameterUtf8AvpWidget     product(DIAMETER_AVPNAME_PRODUCTNAME);
    DiameterUInt32AvpWidget   originStateId(DIAMETER_AVPNAME_ORIGINSTATEID);

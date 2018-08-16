@@ -38,17 +38,6 @@
 #include "aaa_transport_ace.h"
 #include "aaa_data_defs.h"
 
-#ifdef ACE_HAS_SCTP
-extern "C" {
-#include <netinet/sctp.h>
-};
-#else
-#ifndef IPPROTO_SCTP
-#define IPPROTO_SCTP 132 /* always the same value on every platform */
-#endif
-#define SCTP_NODELAY -1
-#endif
-
 typedef Diameter_ACE_Transport<ACE_SOCK_Acceptor,
                                ACE_SOCK_Connector,
                                ACE_SOCK_Stream,

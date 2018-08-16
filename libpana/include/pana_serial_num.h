@@ -205,9 +205,7 @@ class PANA_SerialNumber
         }
         static inline ACE_UINT32 GenerateISN(ACE_UINT32 seed = 0)  {
             if (seed == 0) {
-		time_t time_out;                
-		ACE_System_Time::get_local_system_time(time_out);
-		seed = time_out;
+                ACE_System_Time::get_local_system_time(seed);
             }
             // simple time seeded randon number generator
             ACE_OS::srand(seed + ACE_OS::rand());

@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svnroot/diameter/!svn/ver/278/cplusplus/applications/nas/config
+END
+nasd.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svnroot/diameter/!svn/ver/3/cplusplus/applications/nas/config/nasd.dtd
+END
+nasd_pana_paa.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svnroot/diameter/!svn/ver/229/cplusplus/applications/nas/config/nasd_pana_paa.dtd
+END
+nasd_diameter_eap.xml
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svnroot/diameter/!svn/ver/278/cplusplus/applications/nas/config/nasd_diameter_eap.xml
+END
+nasd_diameter_eap_dictionary.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svnroot/diameter/!svn/ver/203/cplusplus/applications/nas/config/nasd_diameter_eap_dictionary.dtd
+END
+nasd_pana_dictionary.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svnroot/diameter/!svn/ver/221/cplusplus/applications/nas/config/nasd_pana_dictionary.dtd
+END
+nasd.xml
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svnroot/diameter/!svn/ver/3/cplusplus/applications/nas/config/nasd.xml
+END
+nasd_pana_paa.xml
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svnroot/diameter/!svn/ver/229/cplusplus/applications/nas/config/nasd_pana_paa.xml
+END
+nasd_diameter_eap_dictionary.xml
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svnroot/diameter/!svn/ver/263/cplusplus/applications/nas/config/nasd_diameter_eap_dictionary.xml
+END
+nasd_pana_dictionary.xml
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svnroot/diameter/!svn/ver/226/cplusplus/applications/nas/config/nasd_pana_dictionary.xml
+END
+nasd_eap_shared_secret.bin
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svnroot/diameter/!svn/ver/3/cplusplus/applications/nas/config/nasd_eap_shared_secret.bin
+END
+nasd_diameter_eap.dtd
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svnroot/diameter/!svn/ver/278/cplusplus/applications/nas/config/nasd_diameter_eap.dtd
+END

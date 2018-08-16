@@ -38,7 +38,6 @@
 #include <list>
 #include <string>
 #include <map>
-#include "ace/Recursive_Thread_Mutex.h"
 #include "ace/Singleton.h"
 #include "od_utl_rbtree.h"
 
@@ -167,7 +166,7 @@ class DiameterRouteEntry : public OD_Utl_RbTreeData
           // Deprecated:
           //  return (m_Realm < e->Realm());
           //
-          return (ACE_OS::strcasecmp(m_Realm.c_str(), e->Realm().c_str()) < 0) ? 1 : 0;
+          return (strcasecmp(m_Realm.c_str(), e->Realm().c_str()) < 0) ? 1 : 0;
       }
       int operator == (OD_Utl_RbTreeData &cmp) {
           DiameterRouteEntry *e = reinterpret_cast<DiameterRouteEntry*>(&cmp);
@@ -179,7 +178,7 @@ class DiameterRouteEntry : public OD_Utl_RbTreeData
           // Deprecated:
           //  return (m_Realm == e->Realm());
           //
-          return (ACE_OS::strcasecmp(m_Realm.c_str(), e->Realm().c_str()) == 0) ? 1 : 0;
+          return (strcasecmp(m_Realm.c_str(), e->Realm().c_str()) == 0) ? 1 : 0;
       }
       void clear(void *userData = 0);
 };

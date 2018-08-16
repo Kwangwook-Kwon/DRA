@@ -137,7 +137,7 @@ typedef   DiameterMsgParserWidgetChecked AAA_DiameterMsgParserWidgetChecked;
 // Old wrapper classes for AVP widgets mapped to new classes
 //
 typedef   DiameterIdentityAvpWidget      AAA_IdentityAvpWidget;
-typedef   DiameterIPAddressAvpWidget     AAA_AddressAvpWidget;
+typedef   DiameterAddressAvpWidget       AAA_AddressAvpWidget;
 typedef   DiameterInt32AvpWidget         AAA_Int32AvpWidget;
 typedef   DiameterUInt32AvpWidget        AAA_UInt32AvpWidget;
 typedef   DiameterInt64AvpWidget         AAA_Int64AvpWidget;
