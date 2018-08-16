@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E83311DB-922A-40C6-A7D7-7D21A5B03734}</ProjectGuid>
+    <RootNamespace>DiameterParser_Static</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.22823.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\libdiamparser\include;..\..\..\..\ACE-6.3.2\ACE_wrappers;..\..\..\..\boost_1_58_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;DS_DEBUG;ACE_AS_STATIC_LIBS;AAA_PARSER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader />
+      <ProgramDataBaseFileName>$(IntDir)DiameterParser_Static_vc90.pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <AdditionalDependencies>ACEsd.lib;ACEXMLsd.lib;ACEXML_Parsersd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>..\lib\DiameterParsersd.lib</OutputFile>
+      <AdditionalLibraryDirectories>..\..\..\..\ACE-6.3.2\ACE_wrappers\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\libdiamparser\include;..\..\..\..\ACE-6.3.2\ACE_wrappers;..\..\..\..\boost_1_58_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;DS_DEBUG;ACE_AS_STATIC_LIBS;AAA_PARSER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <AdditionalDependencies>ACEs.lib;ACEXMLs.lib;ACEXML_Parsers.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>..\lib\DiameterParsers.lib</OutputFile>
+      <AdditionalLibraryDirectories>..\..\..\..\ACE-6.3.2\ACE_wrappers\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_avplist.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_avp_header.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_dict_mngr.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_error_status.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_memory_manager.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_msg_to_xml.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_parser.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_parser_avp.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_parser_avpvalue.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_parser_q_avplist.cxx" />
+    <ClCompile Include="..\..\..\libdiamparser\src\aaa_xml_parsing.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_avplist.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_avp_header.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_comlist.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_error_status.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_g_avplist.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_memory_manager.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_msg_to_xml.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_parser_avp.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_parser_avpvalue.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_parser_q_avplist.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_q_avplist.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\aaa_xml_parsing.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\diameter_parser.h" />
+    <ClInclude Include="..\..\..\libdiamparser\include\diameter_parser_api.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ODUtl_Static\ODUtl_Static.vcxproj">
+      <Project>{68618d15-e9c3-4f1d-adc8-2b77cf3752bb}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

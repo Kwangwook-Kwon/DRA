@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3C3AF5EF-2286-435F-9185-C390E8A20DF7}</ProjectGuid>
+    <RootNamespace>Diameter_Static</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.22823.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\libdiameter\include;..\..\..\libodutl\include;..\..\..\libdiamparser\include;..\..\..\include;..\..\..\..\ACE-6.3.2\ACE_wrappers;..\..\..\..\boost_1_58_0;..\..\..\..\openssl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;ACE_AS_STATIC_LIBS;AAA_PARSER_EXPORTS;OD_UTL_EXPORTS;DIAMETERBASEPROTOCOL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader />
+      <ProgramDataBaseFileName>$(IntDir)Diameter_Static_vc90.pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <AdditionalDependencies>ACEsd.lib;ACEXMLsd.lib;ACEXML_Parsersd.lib;ODUtlsd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>..\lib\Diametersd.lib</OutputFile>
+      <AdditionalLibraryDirectories>..\..\..\..\ACE-6.3.2\ACE_wrappers\lib;..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\..\..\libdiameter\include;..\..\..\libodutl\include;..\..\..\libdiamparser\include;..\..\..\include;..\..\..\..\ACE-6.3.2\ACE_wrappers;..\..\..\..\boost_1_58_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;ACE_AS_STATIC_LIBS;AAA_PARSER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Lib>
+      <AdditionalDependencies>ACEs.lib;ACEXMLs.lib;ACEXML_Parsers.lib;ODUtls.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>..\lib\Diameters.lib</OutputFile>
+      <AdditionalLibraryDirectories>..\..\..\..\ACE-6.3.2\ACE_wrappers\lib;..\..\..\..\opendiameter-1.0.7-i_upd\VC9\OpenDiameter\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_application.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_peer_fsm.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_peer_table.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_route_msg_router.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_route_table.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_acct_client_fsm.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_acct_rec_transformer.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_acct_server_fsm.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_attributes.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_auth_client_fsm.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_auth_server_fsm.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_client.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_db.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_msg_rx.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_session_server.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_transport_collector.cxx" />
+    <ClCompile Include="..\..\..\libdiameter\src\aaa_xml_data.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_application.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_data_defs.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_garbage_collector.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_log_facility.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_peer_data.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_peer_fsm.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_peer_interface.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_peer_table.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_route_framework.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_route_id_generator.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_route_msg_router.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_route_table.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_acct_client_fsm.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_acct_fsm.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_acct_rec_transformer.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_acct_server_fsm.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_attributes.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_auth_client_fsm.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_auth_fsm.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_auth_server_fsm.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_client.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_db.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_fsm.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_msg_mux.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_msg_rx.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_server.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_session_server_factory.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_transport_ace.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_transport_collector.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_transport_interface.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\aaa_xml_data.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\diameter_api.h" />
+    <ClInclude Include="..\..\..\libdiameter\include\diameter_compatibility_api.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\libdiameter\include\aaa_session.inl" />
+    <None Include="..\..\..\libdiameter\include\aaa_session_client.inl" />
+    <None Include="..\..\..\libdiameter\include\aaa_session_server.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ODUtl_Static\ODUtl_Static.vcxproj">
+      <Project>{68618d15-e9c3-4f1d-adc8-2b77cf3752bb}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
