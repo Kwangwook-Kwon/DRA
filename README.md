@@ -72,3 +72,4 @@ OpenDiameter is depeneded on ACE and BOOST.
 
    3). Static library will be in D:\opendiameter\VC14\lib
 
+test1234
